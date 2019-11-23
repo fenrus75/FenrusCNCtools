@@ -32,16 +32,16 @@ void push_triangle(float v1[3], float v2[3], float v3[3])
 		set_max_triangles(current + 16);
 
 	triangles[current].vertex[0][0] = v1[0];
-	triangles[current].vertex[0][0] = v1[1];
-	triangles[current].vertex[0][0] = v1[2];
+	triangles[current].vertex[0][1] = v1[1];
+	triangles[current].vertex[0][2] = v1[2];
 
 	triangles[current].vertex[1][0] = v2[0];
-	triangles[current].vertex[1][0] = v2[1];
-	triangles[current].vertex[1][0] = v2[2];
+	triangles[current].vertex[1][1] = v2[1];
+	triangles[current].vertex[1][2] = v2[2];
 
 	triangles[current].vertex[2][0] = v3[0];
-	triangles[current].vertex[2][0] = v3[1];
-	triangles[current].vertex[2][0] = v3[2];
+	triangles[current].vertex[2][1] = v3[1];
+	triangles[current].vertex[2][2] = v3[2];
 
 	minX = fminf(minX, v1[0]);
 	minX = fminf(minX, v2[0]);
@@ -72,17 +72,17 @@ void normalize_design_to_zero(void)
 {
 	int i;
 	for (i = 0; i < current; i++) {
-		triangles[current].vertex[0][0] -= minX;
-		triangles[current].vertex[1][0] -= minX;
-		triangles[current].vertex[2][0] -= minX;
+		triangles[i].vertex[0][0] -= minX;
+		triangles[i].vertex[1][0] -= minX;
+		triangles[i].vertex[2][0] -= minX;
 
-		triangles[current].vertex[0][1] -= minY;
-		triangles[current].vertex[1][1] -= minY;
-		triangles[current].vertex[2][1] -= minY;
+		triangles[i].vertex[0][1] -= minY;
+		triangles[i].vertex[1][1] -= minY;
+		triangles[i].vertex[2][1] -= minY;
 
-		triangles[current].vertex[0][2] -= minZ;
-		triangles[current].vertex[1][2] -= minZ;
-		triangles[current].vertex[2][2] -= minZ;
+		triangles[i].vertex[0][2] -= minZ;
+		triangles[i].vertex[1][2] -= minZ;
+		triangles[i].vertex[2][2] -= minZ;
 	}
 
 	maxX = maxX - minX;
@@ -105,17 +105,29 @@ void scale_design(double newsize)
 
 	
 	for (i = 0; i < current; i++) {
-		triangles[current].vertex[0][0] *= factor;
-		triangles[current].vertex[1][0] *= factor;
-		triangles[current].vertex[2][0] *= factor;
+		triangles[i].vertex[0][0] *= factor;
+		triangles[i].vertex[1][0] *= factor;
+		triangles[i].vertex[2][0] *= factor;
 
-		triangles[current].vertex[0][1] *= factor;
-		triangles[current].vertex[1][1] *= factor;
-		triangles[current].vertex[2][1] *= factor;
+		triangles[i].vertex[0][1] *= factor;
+		triangles[i].vertex[1][1] *= factor;
+		triangles[i].vertex[2][1] *= factor;
 
-		triangles[current].vertex[0][2] *= factor;
-		triangles[current].vertex[1][2] *= factor;
-		triangles[current].vertex[2][2] *= factor;
+		triangles[i].vertex[0][2] *= factor;
+		triangles[i].vertex[1][2] *= factor;
+		triangles[i].vertex[2][2] *= factor;
+
+		triangles[i].minX = fminf(triangles[i].vertex[0][0], triangles[i].vertex[1][0]);
+		triangles[i].minX = fminf(triangles[i].minX,         triangles[i].vertex[2][0]);
+
+		triangles[i].maxX = fmaxf(triangles[i].vertex[0][0], triangles[i].vertex[1][0]);
+		triangles[i].maxX = fmaxf(triangles[i].maxX,         triangles[i].vertex[2][0]);
+
+		triangles[i].minY = fminf(triangles[i].vertex[0][1], triangles[i].vertex[1][1]);
+		triangles[i].minY = fminf(triangles[i].minX,         triangles[i].vertex[2][1]);
+
+		triangles[i].maxY = fmaxf(triangles[i].vertex[0][1], triangles[i].vertex[1][1]);
+		triangles[i].maxY = fmaxf(triangles[i].maxY,         triangles[i].vertex[2][1]);
 	}
 
 	maxX *= factor;
@@ -148,6 +160,25 @@ void print_triangle_stats(void)
 
 double get_height(double X, double Y)
 {
-	return X * Y;
+	double value = 0;
+	int i;
+	for (i = 0; i < current; i++) {
+		double newZ;
+		if (triangles[i].minX > X)
+			continue;
+		if (triangles[i].minY > Y)
+			continue;
+		if (triangles[i].maxX < X)
+			continue;
+		if (triangles[i].maxY < Y)
+			continue;
+
+		newZ = (fmax(triangles[i].vertex[0][2], triangles[i].vertex[1][2]) + fmin(triangles[i].vertex[0][2], triangles[i].vertex[1][2]))/2;
+
+;
+
+		value = fmax(newZ, value);
+	}
+	return value;
 }
 

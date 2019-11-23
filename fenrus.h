@@ -4,6 +4,7 @@
 
 struct triangle {
 	float vertex[3][3];
+	float minX, minY, maxX, maxY;
 };
 
 extern int read_stl_file(char *filename);
