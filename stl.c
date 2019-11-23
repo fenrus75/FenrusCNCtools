@@ -1,3 +1,10 @@
+/*
+ * (C) Copyright 2019  -  Arjan van de Ven <arjanvandeven@gmail.com>
+ *
+ * This file is part of FenrusCNCtools
+ *
+ * SPDX-License-Identifier: GPL-3.0
+ */
 #include <unistd.h>
 #include <stdlib.h>
 #include <math.h>

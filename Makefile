@@ -1,8 +1,14 @@
-all: stl2c2d
+all: stl2png
 
-stl2c2d: Makefile stl.c main.c fenrus.h triangle.c image.c
-	gcc $(CFLAGS) -g -O3 -Wall -W -Wno-address-of-packed-member -flto -ffunction-sections stl.c main.c triangle.c image.c -o stl2c2d -lm -lpng
+OBJS := stl.o main.o triangle.o image.o
+
+%.o : %.c fenrus.h Makefile
+	    @gcc $(CFLAGS) -Wno-address-of-packed-member -flto -ffunction-sections  -Wall -W -O3 -g -c $< -o $@
+
+
+stl2png: Makefile fenrus.h $(OBJS)
+	gcc -flto $(OBJS) -o stl2png -lm -lpng
 	
 
 clean:
-	rm -f *~ stl2c2d
+	@rm -f *~ stl2png *.o
