@@ -13,4 +13,9 @@ extern void push_triangle(float v1[3], float v2[3], float v3[3]);
 extern void print_triangle_stats(void);
 extern void normalize_design_to_zero(void);
 extern void scale_design(double newsize);
+extern int image_X(void);
+extern int image_Y(void);
+extern double scale_Z(void);
+extern double get_height(double X, double Y);
+extern void create_image(char *filename);
 #endif

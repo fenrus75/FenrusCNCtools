@@ -123,11 +123,31 @@ void scale_design(double newsize)
 	maxZ *= factor;
 }
 
+int image_X(void)
+{
+	return maxX + 0.999;
+}
 
+int image_Y(void)
+{
+	return maxY + 0.999;
+}
+
+double scale_Z(void)
+{
+	return 255.0 / maxZ;
+}
 void print_triangle_stats(void)
 {
 	printf("Space allocated for triangles : %i\n", maxtriangle);
 	printf("Actual number of triangles    : %i\n", current);
 	printf("Span of the design	      : (%5.1f, %5.1f, %5.1f) - (%5.1f, %5.1f, %5.1f) \n",
 			minX, minY, minZ, maxX, maxY, maxZ);
+	printf("Image size                    : %i x %i \n", image_X(), image_Y());
 }
+
+double get_height(double X, double Y)
+{
+	return X * Y;
+}
+

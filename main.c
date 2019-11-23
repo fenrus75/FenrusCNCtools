@@ -18,5 +18,8 @@ int main(int argc, char **argv)
 	normalize_design_to_zero();
 	scale_design(512);
 	print_triangle_stats();
+
+	create_image("output.png");
 	return EXIT_SUCCESS;
+
 }
