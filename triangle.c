@@ -29,7 +29,7 @@ static float maxZ = -100000;
 void set_max_triangles(int count)
 {
 	maxtriangle = count;
-	triangles = reallocarray(triangles, count, sizeof(struct triangle));
+	triangles = realloc(triangles, count * sizeof(struct triangle));
 }
 
 
