@@ -15,6 +15,8 @@ int main(int argc, char **argv)
 
 	read_stl_file(argv[1]);
 
+	normalize_design_to_zero();
+	scale_design(512);
 	print_triangle_stats();
 	return EXIT_SUCCESS;
 }

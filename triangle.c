@@ -68,6 +68,61 @@ void push_triangle(float v1[3], float v2[3], float v3[3])
 	current++;
 }
 
+void normalize_design_to_zero(void)
+{
+	int i;
+	for (i = 0; i < current; i++) {
+		triangles[current].vertex[0][0] -= minX;
+		triangles[current].vertex[1][0] -= minX;
+		triangles[current].vertex[2][0] -= minX;
+
+		triangles[current].vertex[0][1] -= minY;
+		triangles[current].vertex[1][1] -= minY;
+		triangles[current].vertex[2][1] -= minY;
+
+		triangles[current].vertex[0][2] -= minZ;
+		triangles[current].vertex[1][2] -= minZ;
+		triangles[current].vertex[2][2] -= minZ;
+	}
+
+	maxX = maxX - minX;
+	minX = 0;
+	maxY = maxY - minY;
+	minY = 0;
+	maxZ = maxZ - minZ;
+	minZ = 0;
+}
+void scale_design(double newsize)
+{
+	double factor ;
+	int i;
+
+	normalize_design_to_zero();
+
+	factor = newsize / maxX;
+	factor = fmin(factor, newsize / maxY);
+		
+
+	
+	for (i = 0; i < current; i++) {
+		triangles[current].vertex[0][0] *= factor;
+		triangles[current].vertex[1][0] *= factor;
+		triangles[current].vertex[2][0] *= factor;
+
+		triangles[current].vertex[0][1] *= factor;
+		triangles[current].vertex[1][1] *= factor;
+		triangles[current].vertex[2][1] *= factor;
+
+		triangles[current].vertex[0][2] *= factor;
+		triangles[current].vertex[1][2] *= factor;
+		triangles[current].vertex[2][2] *= factor;
+	}
+
+	maxX *= factor;
+	maxY *= factor;
+	maxZ *= factor;
+}
+
 
 void print_triangle_stats(void)
 {

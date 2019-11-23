@@ -11,5 +11,6 @@ extern int read_stl_file(char *filename);
 extern void set_max_triangles(int count);
 extern void push_triangle(float v1[3], float v2[3], float v3[3]);
 extern void print_triangle_stats(void);
-
+extern void normalize_design_to_zero(void);
+extern void scale_design(double newsize);
 #endif
