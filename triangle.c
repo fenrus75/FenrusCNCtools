@@ -158,19 +158,46 @@ void print_triangle_stats(void)
 	printf("Image size                    : %i x %i \n", image_X(), image_Y());
 }
 
+static double point_to_the_left(double X, double Y, double AX, double AY, double BX, double BY)
+{
+	return (BX-AX)*(Y-AY) - (BY-AY)*(X-AX);
+}
+
+
+static int within_triangle(double X, double Y, int i)
+{
+	double det1, det2, det3;
+
+	int has_pos, has_neg;
+
+	det1 = point_to_the_left(X, Y, triangles[i].vertex[0][0], triangles[i].vertex[0][1], triangles[i].vertex[1][0], triangles[i].vertex[1][1]);
+	det2 = point_to_the_left(X, Y, triangles[i].vertex[1][0], triangles[i].vertex[1][1], triangles[i].vertex[2][0], triangles[i].vertex[2][1]);
+	det3 = point_to_the_left(X, Y, triangles[i].vertex[2][0], triangles[i].vertex[2][1], triangles[i].vertex[0][0], triangles[i].vertex[0][1]);
+
+	has_neg = (det1 < 0) || (det2 < 0) || (det3 < 0);
+	has_pos = (det1 > 0) || (det2 > 0) || (det3 > 0);
+
+	return !(has_neg && has_pos);
+
+}
+
 double get_height(double X, double Y)
 {
 	double value = 0;
 	int i;
 	for (i = 0; i < current; i++) {
 		double newZ;
-		if (triangles[i].minX > X)
+#if 0
+		if (triangles[i].minX > X - 1)
 			continue;
-		if (triangles[i].minY > Y)
+		if (triangles[i].minY > Y - 1)
 			continue;
-		if (triangles[i].maxX < X)
+		if (triangles[i].maxX < X + 1)
 			continue;
-		if (triangles[i].maxY < Y)
+		if (triangles[i].maxY < Y + 1)
+			continue;
+#endif
+		if (!within_triangle(X, Y, i))
 			continue;
 
 		newZ = (fmax(triangles[i].vertex[0][2], triangles[i].vertex[1][2]) + fmin(triangles[i].vertex[0][2], triangles[i].vertex[1][2]))/2;
