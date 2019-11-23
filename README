@@ -1,0 +1,11 @@
+
+stl2png
+-------
+
+converts a binary STL file to a PNG file in grayscale "heightmap" format, so that tools like
+Carbide Create Pro can use it
+
+
+Note: This tool is in early development and has not been extensively tested yet
+
+Note 2: STL files can express complicated 3D structures, while heightmaps cannot.. but neither can CNC machines
