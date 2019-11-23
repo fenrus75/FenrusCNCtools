@@ -44,7 +44,7 @@ void create_image(char *filename)
 		PNG_INTERLACE_NONE, PNG_COMPRESSION_TYPE_DEFAULT, PNG_FILTER_TYPE_DEFAULT);
 	png_write_info(png, info);
 	for (y = 0; y < maxY; y++)
-		png_write_row(png, &pixels[y * maxX]);
+		png_write_row(png, &pixels[(maxY - y - 1) * maxX]);
 	png_write_end(png, NULL);
 
 	fclose(file);

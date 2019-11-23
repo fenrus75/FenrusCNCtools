@@ -181,6 +181,21 @@ static int within_triangle(double X, double Y, int i)
 
 }
 
+
+float calc_Z(float X, float Y, int index)
+{
+	float det = (triangles[index].vertex[1][1] - triangles[index].vertex[2][1]) * 
+		    (triangles[index].vertex[0][0] - triangles[index].vertex[2][0]) + 
+                    (triangles[index].vertex[2][0] - triangles[index].vertex[1][0]) * 
+		    (triangles[index].vertex[0][1] - triangles[index].vertex[2][1]);
+
+	float l1 = ((triangles[index].vertex[1][1] - triangles[index].vertex[2][1]) * (X - triangles[index].vertex[2][0]) + (triangles[index].vertex[2][0] - triangles[index].vertex[1][0]) * (Y - triangles[index].vertex[2][1])) / det;
+	float l2 = ((triangles[index].vertex[2][1] - triangles[index].vertex[0][1]) * (X - triangles[index].vertex[2][0]) + (triangles[index].vertex[0][0] - triangles[index].vertex[2][0]) * (Y - triangles[index].vertex[2][1])) / det;
+	float l3 = 1.0f - l1 - l2;
+
+	return l1 * triangles[index].vertex[0][2] + l2 * triangles[index].vertex[1][2] + l3 * triangles[index].vertex[2][2];
+}
+
 double get_height(double X, double Y)
 {
 	double value = 0;
@@ -201,10 +216,8 @@ double get_height(double X, double Y)
 		/* then a more expensive detailed triangle test */
 		if (!within_triangle(X, Y, i))
 			continue;
-
-		newZ = (fmax(triangles[i].vertex[0][2], triangles[i].vertex[1][2]) + fmin(triangles[i].vertex[0][2], triangles[i].vertex[1][2]))/2;
-
-;
+		/* now calculate the Z height within the triangle */
+		newZ = calc_Z(X, Y, i);
 
 		value = fmax(newZ, value);
 	}
