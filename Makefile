@@ -7,7 +7,7 @@ WOBJS := stl.wo main.wo triangle.wo image.wo
 	    @gcc $(CFLAGS) -Wno-address-of-packed-member -flto -ffunction-sections  -Wall -W -O3 -g -c $< -o $@
 
 %.wo : %.c fenrus.h Makefile
-	    x86_64-w64-mingw32-gcc -Wno-address-of-packed-member -Wall -W -O3 -g -c $< -o $@
+	    @x86_64-w64-mingw32-gcc -Wno-address-of-packed-member -Wall -W -O3 -g -c $< -o $@
 
 
 stl2png: Makefile fenrus.h $(OBJS)

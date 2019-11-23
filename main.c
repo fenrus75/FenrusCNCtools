@@ -8,6 +8,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <unistd.h>
+#include <string.h>
 
 #include "fenrus.h"
 
@@ -15,6 +16,7 @@
 
 int main(int argc, char **argv)
 {	
+	char *output, *stl;
 	if (argc <= 1) {
 		printf("Usage:\n\tstl2c2d <file.stl>\n");
 		return EXIT_SUCCESS;
@@ -26,7 +28,16 @@ int main(int argc, char **argv)
 	scale_design(512);
 	print_triangle_stats();
 
-	create_image("/var/www/html/stl/output.png");
+	output = strdup(argv[1]);
+	stl = strstr(output, ".stl");
+	if (stl)
+		strcpy(stl, ".png");
+	else
+		output = strdup("output.png");
+	
+
+	create_image(output);
+	printf("Wrote %s\n", output);
 	return EXIT_SUCCESS;
 
 }
