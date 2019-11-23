@@ -160,13 +160,21 @@ void print_triangle_stats(void)
 {
 	double scale;
 	printf("Number of triangles in file   : %i\n", current);
+/*
 	printf("Span of the design	      : (%5.1f, %5.1f, %5.1f) - (%5.1f, %5.1f, %5.1f) \n",
 			minX, minY, minZ, maxX, maxY, maxZ);
+*/
 	printf("Image size                    : %i x %i \n", image_X(), image_Y());
 
 	scale = 0.75 / maxZ;
-	printf("Recommended wood size         : %5.2f\"x %5.2f\" x %5.2f\" \n",
+	printf("Recommended wood size 1       : %5.2f\"x %5.2f\" x %5.2f\" \n",
 		scale * maxX, scale * maxY, scale * maxZ);
+	scale = 1.0 / maxZ;
+	printf("Recommended wood size 2       : %5.2f\"x %5.2f\" x %5.2f\" \n",
+		scale * maxX, scale * maxY, scale * maxZ);
+
+	if (current > 10000)
+		printf("Large number of triangles, this may take some time\n");
 }
 
 static double point_to_the_left(double X, double Y, double AX, double AY, double BX, double BY)
