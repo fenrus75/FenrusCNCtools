@@ -14,5 +14,7 @@ int main(int argc, char **argv)
 	}
 
 	read_stl_file(argv[1]);
+
+	print_triangle_stats();
 	return EXIT_SUCCESS;
 }

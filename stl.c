@@ -8,7 +8,7 @@
 
 #include "fenrus.h"
 
-struct triangle {
+struct stltriangle {
 	float normal[3];
 	float vertex1[3];
 	float vertex2[3];
@@ -17,7 +17,7 @@ struct triangle {
 } __attribute__((packed));
 
 
-void print_triangle(struct triangle *t)
+void print_stl_triangle(struct stltriangle *t)
 {
 	printf("\t(%5.1f, %5.1f, %5.1f) - (%5.1f, %5.1f, %5.1f) - (%5.1f, %5.1f, %5.1f)  %i\n",
 		t->vertex1[0], t->vertex1[1], t->vertex1[2],
@@ -48,14 +48,14 @@ int read_stl_file(char *filename)
 		return -1;
 	}
 	ret = fread(&trianglecount, 1, 4, file);
-	printf("The STL file has %i triangles\n", trianglecount);
+	set_max_triangles(trianglecount);
 
 	for (i = 0; i < trianglecount; i++) {
-		struct triangle t;
-		ret = fread(&t, 1, sizeof(struct triangle), file);
+		struct stltriangle t;
+		ret = fread(&t, 1, sizeof(struct stltriangle), file);
 		if (ret < 1)
 			break;
-		print_triangle(&t);
+		push_triangle(t.vertex1, t.vertex2, t.vertex3);
 	}
 
 	fclose(file);
