@@ -124,7 +124,7 @@ void scale_design(double newsize)
 		triangles[i].maxX = fmaxf(triangles[i].maxX,         triangles[i].vertex[2][0]);
 
 		triangles[i].minY = fminf(triangles[i].vertex[0][1], triangles[i].vertex[1][1]);
-		triangles[i].minY = fminf(triangles[i].minX,         triangles[i].vertex[2][1]);
+		triangles[i].minY = fminf(triangles[i].minY,         triangles[i].vertex[2][1]);
 
 		triangles[i].maxY = fmaxf(triangles[i].vertex[0][1], triangles[i].vertex[1][1]);
 		triangles[i].maxY = fmaxf(triangles[i].maxY,         triangles[i].vertex[2][1]);
@@ -187,16 +187,18 @@ double get_height(double X, double Y)
 	int i;
 	for (i = 0; i < current; i++) {
 		double newZ;
-#if 0
-		if (triangles[i].minX > X - 1)
+
+		/* first a few quick bounding box checks */
+		if (triangles[i].minX > X)
 			continue;
-		if (triangles[i].minY > Y - 1)
+		if (triangles[i].minY > Y)
 			continue;
-		if (triangles[i].maxX < X + 1)
+		if (triangles[i].maxX < X)
 			continue;
-		if (triangles[i].maxY < Y + 1)
+		if (triangles[i].maxY < Y)
 			continue;
-#endif
+
+		/* then a more expensive detailed triangle test */
 		if (!within_triangle(X, Y, i))
 			continue;
 
