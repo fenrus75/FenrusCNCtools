@@ -26,6 +26,20 @@ static float maxY = -100000;
 static float minZ = 100000;
 static float maxZ = -100000;
 
+void reset_triangles(void)
+{
+	free(triangles);
+	triangles = NULL;
+	current = 0;
+	maxtriangle = 0;
+	minX = 100000;
+	minY = 100000;
+	minZ = 100000;
+	maxX = -100000;
+	maxY = -100000;
+	maxZ = -100000;
+}
+
 void set_max_triangles(int count)
 {
 	maxtriangle = count;

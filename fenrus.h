@@ -19,4 +19,5 @@ extern int image_Y(void);
 extern double scale_Z(void);
 extern double get_height(double X, double Y);
 extern void create_image(char *filename);
+extern void reset_triangles(void);
 #endif
