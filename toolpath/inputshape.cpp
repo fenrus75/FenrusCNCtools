@@ -192,7 +192,10 @@ void inputshape::create_toolpaths(double depth, int finish_pass)
                 break; /* fixme: memleak */
  
         toolpaths.push_back(tool);       
-        inset += stepover;
+        if (level == 0)
+            inset += stepover / 2;
+        else
+            inset += stepover;
         level ++;
         
     } while (1);
