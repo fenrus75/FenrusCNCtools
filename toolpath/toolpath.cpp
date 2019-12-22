@@ -172,8 +172,8 @@ void toolpath::recalculate()
         
         phi = acos( (BA_x * BC_x + BA_y * BC_y) / (BA_l * BC_l));
         
-        if (is_hole)
-          phi = -phi;
+//        if (!is_hole)
+//          phi = -phi;
         if ( (phi > angle_i) || ( (phi == angle_i) && (length_i < fmin(BA_l,BC_l)))) {
             angle_i = phi;
             best_i = i;

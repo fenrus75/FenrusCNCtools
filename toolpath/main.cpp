@@ -5,7 +5,10 @@
  *
  * SPDX-License-Identifier: GPL-3.0
  */
-#include "tool.h"
+#include <unistd.h>
+#include <stdio.h>
+#include <stdlib.h>
+
 extern "C" {
     #include "toolpath.h"
 }
@@ -17,32 +20,32 @@ int main(int argc, char **argv)
 {
     int opt;
 
-    while ((opt = getopt(argc, argv, "r:v")) != -1) {
+    while ((opt = getopt(argc, argv, "vf")) != -1) {
         switch (opt)
 	{
-			case 'r':
-//				resolution = strtoull(optarg, NULL, 10);
-//				printf("Setting resolution to %i\n", resolution);
-				break;
 			case 'v':
 				verbose = 1;
 				break;
+			case 'f':
+				enable_finishing_pass();
+				printf("Finishing pass enabled\n");
+				break;
+				
 			
 			default:
-				printf("Usage:\n\ttoolpath <file.svg>\n");
+				printf("Usage:\n\ttoolpath [-f] <file.svg>\n");
 				return EXIT_SUCCESS;
 	}
     }
 
     if (optind == argc) {
-        printf("Usage:\n\ttoolpath <file.svg>\n");
+        printf("Usage:\n\ttoolpath [-f] <file.svg>\n");
         return EXIT_SUCCESS;
     }
     
     set_tool_imperial("T102", 0.125, 0.125/2, 0.045, 50, 15);
     set_rippem(15000);
     set_retract_height_imperial(0.06);
- //   enable_finishing_pass();
 
     for(; optind < argc; optind++) {      
 		parse_svg_file(argv[optind]);

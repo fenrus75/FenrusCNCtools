@@ -9,6 +9,12 @@
 extern "C" {
     #include "toolpath.h"
 }
+
+static inline double dist(double X0, double Y0, double X1, double Y1)
+{
+  return sqrt((X1-X0)*(X1-X0) + (Y1-Y0)*(Y1-Y0));
+}
+
 void toollevel::print_as_svg(void)
 {
     char color[32], color2[32];
@@ -89,6 +95,14 @@ void toollevel::add_poly(Polygon_2 *poly, bool is_hole)
             if ( (*p2)[0].x() == (*poly)[1].x() && (*p2)[0].y() == (*poly)[1].y() &&
                 (*p2)[1].x() == (*poly)[0].x() && (*p2)[1].y() == (*poly)[0].y())
                     return;
+#if 1
+            if (dist((*p2)[0].x(), (*p2)[0].y(), (*poly)[0].x(), (*poly)[0].y()) < 0.15 &&
+                dist((*p2)[1].x(), (*p2)[1].y(), (*poly)[1].x(), (*poly)[1].y()) < 0.15)
+                   return;
+            if (dist((*p2)[0].x(), (*p2)[0].y(), (*poly)[0].x(), (*poly)[0].y()) < 0.15 &&
+                dist((*p2)[0].x(), (*p2)[0].y(), (*poly)[1].x(), (*poly)[1].y()) < 0.15)
+                   return;
+#endif            
         }
     }
 

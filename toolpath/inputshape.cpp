@@ -10,6 +10,12 @@
 /* todo: get rid of this addiction to print.h */
 #include "print.h"
 
+double point_snap(double D)
+{
+    int i = (int)(D * 10 + 0.5);
+    return i / 10.0;
+}
+
 void inputshape::set_level(int _level)
 {
     level = _level;
@@ -201,7 +207,6 @@ void inputshape::create_toolpaths(double depth, int finish_pass)
     } while (1);
     
     if (skeleton.size() > 0) {
-        double lX = 0, lY = 0;
         class toollevel *tool = new(class toollevel);       
         tool->level = level;
         tool->is_slotting = true;
@@ -212,19 +217,17 @@ void inputshape::create_toolpaths(double depth, int finish_pass)
         for (auto ss : skeleton) {
             for (auto x = ss->halfedges_begin(); x != ss->halfedges_end(); ++x) {
                     if (x->is_inner_bisector()) {
-                        Polygon_2 *p = new(Polygon_2);
-                        if (lX == x->vertex()->point().x() && lY == x->vertex()->point().y()) { 
-                            p->push_back(Point(x->vertex()->point().x(), x->vertex()->point().y()));
-                            p->push_back(Point(x->opposite()->vertex()->point().x(), x->opposite()->vertex()->point().y()));
-                            lX = x->opposite()->vertex()->point().x();
-                            lY = x->opposite()->vertex()->point().y();
-                        } else {
-                            p->push_back(Point(x->opposite()->vertex()->point().x(), x->opposite()->vertex()->point().y()));
-                            p->push_back(Point(x->vertex()->point().x(), x->vertex()->point().y()));
-                            lX = x->vertex()->point().x();
-                            lY = x->vertex()->point().y();
+                        double X1, Y1, X2, Y2;
+                        X1 = point_snap(x->vertex()->point().x());
+                        Y1 = point_snap(x->vertex()->point().y());
+                        X2 = point_snap(x->opposite()->vertex()->point().x());
+                        Y2 = point_snap(x->opposite()->vertex()->point().y());
+                        if (X1 != X2 || Y1 != Y2) {
+                            Polygon_2 *p = new(Polygon_2);
+                            p->push_back(Point(X1, Y1));
+                            p->push_back(Point(X2, Y2));
+                            tool->add_poly(p, false);
                         }
-                        tool->add_poly(p, false);
                     }
             } 
         }
