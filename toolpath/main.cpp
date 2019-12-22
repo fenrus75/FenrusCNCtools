@@ -39,9 +39,9 @@ int main(int argc, char **argv)
         return EXIT_SUCCESS;
     }
     
-    set_tool("T102", 0.125, 0.125/2, 0.045, 50, 15);
+    set_tool_imperial("T102", 0.125, 0.125/2, 0.045, 50, 15);
     set_rippem(15000);
-    set_retract_height(0.06);
+    set_retract_height_imperial(0.06);
  //   enable_finishing_pass();
 
     for(; optind < argc; optind++) {      
@@ -49,7 +49,7 @@ int main(int argc, char **argv)
 		
 		process_nesting();
 		
-		create_toolpaths(-0.125);
+		create_toolpaths(inch_to_mm(-0.125));
 		consolidate_toolpaths();
 		
 		write_svg("output.svg");

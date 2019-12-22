@@ -16,13 +16,13 @@
 
 
 static const char *tool_name = "T201";
-static double tool_diameter = 0.25;
-static double tool_stepover = 0.125;
-static double tool_maxdepth = 0.045;
-static double tool_feedrate = 50;
-static double tool_plungerate = 25;
+static double tool_diameter = 6;
+static double tool_stepover = 3;
+static double tool_maxdepth = 1;
+static double tool_feedrate = 0;
+static double tool_plungerate = 0;
 static double rippem = 10000;
-static double safe_retract_height = 0.06;
+static double safe_retract_height = 2;
 
 static int want_finishing_pass;
 
@@ -32,14 +32,24 @@ static int mill_count;
 /* in mm */
 static double cX, cY, cZ, cS;
 
-void set_tool(const char *name, double diameter_inch, double stepover_inch, double maxdepth_inch, double feedrate_ipm, double plungerate_ipm)
+void set_tool_imperial(const char *name, double diameter_inch, double stepover_inch, double maxdepth_inch, double feedrate_ipm, double plungerate_ipm)
 {
     tool_name = strdup(name);
-    tool_diameter = diameter_inch;
-    tool_stepover = stepover_inch;
-    tool_maxdepth = maxdepth_inch;
-    tool_feedrate = feedrate_ipm;
-    tool_plungerate = plungerate_ipm;
+    tool_diameter = inch_to_mm(diameter_inch);
+    tool_stepover = inch_to_mm(stepover_inch);
+    tool_maxdepth = inch_to_mm(maxdepth_inch);
+    tool_feedrate = ipm_to_metric(feedrate_ipm);
+    tool_plungerate = ipm_to_metric(plungerate_ipm);
+}
+
+void set_tool_metric(const char *name, double diameter_mm, double stepover_mm, double maxdepth_mm, double feedrate_metric, double plungerate_metric)
+{
+    tool_name = strdup(name);
+    tool_diameter = diameter_mm;
+    tool_stepover = stepover_mm;
+    tool_maxdepth = maxdepth_mm;
+    tool_feedrate = feedrate_metric;
+    tool_plungerate = plungerate_metric;
 }
 
 double get_tool_diameter(void)
@@ -62,9 +72,13 @@ void set_rippem(double _rippem)
     rippem = _rippem;
 }
 
-void set_retract_height(double _rh_inch)
+void set_retract_height_imperial(double _rh_inch)
 {
-    safe_retract_height = _rh_inch;
+    safe_retract_height = inch_to_mm(_rh_inch);
+}
+void set_retract_height_metric(double _rh_mm)
+{
+    safe_retract_height = _rh_mm;
 }
 
 void enable_finishing_pass(void)
@@ -87,8 +101,8 @@ void write_gcode_header(const char *filename)
     fprintf(gcode, "%%\n");
     fprintf(gcode, "G21\n"); /* milimeters not imperials */
     fprintf(gcode, "G90\n"); /* all relative to work piece zero */
-    fprintf(gcode, "G0X0Y0Z%5.4f\n", inch_to_mm(safe_retract_height));
-    cZ = inch_to_mm(safe_retract_height);
+    fprintf(gcode, "G0X0Y0Z%5.4f\n", safe_retract_height);
+    cZ = safe_retract_height;
     fprintf(gcode, "M6 %s\n", tool_name);
     fprintf(gcode, "M3 S%i\n", (int)rippem);
     fprintf(gcode, "(FILENAME: %s)\n", filename);
@@ -109,9 +123,9 @@ void gcode_plunge_to(double Z, double speedratio)
 void gcode_retract(void)
 {
     fprintf(gcode, "G0");
-    if (cZ != inch_to_mm(safe_retract_height))
-        fprintf(gcode,"Z%5.4f", inch_to_mm(safe_retract_height));
-    cZ = inch_to_mm(safe_retract_height);
+    if (cZ != safe_retract_height)
+        fprintf(gcode,"Z%5.4f", safe_retract_height);
+    cZ = safe_retract_height;
     fprintf(gcode, "\n");
     retract_count++;
 }
@@ -141,7 +155,7 @@ void gcode_mill_to(double X, double Y, double Z, double speedratio)
 void gcode_travel_to(double X, double Y)
 {
 
-    if (cZ < inch_to_mm(safe_retract_height))
+    if (cZ < safe_retract_height)
         gcode_retract();
     fprintf(gcode, "G0");
     if (cX != X)
