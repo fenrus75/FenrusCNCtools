@@ -12,15 +12,16 @@
 extern "C" {
     #include "toolpath.h"
 }
-int verbose = 0;
 
+int verbose = 0;
+int want_skeleton_path = 0;
 
 
 int main(int argc, char **argv)
 {
     int opt;
 
-    while ((opt = getopt(argc, argv, "vf")) != -1) {
+    while ((opt = getopt(argc, argv, "vfs")) != -1) {
         switch (opt)
 	{
 			case 'v':
@@ -30,7 +31,10 @@ int main(int argc, char **argv)
 				enable_finishing_pass();
 				printf("Finishing pass enabled\n");
 				break;
-				
+			case 's':
+				want_skeleton_path = 1;
+				printf("Skeleton path enabled\n");
+				break;
 			
 			default:
 				printf("Usage:\n\ttoolpath [-f] <file.svg>\n");

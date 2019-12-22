@@ -144,4 +144,7 @@ private:
     
 };
 
+extern int want_skeleton_path;
+
+
 #endif

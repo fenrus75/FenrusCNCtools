@@ -184,7 +184,7 @@ void inputshape::create_toolpaths(double depth, int finish_pass)
                 inset = inset + 0.00001;
         }
         
-        if (level == 0) {
+        if (level == 0 && want_skeleton_path) {
 
             for (auto ply : offset_polygons) {
                 SsPtr pp = CGAL::create_interior_straight_skeleton_2(ply->outer_boundary().vertices_begin(),
@@ -223,7 +223,7 @@ void inputshape::create_toolpaths(double depth, int finish_pass)
         
     } while (1);
     
-    if (skeleton.size() > 0) {
+    if (skeleton.size() > 0 && want_skeleton_path) {
         class toollevel *tool = new(class toollevel);       
         tool->level = level;
         tool->is_slotting = true;
