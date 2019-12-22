@@ -45,20 +45,18 @@ void declare_minY(double Y)
 
 void new_poly(double X, double Y)
 {
-  if (shape) {
-    shape->close_shape();
-    shapes.push_back(shape);
-  }
+  end_poly();
+
   shape = new(class inputshape);
-  shape->add_point(X, Y);
-  minX = fmin(X, minX);
-  minY = fmin(Y, minY);
-  maxX = fmax(X, maxX);
-  maxY = fmax(Y, maxY);
+  
+  add_point_to_poly(X, Y);
 }
 
 void add_point_to_poly(double X, double Y)
 {
+  if (!shape)
+    shape = new(class inputshape);
+    
   shape->add_point(X, Y);
   minX = fmin(X, minX);
   minY = fmin(Y, minY);
@@ -80,7 +78,7 @@ void end_poly(void)
 void write_svg(const char *filename)
 {
 
-  printf("Work size: %5.2f x %5.2f inch\n", px_to_inch(maxX-minX), px_to_inch(maxY - minY));
+  printf("Work size: %5.2f x %5.2f inch\n", mm_to_inch(maxX-minX), mm_to_inch(maxY - minY));
   set_svg_bounding_box(minX, minY, maxX, maxY);
   write_svg_header(filename, 1.0);
 

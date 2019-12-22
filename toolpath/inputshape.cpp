@@ -138,11 +138,11 @@ void inputshape::create_toolpaths(double depth, int finish_pass)
     }
     
     /* first inset is the radius (half diameter) of the tool, after that increment by stepover */
-    inset = inch_to_px(diameter/2);
+    inset = inch_to_mm(diameter/2);
     
     /* finish_pass is -1 for all layers above the bottom layer IF finishing is enabled */
     if (finish_pass == -1)
-        inset = inset + mm_to_px(0.1);
+        inset = inset + 0.1;
         
     
     /* less stepover during the bottom finish pass (1) */
@@ -192,7 +192,7 @@ void inputshape::create_toolpaths(double depth, int finish_pass)
                 break; /* fixme: memleak */
  
         toolpaths.push_back(tool);       
-        inset += inch_to_px(stepover);
+        inset += inch_to_mm(stepover);
         level ++;
         
     } while (1);

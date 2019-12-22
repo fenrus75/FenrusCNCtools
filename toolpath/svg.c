@@ -21,10 +21,10 @@ static double svgscale;
 void svg_line(double X1, double Y1, double X2, double Y2, const char *color, double width)
 {
 	fprintf(output, "<line x1=\"%5.2f\" y1=\"%5.2f\" x2=\"%5.2f\" y2=\"%5.2f\" stroke=\"%s\" stroke-width=\"%f\"/>\n", 
-		svgscale * (X1 - minX), 
-		svgscale * (maxY-Y1), 
-		svgscale * (X2 - minX), 
-		svgscale * (maxY-Y2),
+		svgscale * (mm_to_px(X1) - minX), 
+		svgscale * (maxY-mm_to_px(Y1)), 
+		svgscale * (mm_to_px(X2) - minX), 
+		svgscale * (maxY-mm_to_px(Y2)),
 		color,
 		width);
 }
@@ -32,19 +32,19 @@ void svg_line(double X1, double Y1, double X2, double Y2, const char *color, dou
 void svg_circle(double X1, double Y1, double radius, const char * color, double width)
 {
 	fprintf(output, "<circle cx=\"%5.2f\" cy=\"%5.2f\" r=\"%5.2f\"  stroke=\"%s\" stroke-width=\"%f\" />\n", 
-		svgscale * (X1 - minX), 
-		svgscale * (maxY-Y1), 
-		svgscale * radius, 
+		svgscale * (mm_to_px(X1) - minX), 
+		svgscale * (maxY-mm_to_px(Y1)), 
+		svgscale * mm_to_px(radius), 
 		color,
-		width);
+		mm_to_px(width));
 }
 
 void set_svg_bounding_box(int X1, int Y1, int X2, int Y2)
 {
-	minX = X1;
-	minY = Y1;
-	maxX = X2;
-	maxY = Y2;
+	minX = mm_to_px(X1);
+	minY = mm_to_px(Y1);
+	maxX = mm_to_px(X2);
+	maxY = mm_to_px(Y2);
 }
 
 void write_svg_header(const char *filename, double scale)
@@ -71,4 +71,3 @@ void write_svg_footer(void)
 	fclose(output);
 	output = NULL;
 }
-

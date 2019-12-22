@@ -19,10 +19,10 @@ void toolpath::print_as_svg(const char *color)
     if (is_slotting)
         color = "pink";
     for (auto i : polygons) {
-        print_polygon(i, color, inch_to_px(diameter) * 0.125);
+        print_polygon(i, color, inch_to_mm(diameter) * 0.125);
 #if 1
         if (start_vertex < i->size() && i->size() > 2) {
-          svg_circle((*i)[start_vertex].x(), (*i)[start_vertex].y(), inch_to_px(diameter/2), "red", 0.5);
+          svg_circle((*i)[start_vertex].x(), (*i)[start_vertex].y(), inch_to_mm(diameter/2), "red", 0.5);
         }
 #endif
     }
@@ -49,11 +49,11 @@ void toolpath::output_gcode(void)
       auto vi = (*poly)[current];
       auto vi2 = (*poly)[next];
       
-      if (i == 0 && dist(lX,lY, vi.x(), vi.y()) < inch_to_px(diameter * 0.75)) {
-        gcode_mill_to(px_to_mm(vi.x()), px_to_mm(vi.y() - get_minY()), inch_to_mm(depth), speed * 0.667);
+      if (i == 0 && dist(lX,lY, vi.x(), vi.y()) < inch_to_mm(diameter * 0.75)) {
+        gcode_mill_to(vi.x(), vi.y() - get_minY(), inch_to_mm(depth), speed * 0.667);
       }
-      gcode_conditional_travel_to(px_to_mm(vi.x()), px_to_mm(vi.y() - get_minY()), inch_to_mm(depth), speed);
-      gcode_mill_to(px_to_mm(vi2.x()), px_to_mm(vi2.y() - get_minY()), inch_to_mm(depth), speed);
+      gcode_conditional_travel_to(vi.x(), vi.y() - get_minY(), inch_to_mm(depth), speed);
+      gcode_mill_to(vi2.x(), vi2.y() - get_minY(), inch_to_mm(depth), speed);
       lX = vi2.x();
       lY = vi2.y();
     }
@@ -67,15 +67,15 @@ void toolpath::output_gcode_slotting(void)
   for (auto poly : polygons) {
     if (poly->size() == 2) {
       double distance1, distance2;
-      distance1 = dist(gcode_current_X(), gcode_current_Y(), px_to_mm((*poly)[0].x()), px_to_mm((*poly)[0].y() - get_minY()));
-      distance2 = dist(gcode_current_X(), gcode_current_Y(), px_to_mm((*poly)[1].x()), px_to_mm((*poly)[1].y() - get_minY()));
+      distance1 = dist(gcode_current_X(), gcode_current_Y(), (*poly)[0].x(), (*poly)[0].y() - get_minY());
+      distance2 = dist(gcode_current_X(), gcode_current_Y(), (*poly)[1].x(), (*poly)[1].y() - get_minY());
       
       if (distance1 < distance2) {
-         gcode_conditional_travel_to(px_to_mm((*poly)[0].x()), px_to_mm((*poly)[0].y() - get_minY()), inch_to_mm(depth), speed);
-         gcode_mill_to(px_to_mm((*poly)[1].x()), px_to_mm((*poly)[1].y() - get_minY()), inch_to_mm(depth), speed);
+         gcode_conditional_travel_to((*poly)[0].x(), (*poly)[0].y() - get_minY(), inch_to_mm(depth), speed);
+         gcode_mill_to((*poly)[1].x(), (*poly)[1].y() - get_minY(), inch_to_mm(depth), speed);
       } else {
-         gcode_conditional_travel_to(px_to_mm((*poly)[1].x()), px_to_mm((*poly)[1].y() - get_minY()), inch_to_mm(depth), speed);
-         gcode_mill_to(px_to_mm((*poly)[0].x()), px_to_mm((*poly)[0].y() - get_minY()), inch_to_mm(depth), speed);
+         gcode_conditional_travel_to((*poly)[1].x(), (*poly)[1].y() - get_minY(), inch_to_mm(depth), speed);
+         gcode_mill_to((*poly)[0].x(), (*poly)[0].y() - get_minY(), inch_to_mm(depth), speed);
       }
       return;
     }
@@ -84,8 +84,8 @@ void toolpath::output_gcode_slotting(void)
       if (vi2 == poly->vertices_end())
         vi2 = poly->vertices_begin();
         
-      gcode_conditional_travel_to(px_to_mm(vi->x()), px_to_mm(vi->y() - get_minY()), inch_to_mm(depth), speed);
-      gcode_mill_to(px_to_mm(vi2->x()), px_to_mm(vi2->y() - get_minY()), inch_to_mm(depth), speed);
+      gcode_conditional_travel_to(vi->x(), vi->y() - get_minY(), inch_to_mm(depth), speed);
+      gcode_mill_to(vi2->x(), vi2->y() - get_minY(), inch_to_mm(depth), speed);
     }
   }
 }

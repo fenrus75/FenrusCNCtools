@@ -48,16 +48,16 @@ void toollevel::output_gcode(void)
     
     worklist = toolpaths;
     gcode_write_comment(name);
-    sortX = mm_to_px(gcode_current_X());
-    sortY = mm_to_px(gcode_current_Y()) + get_minY();
+    sortX = gcode_current_X();
+    sortY = gcode_current_Y() + get_minY();
         
     sort(worklist.begin(), worklist.end(), compare_path);
     
     while (worklist.size() > 0) {
         worklist[0]->output_gcode();
         worklist.erase(worklist.begin());
-        sortX = mm_to_px(gcode_current_X());
-        sortY = mm_to_px(gcode_current_Y()) + get_minY();
+        sortX = gcode_current_X();
+        sortY = gcode_current_Y() + get_minY();
         
         sort(worklist.begin(), worklist.end(), compare_path);
     }

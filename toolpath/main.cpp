@@ -42,7 +42,7 @@ int main(int argc, char **argv)
     set_tool("T102", 0.125, 0.125/2, 0.045, 50, 15);
     set_rippem(15000);
     set_retract_height(0.06);
-    enable_finishing_pass();
+ //   enable_finishing_pass();
 
     for(; optind < argc; optind++) {      
 		parse_svg_file(argv[optind]);

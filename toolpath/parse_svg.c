@@ -50,13 +50,13 @@ static void cubic_bezier(double x0, double y0,
         nX = (1-t)*(1-t)*(1-t)*x0 + 3*(1-t)*(1-t)*t*x1 + 3 * (1-t)*t*t*x2 + t*t*t*x3;
         nY = (1-t)*(1-t)*(1-t)*y0 + 3*(1-t)*(1-t)*t*y1 + 3 * (1-t)*t*t*y2 + t*t*t*y3;
         if (distance(lX,lY, nX,nY) > 1) {
-            add_point_to_poly(nX, nY);
+            add_point_to_poly(px_to_mm(nX), px_to_mm(nY));
             lX = nX;
             lY = nY;
         }
         t = t + delta;
     }
-    add_point_to_poly(x3,y3);
+    add_point_to_poly(px_to_mm(x3),px_to_mm(y3));
 }                    
 
 static void quadratic_bezier(double x0, double y0,
@@ -73,13 +73,13 @@ static void quadratic_bezier(double x0, double y0,
         nX = (1-t)*(1-t)*x0 + 2*(1-t)*t*x1 + t*t*x3;
         nY = (1-t)*(1-t)*y0 + 2*(1-t)*t*y1 + t*t*y3;
         if (distance(lX,lY, nX,nY) > 1) {
-            add_point_to_poly(nX, nY);
+            add_point_to_poly(px_to_mm(nX), px_to_mm(nY));
             lX = nX;
             lY = nY;
         }
         t = t + delta;
     }
-    add_point_to_poly(x3,y3);
+    add_point_to_poly(px_to_mm(x3), px_to_mm(y3));
 }                    
 
 static void push_chunk(char *chunk)
@@ -116,24 +116,24 @@ static void push_chunk(char *chunk)
             }
 #endif
 //            printf("Line         : %5.2f %5.2f\n", arg1, arg2);
-            add_point_to_poly(arg1, -arg2);
+            add_point_to_poly(px_to_mm(arg1), px_to_mm(-arg2));
             last_X = arg1;
             last_Y = arg2;
             break;
         case 'M':
 //            printf("Start of poly: %5.2f %5.2f\n", arg1, arg2);
-            new_poly(arg1, -arg2);
+            new_poly(px_to_mm(arg1), px_to_mm(-arg2));
             last_X = arg1;
             last_Y = arg2;
             break;
         case 'H':
 //            printf("Start of poly: %5.2f %5.2f\n", arg1, arg2);
-            add_point_to_poly(arg1, -last_Y);
+            add_point_to_poly(px_to_mm(arg1), px_to_mm(-last_Y));
             last_X = arg1;
             break;
         case 'V':
 //            printf("Start of poly: %5.2f %5.2f\n", arg1, arg2);
-            add_point_to_poly(last_X, -arg1);
+            add_point_to_poly(px_to_mm(last_X), px_to_mm(-arg1));
             last_Y = arg1;
             break;
         case 'C':
@@ -174,7 +174,7 @@ static void parse_line(char *line)
     c = strstr(line, "height=\"");
     if (c) {
         height = strtod(c+8, NULL);
-        declare_minY(-height);
+        declare_minY(px_to_mm(-height));
     }
     c = strstr(line, " d=\"");
     if (c == NULL)
