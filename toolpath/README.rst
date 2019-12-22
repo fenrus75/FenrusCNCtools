@@ -21,9 +21,6 @@ Todo list (what I know is wrong or what I want to add)
 ------------------------------------------------------
 
 Things to fix
-* Units are a mess internally. APIs are often in imperial inches,
-  internal datastructures are in PX but the gcode side is in milimeters.
-  --> Over time converge on using MM everywhere with helpers for conversion
 * SVG parser is extremely hard coded/limited; using a library can improve
   this but will add another dependency
 
@@ -32,3 +29,11 @@ Things to experiment with
 * The slotting toolpaths should likely be full speed at half depth instead
 * An "edge only" toolpath at half depth to reduce fuzz at the edges of the
   cut
+
+
+
+Done list
+---------
+* Units are a mess internally. APIs are often in imperial inches,
+  internal datastructures are in PX but the gcode side is in milimeters.
+  --> Over time converge on using MM everywhere with helpers for conversion
