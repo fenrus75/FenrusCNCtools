@@ -15,17 +15,22 @@
 
 static int resolution = 512;
 
+int verbose = 0;
+
 int main(int argc, char **argv)
 {	
 	char *output, *stl;
 	int opt;
 
-	while ((opt = getopt(argc, argv, "r:L")) != -1) {
+	while ((opt = getopt(argc, argv, "r:v")) != -1) {
 		switch (opt)
 		{
 			case 'r':
 				resolution = strtoull(optarg, NULL, 10);
 				printf("Setting resolution to %i\n", resolution);
+				break;
+			case 'v':
+				verbose = 1;
 				break;
 			
 			default:

@@ -12,7 +12,7 @@
 
 #include "fenrus.h"
 
-
+extern int verbose;
 
 
 void create_image(char *filename)
@@ -39,6 +39,10 @@ void create_image(char *filename)
 	for (y = 0; y < maxY; y++) {
 		for (x = 0; x < maxX; x++) {
 			pixels[x + y * maxX] = scale * get_height(x, y);
+		}
+		if (verbose) {
+			printf("\rLine %i",y);
+			fflush(stdout);
 		}
 	}
 

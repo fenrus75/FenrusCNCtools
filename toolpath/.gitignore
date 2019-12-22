@@ -1,0 +1,8 @@
+*.o
+toolpath
+*~
+DEADJOE
+*.svg
+cgaltest
+*.nc
+*.c2d
