@@ -82,7 +82,7 @@ static void quadratic_bezier(double x0, double y0,
     add_point_to_poly(px_to_mm(x3), px_to_mm(y3));
 }                    
 
-static void push_chunk(char *chunk)
+static void push_chunk(char *chunk, char *line)
 {
     char command;
     char *c;
@@ -150,12 +150,12 @@ static void push_chunk(char *chunk)
             end_poly();
             break;
         default:
-            printf("Unknown command in chunk: %s\n", chunk);
+            printf("Unknown command in chunk: %s  (%s)\n", chunk, line);
     }
     
 }
 
-static const char *valid = "0123456789. ";
+static const char *valid = "0123456789.eE- ";
 
 static void strip_str(char *line)
 {
@@ -191,7 +191,7 @@ static void parse_line(char *line)
         } else {
             strip_str(chunk);
             if (strlen(chunk) > 0)
-                push_chunk(chunk);
+                push_chunk(chunk, line);
             memset(chunk, 0, sizeof(chunk));
             chunk[strlen(chunk)] = *c;           
         }
@@ -199,7 +199,7 @@ static void parse_line(char *line)
     }
     strip_str(chunk);
     if (strlen(chunk) > 0)
-        push_chunk(chunk);
+        push_chunk(chunk, line);
     end_poly();
 }
 
