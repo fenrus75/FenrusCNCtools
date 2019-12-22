@@ -137,11 +137,17 @@ void inputshape::create_toolpaths(double depth, int finish_pass)
     double diameter = get_tool_diameter();
     double stepover = get_tool_stepover();
     double inset;
+    SsPtr iss;
+    
+    
+    
     if (!polyhole) {
         polyhole = new PolygonWithHoles(poly);
         for (auto i : children)
           polyhole->add_hole(i->poly);
     }
+    
+    iss =  CGAL::create_interior_straight_skeleton_2(*polyhole);
     
     /* first inset is the radius (half diameter) of the tool, after that increment by stepover */
     inset = diameter/2;
@@ -165,7 +171,8 @@ void inputshape::create_toolpaths(double depth, int finish_pass)
         tool->depth = depth;
                 
         PolygonWithHolesPtrVector  offset_polygons;
-        offset_polygons = CGAL::create_interior_skeleton_and_offset_polygons_with_holes_2(inset, *polyhole);
+//        offset_polygons = CGAL::create_interior_skeleton_and_offset_polygons_with_holes_2(inset, *polyhole);
+        offset_polygons = arrange_offset_polygons_2(CGAL::create_offset_polygons_2<Polygon_2>(inset,*iss) );
         
         if (level == 0) {
 

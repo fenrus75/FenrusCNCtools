@@ -12,6 +12,7 @@
 #include <boost/shared_ptr.hpp>
 #include <CGAL/Exact_predicates_inexact_constructions_kernel.h>
 #include <CGAL/create_offset_polygons_from_polygon_with_holes_2.h>
+#include <CGAL/create_straight_skeleton_from_polygon_with_holes_2.h>
 
 #include <CGAL/Polygon_2.h>
 #include <CGAL/create_offset_polygons_2.h>
@@ -29,8 +30,7 @@ typedef std::vector<PolygonPtr> PolygonPtrVector ;
 typedef CGAL::Polygon_with_holes_2<K> PolygonWithHoles ;
 typedef boost::shared_ptr<PolygonWithHoles> PolygonWithHolesPtr ;
 typedef std::vector<PolygonWithHolesPtr> PolygonWithHolesPtrVector;
-typedef CGAL::Straight_skeleton_2<K>  Ss ;
-typedef boost::shared_ptr<Ss> SsPtr ;
+typedef CGAL::Polygon_with_holes_2<K> Polygon_with_holes ;
 
 class inputshape;
 typedef class inputshape inputshape;

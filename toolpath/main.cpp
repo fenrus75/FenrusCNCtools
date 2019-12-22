@@ -52,7 +52,7 @@ int main(int argc, char **argv)
 		
 		process_nesting();
 		
-		create_toolpaths(inch_to_mm(-0.125));
+		create_toolpaths(inch_to_mm(-0.044));
 		consolidate_toolpaths();
 		
 		write_svg("output.svg");
