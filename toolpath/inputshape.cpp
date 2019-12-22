@@ -164,6 +164,7 @@ void inputshape::create_toolpaths(double depth, int finish_pass)
     do {
         class toollevel *tool = new(class toollevel);
         int added = 0;
+        int had_exception = 1;
         
         tool->level = level;
         tool->offset = inset;
@@ -172,7 +173,16 @@ void inputshape::create_toolpaths(double depth, int finish_pass)
                 
         PolygonWithHolesPtrVector  offset_polygons;
 //        offset_polygons = CGAL::create_interior_skeleton_and_offset_polygons_with_holes_2(inset, *polyhole);
-        offset_polygons = arrange_offset_polygons_2(CGAL::create_offset_polygons_2<Polygon_2>(inset,*iss) );
+
+        while (had_exception) {
+            had_exception = 0;
+            try {
+                offset_polygons = arrange_offset_polygons_2(CGAL::create_offset_polygons_2<Polygon_2>(inset,*iss) );
+            } catch (...) { had_exception = 1;};
+            
+            if (had_exception)
+                inset = inset + 0.00001;
+        }
         
         if (level == 0) {
 
