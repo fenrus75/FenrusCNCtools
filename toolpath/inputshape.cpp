@@ -170,6 +170,9 @@ void inputshape::create_toolpaths(double depth, int finish_pass, int want_option
         tool->offset = inset;
         tool->diameter = diameter;
         tool->depth = depth;
+        
+        if (want_optional && (level > 1) && ((level & 1) == 0))
+            tool->is_optional = 1;
                 
         PolygonWithHolesPtrVector  offset_polygons;
 //        offset_polygons = CGAL::create_interior_skeleton_and_offset_polygons_with_holes_2(inset, *polyhole);
@@ -201,14 +204,15 @@ void inputshape::create_toolpaths(double depth, int finish_pass, int want_option
             tool->add_poly(p, false);
             added++;
 
-            for(auto hi = ply->holes_begin() ; hi != ply->holes_end() ; ++ hi ) {
-              Polygon_2 *p;
-              p = new(Polygon_2);
-              *p = *hi;
-              p->reverse_orientation();
-              tool->add_poly(p, true);
-              added++;
-            }
+//            if (!tool->is_optional)
+              for(auto hi = ply->holes_begin() ; hi != ply->holes_end() ; ++ hi ) {
+                Polygon_2 *p;
+                p = new(Polygon_2);
+                *p = *hi;
+                p->reverse_orientation();
+                tool->add_poly(p, true);
+                added++;
+              }
         }
         
         if (!added)
@@ -254,13 +258,71 @@ void inputshape::create_toolpaths(double depth, int finish_pass, int want_option
 void inputshape::consolidate_toolpaths(void)
 {
     unsigned int level;
+
+    if (want_inbetween_paths) {    
+        /* step 1 : eliminate redundant optional paths */	
+        /* first for not holes */
+        for (level = 0; level + 1 < toolpaths.size(); level++) {
+            if (!toolpaths[level]->is_optional)
+                continue;
+            for (auto tp : toolpaths[level]->toolpaths) {
+                if (tp->is_hole)
+                    continue;
+                /* for each toolpath, check if there is a toolpath a level up that is inside this tp */
+                for (auto tp2 : toolpaths[level + 1]->toolpaths) {
+                    if (tp2->fits_inside(tp)) {
+                        tp->polygons.clear();
+                    }
+                }               
+            } 
+            for (unsigned int j = 0; j < toolpaths[level]->toolpaths.size(); j++) {
+                if (toolpaths[level]->toolpaths[j]->polygons.size() == 0) {
+                    toolpaths[level]->toolpaths.erase(toolpaths[level]->toolpaths.begin() + j);
+                    j--;
+                }
+            }
+        }
     
-    /* skip level 0; we want the final contour cut to be special */
+
+        /* then for holes where "inside" is in the opposite direction */
+        for (level = 1; level  < toolpaths.size(); level++) {
+            if (!toolpaths[level]->is_optional)
+                continue;
+            for (auto tp : toolpaths[level]->toolpaths) {
+                if (!tp->is_hole)
+                    continue;
+            /* for each toolpath, check if there is a toolpath a level up that is inside this tp */
+                for (auto tp2 : toolpaths[level - 1]->toolpaths) {
+                    if (tp2->fits_inside(tp)) {
+                        tp->polygons.clear();
+                    }
+                }               
+            } 
+            for (unsigned int j = 0; j < toolpaths[level]->toolpaths.size(); j++) {
+                if (toolpaths[level]->toolpaths[j]->polygons.size() == 0) {
+                    toolpaths[level]->toolpaths.erase(toolpaths[level]->toolpaths.begin() + j);
+                    j--;
+                }
+            }
+        }
+    
+ 
+        /* step 2 : remove empty levels */
+        for (level = 0; level + 1 < toolpaths.size(); level++) {
+            if (!toolpaths[level]->is_optional)
+                continue;
+            if (toolpaths[level]->toolpaths.size() == 0) {
+                toolpaths.erase(toolpaths.begin() + level);
+                level--;
+            }
+        }
+    }
+    /* step 3 : consolidate outer "rings" into inner rings */
     for (level = 0; level + 1 < toolpaths.size(); level++) {
         for (auto tp : toolpaths[level]->toolpaths) {
             class toolpath *match = NULL;
             int valid = 1;
-            /* for each toolpath, check if there is exactly e toolpath a level up that is inside this tp */
+            /* for each toolpath, check if there is exactly one toolpath a level up that is inside this tp */
             for (auto tp2 : toolpaths[level + 1]->toolpaths) {
                 if (tp2->fits_inside(tp)) {
                     if (match != NULL)
@@ -269,7 +331,7 @@ void inputshape::consolidate_toolpaths(void)
                 }
             }   
             
-            if (valid && match && tp->is_hole == match->is_hole && tp->is_slotting == match->is_slotting) {
+            if (valid && match && tp->is_hole == match->is_hole && tp->is_slotting == match->is_slotting && tp->is_optional == match->is_optional) {
                 for (auto p: tp->polygons) {
                     match->add_polygon(p);
                 }

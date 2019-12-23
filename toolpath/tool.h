@@ -41,6 +41,7 @@ public:
         level = 0;
         is_hole = false;
         is_slotting = false;
+        is_optional = false;
         diameter = 0;
         start_vertex = 0;
         depth = 0;
@@ -48,12 +49,13 @@ public:
 
     int level;
 
-    double diameter; /* INCHES */
-    double depth; /* INCHES */
+    double diameter;
+    double depth;
     
     unsigned int start_vertex;
     bool is_hole;
     bool is_slotting;    
+    bool is_optional;
     
     void add_polygon(Polygon_2 *poly);
     bool fits_inside(class toolpath *shape);
@@ -96,7 +98,7 @@ public:
     
     /* the slotting level runs at a different speed and should not merge */
     bool is_slotting;
-
+    
     void print_as_svg(void);
     void output_gcode(void);
     

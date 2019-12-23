@@ -78,6 +78,7 @@ void toollevel::add_poly(Polygon_2 *poly, bool is_hole)
     tp->add_polygon(poly);
     tp->is_hole = is_hole;
     tp->is_slotting = is_slotting;
+    tp->is_optional = is_optional;
     tp->diameter = diameter;
     tp->depth = depth;
     tp->recalculate();
