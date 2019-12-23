@@ -15,10 +15,10 @@ static double dist(double X0, double Y0, double X1, double Y1)
 void toolpath::print_as_svg(const char *color)
 {
     double width = diameter * 0.125;
-    if (is_hole)
-        color = "red";
-    if (is_slotting)
-        color = "pink";
+//    if (is_hole)
+//        color = "red";
+//    if (is_slotting)
+//        color = "pink";
     if (is_optional) {
         color = "purple";
         width *= 3;

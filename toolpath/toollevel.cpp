@@ -25,6 +25,7 @@ void toollevel::print_as_svg(void)
     if (c > 200)
         c = 200;
         
+    c = 150;
         
     sprintf(color, "#%02x%02x%02x", c, c, c);
     sprintf(color2, "#%02x%02x%02x", c, c, 255);
