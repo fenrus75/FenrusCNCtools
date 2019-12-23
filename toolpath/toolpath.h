@@ -69,7 +69,10 @@ extern double gcode_current_X(void);
 extern double gcode_current_Y(void);
 extern void enable_finishing_pass(void);
 extern int get_finishing_pass(void);
-
+extern void read_tool_lib(const char *filename);
+extern int have_tool(int nr);
+extern void activate_tool(int nr);
+extern void print_tools(void);
 
 
 static inline double px_to_inch(double px) { return px / 96.0; };
@@ -80,5 +83,6 @@ static inline double inch_to_mm(double inch) { return 25.4 * inch; };
 static inline double mm_to_inch(double inch) { return inch / 25.4; };
 static inline double ipm_to_metric(double inch) { return 25.4 * inch; };
 
+extern int verbose;
 
 #endif

@@ -16,12 +16,21 @@ extern "C" {
 int verbose = 0;
 int want_skeleton_path = 0;
 
+void usage(void)
+{
+	printf("Usage:\n\ttoolpath [-f] [-s] [-t <nr] <file.svg>\n");
+	exit(EXIT_SUCCESS);
+}
+
 
 int main(int argc, char **argv)
 {
     int opt;
+    int tool = 102;
+    
+    read_tool_lib("toollib.csv");
 
-    while ((opt = getopt(argc, argv, "vfs")) != -1) {
+    while ((opt = getopt(argc, argv, "vfst:")) != -1) {
         switch (opt)
 	{
 			case 'v':
@@ -35,19 +44,28 @@ int main(int argc, char **argv)
 				want_skeleton_path = 1;
 				printf("Skeleton path enabled\n");
 				break;
+			case 't':
+				int arg;
+				arg = strtoull(optarg, NULL, 10);
+				if (have_tool(arg)) {
+					tool = arg;
+				} else {
+					printf("Unknown tool requested\n");
+					print_tools();
+				}
+				break;
 			
 			default:
-				printf("Usage:\n\ttoolpath [-f] <file.svg>\n");
-				return EXIT_SUCCESS;
+				usage();
 	}
     }
+	
+    activate_tool(tool);
 
     if (optind == argc) {
-        printf("Usage:\n\ttoolpath [-f] <file.svg>\n");
-        return EXIT_SUCCESS;
+    	usage();
     }
     
-    set_tool_imperial("T102", 0.125, 0.125/2, 0.045, 50, 15);
     set_rippem(15000);
     set_retract_height_imperial(0.06);
 
