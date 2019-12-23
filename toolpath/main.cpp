@@ -18,7 +18,7 @@ int want_skeleton_path = 0;
 
 void usage(void)
 {
-	printf("Usage:\n\ttoolpath [-f] [-s] [-t <nr] <file.svg>\n");
+	printf("Usage:\n\ttoolpath [-f] [-s] [-l <toollibrary.csv>] [-t <nr] <file.svg>\n");
 	exit(EXIT_SUCCESS);
 }
 
@@ -30,7 +30,7 @@ int main(int argc, char **argv)
     
     read_tool_lib("toollib.csv");
 
-    while ((opt = getopt(argc, argv, "vfst:")) != -1) {
+    while ((opt = getopt(argc, argv, "vfsl:t:")) != -1) {
         switch (opt)
 	{
 			case 'v':
@@ -44,6 +44,9 @@ int main(int argc, char **argv)
 				want_skeleton_path = 1;
 				printf("Skeleton path enabled\n");
 				break;
+			case 'l':
+				read_tool_lib(optarg);
+				break;	
 			case 't':
 				int arg;
 				arg = strtoull(optarg, NULL, 10);
