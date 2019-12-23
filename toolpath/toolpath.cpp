@@ -153,6 +153,14 @@ void toolpath::recalculate()
     double angle_i = -400;
     double length_i = -400;
     
+    length = 0.0;
+    for (i = 0; i < polygons[0]->size(); i++) {
+      unsigned int next = i + 1;
+      if (next >= polygons[0]->size())
+        next = 0;
+      length = length + dist( (*polygons[0])[i].x(), (*polygons[0])[i].y(), (*polygons[0])[next].x(), (*polygons[0])[next].y());
+    }
+    
     for (i = 0; i < polygons[0]->size(); i++) {
         double BC_x, BC_y, BA_x, BA_y;
         double BC_l, BA_l;

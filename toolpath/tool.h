@@ -57,6 +57,8 @@ public:
     bool is_slotting;    
     bool is_optional;
     
+    double length;
+    
     void add_polygon(Polygon_2 *poly);
     bool fits_inside(class toolpath *shape);
     double distance_from(double X, double Y);

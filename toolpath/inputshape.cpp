@@ -266,14 +266,22 @@ void inputshape::consolidate_toolpaths(void)
             if (!toolpaths[level]->is_optional)
                 continue;
             for (auto tp : toolpaths[level]->toolpaths) {
+                double len = 0.0;
+                double target = 0.0;
                 if (tp->is_hole)
                     continue;
                 /* for each toolpath, check if there is a toolpath a level up that is inside this tp */
                 for (auto tp2 : toolpaths[level + 1]->toolpaths) {
                     if (tp2->fits_inside(tp)) {
-                        tp->polygons.clear();
+                        len = len + tp2->length;
                     }
-                }               
+                }
+                target = tp->length - 8 * tp->diameter;
+                if (target <=0)
+                    target = 0.0;
+                if (len > target)               
+                        tp->polygons.clear();
+                
             } 
             for (unsigned int j = 0; j < toolpaths[level]->toolpaths.size(); j++) {
                 if (toolpaths[level]->toolpaths[j]->polygons.size() == 0) {
@@ -289,14 +297,21 @@ void inputshape::consolidate_toolpaths(void)
             if (!toolpaths[level]->is_optional)
                 continue;
             for (auto tp : toolpaths[level]->toolpaths) {
+                double len = 0.0;
+                double target = 0.0;
                 if (!tp->is_hole)
                     continue;
             /* for each toolpath, check if there is a toolpath a level up that is inside this tp */
                 for (auto tp2 : toolpaths[level - 1]->toolpaths) {
                     if (tp2->fits_inside(tp)) {
-                        tp->polygons.clear();
+                        len = len + tp2->length;
                     }
                 }               
+                target = tp->length - 8 * tp->diameter;
+                if (target <=0)
+                    target = 0.0;
+                if (len > target)               
+                        tp->polygons.clear();
             } 
             for (unsigned int j = 0; j < toolpaths[level]->toolpaths.size(); j++) {
                 if (toolpaths[level]->toolpaths[j]->polygons.size() == 0) {
