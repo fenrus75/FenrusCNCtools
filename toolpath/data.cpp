@@ -152,7 +152,6 @@ void create_toolpaths(int tool, double depth)
   double depthstep;
   double surplus;
   int finish = 0;
-  
   activate_tool(tool);
   
   depthstep = get_tool_maxdepth();
@@ -166,13 +165,13 @@ void create_toolpaths(int tool, double depth)
 
   if (get_finishing_pass()) {
     /* finishing rules: deepest cut is small */
-    depthstep = fmin(depthstep, mm_to_inch(0.25));
+    depthstep = fmin(depthstep, 0.25);
     finish  = 1;
   }
-  
+
   while (currentdepth < 0) {
     for (auto i : shapes)
-      i->create_toolpaths(currentdepth, finish);
+      i->create_toolpaths(currentdepth, finish, want_inbetween_paths);
     currentdepth += depthstep;
     depthstep = get_tool_maxdepth();
     if (finish)

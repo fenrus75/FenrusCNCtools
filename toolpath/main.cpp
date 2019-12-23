@@ -15,6 +15,7 @@ extern "C" {
 
 int verbose = 0;
 int want_skeleton_path = 0;
+int want_inbetween_paths = 0;
 
 void usage(void)
 {
@@ -30,7 +31,7 @@ int main(int argc, char **argv)
     
     read_tool_lib("toollib.csv");
 
-    while ((opt = getopt(argc, argv, "vfsl:t:")) != -1) {
+    while ((opt = getopt(argc, argv, "vfsil:t:")) != -1) {
         switch (opt)
 	{
 			case 'v':
@@ -43,6 +44,10 @@ int main(int argc, char **argv)
 			case 's':
 				want_skeleton_path = 1;
 				printf("Skeleton path enabled\n");
+				break;
+			case 'i':
+				want_inbetween_paths = 1;
+				printf("Inbetween paths enabled\n");
 				break;
 			case 'l':
 				read_tool_lib(optarg);

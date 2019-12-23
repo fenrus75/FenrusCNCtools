@@ -123,7 +123,7 @@ public:
     bool fits_inside(class inputshape *shape);
 
 
-    void create_toolpaths(double depth, int finish_pass);
+    void create_toolpaths(double depth, int finish_pass, int is_optional);
     void consolidate_toolpaths(void);
 
     double area;
@@ -145,6 +145,7 @@ private:
 };
 
 extern int want_skeleton_path;
+extern int want_inbetween_paths;
 
 
 #endif

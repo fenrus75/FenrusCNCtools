@@ -131,7 +131,7 @@ bool inputshape::fits_inside(class inputshape *shape)
 }
 
 
-void inputshape::create_toolpaths(double depth, int finish_pass)
+void inputshape::create_toolpaths(double depth, int finish_pass, int want_optional)
 {
     int level = 0;
     double diameter = get_tool_diameter();
@@ -215,7 +215,7 @@ void inputshape::create_toolpaths(double depth, int finish_pass)
                 break; /* fixme: memleak */
  
         toolpaths.push_back(tool);       
-        if (level == 0)
+        if (level == 0 || want_optional)
             inset += stepover / 2;
         else
             inset += stepover;
