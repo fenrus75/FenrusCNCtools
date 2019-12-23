@@ -146,17 +146,21 @@ void process_nesting(void)
   }
 }
 
-void create_toolpaths(double depth)
+void create_toolpaths(int tool, double depth)
 {
   double currentdepth = depth;
-  double depthstep = get_tool_maxdepth(); /* inches */
+  double depthstep;
   double surplus;
   int finish = 0;
+  
+  activate_tool(tool);
+  
+  depthstep = get_tool_maxdepth();
 
   int rounds = (int)ceilf(-depth / depthstep);
   surplus = rounds * depthstep + depth;
   
-  /* we have spare height, split evenly between first and last cut */
+  /* if we have spare height, split evenly between first and last cut */
   depthstep = depthstep - surplus / 2;
 
 

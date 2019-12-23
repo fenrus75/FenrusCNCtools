@@ -63,8 +63,6 @@ int main(int argc, char **argv)
 	}
     }
 	
-    activate_tool(tool);
-
     if (optind == argc) {
     	usage();
     }
@@ -77,7 +75,7 @@ int main(int argc, char **argv)
 		
 		process_nesting();
 		
-		create_toolpaths(inch_to_mm(-0.044));
+		create_toolpaths(tool, inch_to_mm(-0.044));
 		consolidate_toolpaths();
 		
 		write_svg("output.svg");
