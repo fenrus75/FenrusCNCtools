@@ -17,6 +17,8 @@ int verbose = 0;
 int want_skeleton_path = 0;
 int want_inbetween_paths = 0;
 
+static int depth;
+
 void usage(void)
 {
 	printf("Usage:\n\ttoolpath [-f] [-s] [-l <toollibrary.csv>] [-t <nr] <file.svg>\n");
@@ -30,8 +32,10 @@ int main(int argc, char **argv)
     int tool = 102;
     
     read_tool_lib("toollib.csv");
+    
+    depth = inch_to_mm(0.044);
 
-    while ((opt = getopt(argc, argv, "vfsil:t:")) != -1) {
+    while ((opt = getopt(argc, argv, "vfsil:t:d:D:")) != -1) {
         switch (opt)
 	{
 			case 'v':
@@ -52,6 +56,12 @@ int main(int argc, char **argv)
 			case 'l':
 				read_tool_lib(optarg);
 				break;	
+			case 'd': /* inch */
+				depth = inch_to_mm(strtod(optarg, NULL));
+				break;
+			case 'D': /* metric mm*/
+				depth = strtod(optarg, NULL);
+				break;
 			case 't':
 				int arg;
 				arg = strtoull(optarg, NULL, 10);
@@ -80,7 +90,7 @@ int main(int argc, char **argv)
 		
 		process_nesting();
 		
-		create_toolpaths(tool, inch_to_mm(-0.044));
+		create_toolpaths(tool, -depth);
 		consolidate_toolpaths();
 		
 		write_svg("output.svg");
