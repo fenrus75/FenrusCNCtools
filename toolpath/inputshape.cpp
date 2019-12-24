@@ -133,7 +133,7 @@ bool inputshape::fits_inside(class inputshape *shape)
 }
 
 
-void inputshape::create_toolpaths(int toolnr, double depth, int finish_pass, int want_optional)
+void inputshape::create_toolpaths(int toolnr, double depth, int finish_pass, int want_optional, double start_inset, double end_inset)
 {
     int level = 0;
     double diameter = get_tool_diameter();
@@ -152,7 +152,7 @@ void inputshape::create_toolpaths(int toolnr, double depth, int finish_pass, int
     iss =  CGAL::create_interior_straight_skeleton_2(*polyhole);
     
     /* first inset is the radius (half diameter) of the tool, after that increment by stepover */
-    inset = diameter/2;
+    inset = start_inset + diameter/2;
     
     /* finish_pass is -1 for all layers above the bottom layer IF finishing is enabled */
     if (finish_pass == -1)
@@ -226,6 +226,8 @@ void inputshape::create_toolpaths(int toolnr, double depth, int finish_pass, int
             inset += stepover / 2;
         else
             inset += stepover;
+        if (inset > end_inset)
+            break;
         level ++;
         
     } while (1);

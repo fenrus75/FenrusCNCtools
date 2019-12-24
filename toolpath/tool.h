@@ -131,7 +131,7 @@ public:
     bool fits_inside(class inputshape *shape);
 
 
-    void create_toolpaths(int toolnr, double depth, int finish_pass, int is_optional);
+    void create_toolpaths(int toolnr, double depth, int finish_pass, int is_optional, double start_inset, double end_inset);
     void consolidate_toolpaths(void);
 
     double area;

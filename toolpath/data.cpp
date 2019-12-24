@@ -185,7 +185,7 @@ void create_toolpaths(double depth)
 
   while (currentdepth < 0) {
     for (auto i : shapes)
-      i->create_toolpaths(tool, currentdepth, finish, want_inbetween_paths);
+      i->create_toolpaths(tool, currentdepth, finish, want_inbetween_paths, 0.0, 6000000);
     currentdepth += depthstep;
     depthstep = get_tool_maxdepth();
     if (finish)
