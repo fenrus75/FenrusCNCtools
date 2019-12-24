@@ -160,39 +160,46 @@ void process_nesting(void)
 
 void create_toolpaths(double depth)
 {
-  double currentdepth = depth;
+  double currentdepth;
   double depthstep;
   double surplus;
   int finish = 0;
-  int tool = toollist[0];
+  int toolnr;
+  int tool;
   
-  activate_tool(tool);
+  tool = toollist.size() -1;
+  while (tool >= 0) {
+    currentdepth = depth;
+    toolnr = toollist[tool];  
+    activate_tool(toolnr);
   
-  depthstep = get_tool_maxdepth();
-
-  int rounds = (int)ceilf(-depth / depthstep);
-  surplus = rounds * depthstep + depth;
-  
-  /* if we have spare height, split evenly between first and last cut */
-  depthstep = depthstep - surplus / 2;
-
-
-  if (get_finishing_pass()) {
-    /* finishing rules: deepest cut is small */
-    depthstep = fmin(depthstep, 0.25);
-    finish  = 1;
-  }
-
-  while (currentdepth < 0) {
-    for (auto i : shapes)
-      i->create_toolpaths(tool, currentdepth, finish, want_inbetween_paths, 0.0, 6000000);
-    currentdepth += depthstep;
     depthstep = get_tool_maxdepth();
-    if (finish)
-      finish = -1;
+
+    int rounds = (int)ceilf(-depth / depthstep);
+    surplus = rounds * depthstep + depth;
+  
+    /* if we have spare height, split evenly between first and last cut */
+    depthstep = depthstep - surplus / 2;
+
+
+    if (get_finishing_pass()) {
+      /* finishing rules: deepest cut is small */
+      depthstep = fmin(depthstep, 0.25);
+      finish  = 1;
+    }
+
+    while (currentdepth < 0) {
+      for (auto i : shapes)
+        i->create_toolpaths(toolnr, currentdepth, finish, want_inbetween_paths, 0.0, 6000000);
+      currentdepth += depthstep;
+      depthstep = get_tool_maxdepth();
+      if (finish)
+        finish = -1;
+    }
+    
+    tool--;
   }
 }
-
 void consolidate_toolpaths()
 {
   for (auto i : shapes)
