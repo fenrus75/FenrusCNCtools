@@ -60,7 +60,7 @@ void inputshape::print_as_svg(void)
     for (auto i : children)
         i->print_as_svg();
 
-    for (auto i =  toolpaths.rbegin(); i != toolpaths.rend(); ++i)
+    for (auto i =  tooldepths.rbegin(); i != tooldepths.rend(); ++i)
         (*i)->print_as_svg();
 
 }
@@ -68,7 +68,7 @@ void inputshape::print_as_svg(void)
 void inputshape::output_gcode(int tool)
 {
     gcode_write_comment("Shape");
-    for (auto i =  toolpaths.rbegin(); i != toolpaths.rend(); ++i) {
+    for (auto i =  tooldepths.rbegin(); i != tooldepths.rend(); ++i) {
         if ((*i)->toolnr == tool || tool == 0)
             (*i)->output_gcode();
     }
@@ -165,6 +165,12 @@ void inputshape::create_toolpaths(int toolnr, double depth, int finish_pass, int
     if (finish_pass == 1)
         stepover = stepover / sqrt(2);
         
+    class tooldepth * td = new(class tooldepth);
+    tooldepths.push_back(td);
+    td->depth = depth;
+    td->toolnr = toolnr;
+    td->diameter = diameter;
+    
     do {
         class toollevel *tool = new(class toollevel);
         int added = 0;
@@ -223,7 +229,7 @@ void inputshape::create_toolpaths(int toolnr, double depth, int finish_pass, int
         if (!added)
                 break; /* fixme: memleak */
  
-        toolpaths.push_back(tool);       
+        td->toollevels.push_back(tool);       
         if (level == 0 || want_optional)
             inset += stepover / 2;
         else
@@ -233,7 +239,6 @@ void inputshape::create_toolpaths(int toolnr, double depth, int finish_pass, int
         level ++;
         
     } while (1);
-    
     if (skeleton.size() > 0 && want_skeleton_path) {
         class toollevel *tool = new(class toollevel);       
         tool->level = level;
@@ -241,7 +246,7 @@ void inputshape::create_toolpaths(int toolnr, double depth, int finish_pass, int
         tool->name = "Bisector Slotting";
         tool->diameter = diameter;
         tool->depth = depth;
-        toolpaths.push_back(tool);
+        td->toollevels.push_back(tool);
         for (auto ss : skeleton) {
             for (auto x = ss->halfedges_begin(); x != ss->halfedges_end(); ++x) {
                     if (x->is_inner_bisector()) {
@@ -266,19 +271,20 @@ void inputshape::consolidate_toolpaths(void)
 {
     unsigned int level;
 
-    if (want_inbetween_paths) {    
+    if (want_inbetween_paths) {  
+      for (auto td : tooldepths) {  
         /* step 1 : eliminate redundant optional paths */	
         /* first for not holes */
-        for (level = 0; level + 1 < toolpaths.size(); level++) {
-            if (!toolpaths[level]->is_optional)
+        for (level = 0; level + 1 < td->toollevels.size(); level++) {
+            if (!td->toollevels[level]->is_optional)
                 continue;
-            for (auto tp : toolpaths[level]->toolpaths) {
+            for (auto tp : td->toollevels[level]->toolpaths) {
                 double len = 0.0;
                 double target = 0.0;
                 if (tp->is_hole)
                     continue;
                 /* for each toolpath, check if there is a toolpath a level up that is inside this tp */
-                for (auto tp2 : toolpaths[level + 1]->toolpaths) {
+                for (auto tp2 : td->toollevels[level + 1]->toolpaths) {
                     if (tp2->fits_inside(tp)) {
                         len = len + tp2->length;
                     }
@@ -290,9 +296,9 @@ void inputshape::consolidate_toolpaths(void)
                         tp->polygons.clear();
                 
             } 
-            for (unsigned int j = 0; j < toolpaths[level]->toolpaths.size(); j++) {
-                if (toolpaths[level]->toolpaths[j]->polygons.size() == 0) {
-                    toolpaths[level]->toolpaths.erase(toolpaths[level]->toolpaths.begin() + j);
+            for (unsigned int j = 0; j < td->toollevels[level]->toolpaths.size(); j++) {
+                if (td->toollevels[level]->toolpaths[j]->polygons.size() == 0) {
+                    td->toollevels[level]->toolpaths.erase(td->toollevels[level]->toolpaths.begin() + j);
                     j--;
                 }
             }
@@ -300,16 +306,16 @@ void inputshape::consolidate_toolpaths(void)
     
 
         /* then for holes where "inside" is in the opposite direction */
-        for (level = 1; level  < toolpaths.size(); level++) {
-            if (!toolpaths[level]->is_optional)
+        for (level = 1; level  < td->toollevels.size(); level++) {
+            if (!td->toollevels[level]->is_optional)
                 continue;
-            for (auto tp : toolpaths[level]->toolpaths) {
+            for (auto tp : td->toollevels[level]->toolpaths) {
                 double len = 0.0;
                 double target = 0.0;
                 if (!tp->is_hole)
                     continue;
             /* for each toolpath, check if there is a toolpath a level up that is inside this tp */
-                for (auto tp2 : toolpaths[level - 1]->toolpaths) {
+                for (auto tp2 : td->toollevels[level - 1]->toolpaths) {
                     if (tp2->fits_inside(tp)) {
                         len = len + tp2->length;
                     }
@@ -320,9 +326,9 @@ void inputshape::consolidate_toolpaths(void)
                 if (len > target)               
                         tp->polygons.clear();
             } 
-            for (unsigned int j = 0; j < toolpaths[level]->toolpaths.size(); j++) {
-                if (toolpaths[level]->toolpaths[j]->polygons.size() == 0) {
-                    toolpaths[level]->toolpaths.erase(toolpaths[level]->toolpaths.begin() + j);
+            for (unsigned int j = 0; j < td->toollevels[level]->toolpaths.size(); j++) {
+                if (td->toollevels[level]->toolpaths[j]->polygons.size() == 0) {
+                    td->toollevels[level]->toolpaths.erase(td->toollevels[level]->toolpaths.begin() + j);
                     j--;
                 }
             }
@@ -330,22 +336,24 @@ void inputshape::consolidate_toolpaths(void)
     
  
         /* step 2 : remove empty levels */
-        for (level = 0; level + 1 < toolpaths.size(); level++) {
-            if (!toolpaths[level]->is_optional)
+        for (level = 0; level + 1 < td->toollevels.size(); level++) {
+            if (!td->toollevels[level]->is_optional)
                 continue;
-            if (toolpaths[level]->toolpaths.size() == 0) {
-                toolpaths.erase(toolpaths.begin() + level);
+            if (td->toollevels[level]->toolpaths.size() == 0) {
+                td->toollevels.erase(td->toollevels.begin() + level);
                 level--;
             }
         }
+      }
     }
     /* step 3 : consolidate outer "rings" into inner rings */
-    for (level = 0; level + 1 < toolpaths.size(); level++) {
-        for (auto tp : toolpaths[level]->toolpaths) {
+   for (auto td : tooldepths) {  
+     for (level = 0; level + 1 < td->toollevels.size(); level++) {
+        for (auto tp : td->toollevels[level]->toolpaths) {
             class toolpath *match = NULL;
             int valid = 1;
             /* for each toolpath, check if there is exactly one toolpath a level up that is inside this tp */
-            for (auto tp2 : toolpaths[level + 1]->toolpaths) {
+            for (auto tp2 : td->toollevels[level + 1]->toolpaths) {
                 if (tp2->fits_inside(tp)) {
                     if (match != NULL)
                         valid = 0;
@@ -360,7 +368,6 @@ void inputshape::consolidate_toolpaths(void)
                 tp->polygons.clear();
             }         
         }        
+      }
     }
-   for (auto x : toolpaths)
-       x->sort_if_slotting();
 }

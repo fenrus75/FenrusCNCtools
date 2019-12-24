@@ -111,6 +111,35 @@ public:
     void sort_if_slotting(void);
 };
 
+class tooldepth {
+public:
+
+    tooldepth() {
+        level = 0;
+        is_slotting = false;
+        diameter = 0.0;
+        name = "unknown";
+        depth = 0.0;
+        toolnr = 0;
+    }
+    int level;
+    int toolnr;
+    const char *name;
+    double diameter;
+    double depth;
+    
+    void add_poly(Polygon_2 *poly, bool is_hole);
+    vector<class toollevel*> toollevels;
+    
+    /* the slotting level runs at a different speed and should not merge */
+    bool is_slotting;
+    
+    void print_as_svg(void);
+    void output_gcode(void);
+    
+    void sort_if_slotting(void);
+};
+
 class inputshape {
 public:
     inputshape() {
@@ -145,7 +174,7 @@ private:
     vector<SsPtr>	skeleton;
     SsPtr iss;
     
-    vector<class toollevel*> toolpaths;
+    vector<class tooldepth*> tooldepths;
     
     double bbX1, bbY1, bbX2, bbY2;
 
