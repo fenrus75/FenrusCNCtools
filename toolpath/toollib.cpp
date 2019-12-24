@@ -8,6 +8,9 @@ extern "C" {
     #include "toolpath.h"
 }
 
+static const char *colors[8] = {"darkgray", "green", "blue", "purple", "orange", "yellow", "cyan", "red"};
+static int colornr;
+
 #include <vector>
 
 using namespace std;
@@ -15,6 +18,7 @@ using namespace std;
 struct tool {
     int number;
     const char *name;
+    const char *svgcolor;
     double diameter_inch;
     double depth_inch;
     double feedrate_ipm;
@@ -90,6 +94,9 @@ void print_tools(void)
 
 static void finish_tool(void)
 {
+    current->svgcolor = colors[colornr++];
+    if (colornr >= 8)
+        colornr = 0;
     tools.push_back(current);
     if (verbose) {
         print_tool(current);
@@ -97,6 +104,13 @@ static void finish_tool(void)
     current = NULL;
 }
 
+const char * tool_svgcolor(int toolnr)
+{
+    for (auto tool : tools)
+        if (tool->number == toolnr)
+            return tool->svgcolor;
+    return "black";
+}
 static void parse_line(char *line)
 {
     char word[4096];

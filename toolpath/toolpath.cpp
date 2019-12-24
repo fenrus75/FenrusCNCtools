@@ -14,17 +14,18 @@ static double dist(double X0, double Y0, double X1, double Y1)
 
 void toolpath::print_as_svg(const char *color)
 {
-    double width = diameter * 0.125;
+    double width = diameter * 0.333;
 //    if (is_hole)
 //        color = "red";
 //    if (is_slotting)
 //        color = "pink";
     if (is_optional) {
         color = "purple";
-        width *= 3;
     }
     for (auto i : polygons) {
         print_polygon(i, color, width);
+        for (unsigned int j = 0; j < i->size(); j++)
+          svg_circle((*i)[j].x(), (*i)[j].y(), width/2, color, 0);
 #if 0
         if (start_vertex < i->size() && i->size() > 2) {
           svg_circle((*i)[start_vertex].x(), (*i)[start_vertex].y(), diameter/2, "red", 0.5);

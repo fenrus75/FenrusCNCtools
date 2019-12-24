@@ -75,6 +75,7 @@ extern void activate_tool(int nr);
 extern void print_tools(void);
 extern void push_tool(int toolnr);
 extern void set_default_tool(int toolnr);
+extern const char * tool_svgcolor(int toolnr);
 
 
 static inline double px_to_inch(double px) { return px / 96.0; };

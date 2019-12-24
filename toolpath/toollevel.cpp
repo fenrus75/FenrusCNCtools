@@ -17,28 +17,12 @@ static inline double dist(double X0, double Y0, double X1, double Y1)
 
 void toollevel::print_as_svg(void)
 {
-    char color[32], color2[32];
-    int c;
-    int xi = 0;
+    const char *color;
     
-    c = level * 16;
-    if (c > 200)
-        c = 200;
-        
-    c = 150;
-        
-    sprintf(color, "#%02x%02x%02x", c, c, c);
-    sprintf(color2, "#%02x%02x%02x", c, c, 255);
-    if (is_slotting) {
-        sprintf(color, "purple\" marker-end=\"url(#arrow)");
-    }
+    color = tool_svgcolor(toolnr);
+    
     for (auto i : toolpaths) {
-        c = xi * 8;
-        if (c > 255) c = c & 255;
-        if (is_slotting)
-            sprintf(color, "#%02x%02x%02x", c, 128, 0);
         i->print_as_svg(color);
-        xi++;
     }
 }
 

@@ -26,12 +26,12 @@ void svg_line(double X1, double Y1, double X2, double Y2, const char *color, dou
 		svgscale * (mm_to_px(X2) - minX), 
 		svgscale * (maxY-mm_to_px(Y2)),
 		color,
-		width);
+		mm_to_px(width));
 }
 
 void svg_circle(double X1, double Y1, double radius, const char * color, double width)
 {
-	fprintf(output, "<circle cx=\"%5.2f\" cy=\"%5.2f\" r=\"%5.2f\"  stroke=\"%s\" stroke-width=\"%f\" />\n", 
+	fprintf(output, "<circle cx=\"%5.2f\" cy=\"%5.2f\" r=\"%5.2f\"  fill=\"%s\" stroke-width=\"%f\" />\n", 
 		svgscale * (mm_to_px(X1) - minX), 
 		svgscale * (maxY-mm_to_px(Y1)), 
 		svgscale * mm_to_px(radius), 
