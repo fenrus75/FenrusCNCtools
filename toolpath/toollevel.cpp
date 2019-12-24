@@ -83,6 +83,7 @@ void toollevel::add_poly(Polygon_2 *poly, bool is_hole)
     tp->diameter = diameter;
     tp->depth = depth;
     tp->recalculate();
+    tp->toolnr = toolnr;
     
     /* check if the same path is already there if we're slotting */
     if (is_slotting) {

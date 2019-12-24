@@ -65,14 +65,16 @@ void inputshape::print_as_svg(void)
 
 }
 
-void inputshape::output_gcode(void)
+void inputshape::output_gcode(int tool)
 {
     gcode_write_comment("Shape");
-    for (auto i =  toolpaths.rbegin(); i != toolpaths.rend(); ++i)
-        (*i)->output_gcode();
+    for (auto i =  toolpaths.rbegin(); i != toolpaths.rend(); ++i) {
+        if ((*i)->toolnr == tool || tool == 0)
+            (*i)->output_gcode();
+    }
         
     for (auto i : children)
-        i->output_gcode();
+        i->output_gcode(tool);
 }
 void inputshape::add_point(double X, double Y)
 {
@@ -131,7 +133,7 @@ bool inputshape::fits_inside(class inputshape *shape)
 }
 
 
-void inputshape::create_toolpaths(double depth, int finish_pass, int want_optional)
+void inputshape::create_toolpaths(int toolnr, double depth, int finish_pass, int want_optional)
 {
     int level = 0;
     double diameter = get_tool_diameter();
@@ -170,6 +172,7 @@ void inputshape::create_toolpaths(double depth, int finish_pass, int want_option
         tool->offset = inset;
         tool->diameter = diameter;
         tool->depth = depth;
+        tool->toolnr = toolnr;
         
         if (want_optional && (level > 1) && ((level & 1) == 0))
             tool->is_optional = 1;
@@ -346,7 +349,7 @@ void inputshape::consolidate_toolpaths(void)
                 }
             }   
             
-            if (valid && match && tp->is_hole == match->is_hole && tp->is_slotting == match->is_slotting && tp->is_optional == match->is_optional) {
+            if (valid && match && tp->is_hole == match->is_hole && tp->is_slotting == match->is_slotting && tp->is_optional == match->is_optional && tp->toolnr == match->toolnr) {
                 for (auto p: tp->polygons) {
                     match->add_polygon(p);
                 }

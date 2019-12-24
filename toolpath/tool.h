@@ -45,9 +45,11 @@ public:
         diameter = 0;
         start_vertex = 0;
         depth = 0;
+        toolnr = 0;
     }
 
     int level;
+    int toolnr;
 
     double diameter;
     double depth;
@@ -84,8 +86,10 @@ public:
         diameter = 0.0;
         name = "unknown";
         depth = 0.0;
+        toolnr = 0;
     }
     int level;
+    int toolnr;
     double offset; /* offset used to create this level */
     const char *name;
     double diameter;
@@ -122,12 +126,12 @@ public:
 
     void fix_orientation(void);
     void print_as_svg(void);
-    void output_gcode(void);
+    void output_gcode(int tool);
     
     bool fits_inside(class inputshape *shape);
 
 
-    void create_toolpaths(double depth, int finish_pass, int is_optional);
+    void create_toolpaths(int toolnr, double depth, int finish_pass, int is_optional);
     void consolidate_toolpaths(void);
 
     double area;

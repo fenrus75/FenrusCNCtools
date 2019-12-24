@@ -67,6 +67,7 @@ int main(int argc, char **argv)
 				arg = strtoull(optarg, NULL, 10);
 				if (have_tool(arg)) {
 					tool = arg;
+					push_tool(tool);
 				} else {
 					printf("Unknown tool requested\n");
 					print_tools();
@@ -84,13 +85,14 @@ int main(int argc, char **argv)
     
     set_rippem(15000);
     set_retract_height_imperial(0.06);
+    set_default_tool(tool);
 
     for(; optind < argc; optind++) {      
 		parse_svg_file(argv[optind]);
 		
 		process_nesting();
 		
-		create_toolpaths(tool, -depth);
+		create_toolpaths(-depth);
 		consolidate_toolpaths();
 		
 		write_svg("output.svg");

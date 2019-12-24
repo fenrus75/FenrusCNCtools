@@ -11,12 +11,13 @@ extern "C" {
   #include "toolpath.h"
 }
 
+static vector<int> toollist;
+
 
 static vector<class inputshape *> shapes;
 
 static class inputshape *shape;
 static double minX = 10000, minY = 10000, maxY = -10000, maxX = -10000;
-
 
 
 static bool compare_shape(class inputshape *A, class inputshape *B)
@@ -74,6 +75,17 @@ void end_poly(void)
   sort(shapes.begin(), shapes.end(), compare_shape);
 }
 
+void push_tool(int toolnr)
+{
+  toollist.push_back(toolnr);
+}
+
+void set_default_tool(int toolnr)
+{
+  if (toollist.size() > 0)
+    return;
+  toollist.push_back(toolnr);
+}
 
 void write_svg(const char *filename)
 {
@@ -93,7 +105,7 @@ void write_gcode(const char *filename)
   write_gcode_header(filename);
   
   for (auto i : shapes) {
-    i->output_gcode();
+    i->output_gcode(0);
   }
   
   write_gcode_footer();
@@ -146,12 +158,14 @@ void process_nesting(void)
   }
 }
 
-void create_toolpaths(int tool, double depth)
+void create_toolpaths(double depth)
 {
   double currentdepth = depth;
   double depthstep;
   double surplus;
   int finish = 0;
+  int tool = toollist[0];
+  
   activate_tool(tool);
   
   depthstep = get_tool_maxdepth();
@@ -171,7 +185,7 @@ void create_toolpaths(int tool, double depth)
 
   while (currentdepth < 0) {
     for (auto i : shapes)
-      i->create_toolpaths(currentdepth, finish, want_inbetween_paths);
+      i->create_toolpaths(tool, currentdepth, finish, want_inbetween_paths);
     currentdepth += depthstep;
     depthstep = get_tool_maxdepth();
     if (finish)
