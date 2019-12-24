@@ -60,8 +60,8 @@ void inputshape::print_as_svg(void)
     for (auto i : children)
         i->print_as_svg();
 
-    for (auto i : toolpaths)
-        i->print_as_svg();
+    for (auto i =  toolpaths.rbegin(); i != toolpaths.rend(); ++i)
+        (*i)->print_as_svg();
 
 }
 
