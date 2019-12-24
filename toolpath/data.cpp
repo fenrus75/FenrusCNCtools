@@ -103,9 +103,15 @@ void write_svg(const char *filename)
 void write_gcode(const char *filename)
 {
   write_gcode_header(filename);
+  int j;
   
-  for (auto i : shapes) {
-    i->output_gcode(0);
+  for (j = toollist.size() -1 ; j>=0 ; j--) {
+    for (auto i : shapes) {
+      i->output_gcode(toollist[j]);
+    }
+    if (j > 0)
+          gcode_tool_change(toollist[j-1]);
+    
   }
   
   write_gcode_footer();
@@ -199,8 +205,6 @@ void create_toolpaths(double depth)
     if (tool > 0)
       end = 2 * get_tool_stepover(toollist[tool-1]) + 2 * get_tool_stepover(toollist[tool]);
       
-    printf("Contouring from %5.2f to %5.2f with tool %i\n", start, end, toolnr);
-
     while (currentdepth < 0) {
       for (auto i : shapes)
         i->create_toolpaths(toolnr, currentdepth, finish, want_inbetween_paths, start, end);

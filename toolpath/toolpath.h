@@ -77,6 +77,7 @@ extern void push_tool(int toolnr);
 extern void set_default_tool(int toolnr);
 extern const char * tool_svgcolor(int toolnr);
 extern double get_tool_stepover(int toolnr);
+extern void gcode_tool_change(int toolnr);
 
 
 static inline double px_to_inch(double px) { return px / 96.0; };
