@@ -49,7 +49,7 @@ extern void consolidate_toolpaths(void);
 extern void set_tool_imperial(const char *name, double diameter_inch, double stepover_inch, double maxdepth_inch, double feedrate_ipm, double plungerate_ipm);
 extern void set_tool_metric(const char *name, double diameter_mm, double stepover_mm, double maxdepth_mm, double feedrate_mmpm, double plungerate_mmpm);
 extern double get_tool_diameter(void);
-extern double get_tool_stepover(void);
+extern double get_tool_stepover_gcode(void);
 extern double get_tool_maxdepth(void);
 extern void set_retract_height_imperial(double _rh_inch);
 extern void set_retract_height_metric(double _rh_mm);
@@ -76,6 +76,7 @@ extern void print_tools(void);
 extern void push_tool(int toolnr);
 extern void set_default_tool(int toolnr);
 extern const char * tool_svgcolor(int toolnr);
+extern double get_tool_stepover(int toolnr);
 
 
 static inline double px_to_inch(double px) { return px / 96.0; };

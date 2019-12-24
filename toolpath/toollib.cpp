@@ -111,6 +111,16 @@ const char * tool_svgcolor(int toolnr)
             return tool->svgcolor;
     return "black";
 }
+
+double get_tool_stepover(int toolnr)
+{
+    for (auto tool : tools)
+        if (tool->number == toolnr)
+            return inch_to_mm( tool->diameter_inch/2);
+    return 0.125;
+}
+
+
 static void parse_line(char *line)
 {
     char word[4096];

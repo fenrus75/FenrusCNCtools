@@ -169,6 +169,7 @@ void create_toolpaths(double depth)
   
   tool = toollist.size() -1;
   while (tool >= 0) {
+    double start, end;
     currentdepth = depth;
     toolnr = toollist[tool];  
     activate_tool(toolnr);
@@ -187,10 +188,22 @@ void create_toolpaths(double depth)
       depthstep = fmin(depthstep, 0.25);
       finish  = 1;
     }
+    
+    start = 0;
+    end = 60000000;
+    
+    /* we want courser tools to not get within the stepover of the finer tool */
+    if (tool < (int)toollist.size() -1)
+      start = get_tool_stepover(toollist[tool+1]);
+      
+    if (tool > 0)
+      end = 2 * get_tool_stepover(toollist[tool-1]) + 2 * get_tool_stepover(toollist[tool]);
+      
+    printf("Contouring from %5.2f to %5.2f with tool %i\n", start, end, toolnr);
 
     while (currentdepth < 0) {
       for (auto i : shapes)
-        i->create_toolpaths(toolnr, currentdepth, finish, want_inbetween_paths, 0.0, 6000000);
+        i->create_toolpaths(toolnr, currentdepth, finish, want_inbetween_paths, start, end);
       currentdepth += depthstep;
       depthstep = get_tool_maxdepth();
       if (finish)

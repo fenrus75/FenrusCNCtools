@@ -57,7 +57,7 @@ double get_tool_diameter(void)
     return tool_diameter;
 }
 
-double get_tool_stepover(void)
+double get_tool_stepover_gcode(void)
 {
     return tool_stepover;
 }

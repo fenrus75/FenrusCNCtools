@@ -137,9 +137,8 @@ void inputshape::create_toolpaths(int toolnr, double depth, int finish_pass, int
 {
     int level = 0;
     double diameter = get_tool_diameter();
-    double stepover = get_tool_stepover();
+    double stepover = get_tool_stepover(toolnr);
     double inset;
-    SsPtr iss;
     
     
     
@@ -149,7 +148,10 @@ void inputshape::create_toolpaths(int toolnr, double depth, int finish_pass, int
           polyhole->add_hole(i->poly);
     }
     
-    iss =  CGAL::create_interior_straight_skeleton_2(*polyhole);
+    if (!iss) {
+        iss =  CGAL::create_interior_straight_skeleton_2(*polyhole);
+        printf("Interior created\n");
+    }
     
     /* first inset is the radius (half diameter) of the tool, after that increment by stepover */
     inset = start_inset + diameter/2;

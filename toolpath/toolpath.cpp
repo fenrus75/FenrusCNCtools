@@ -19,9 +19,9 @@ void toolpath::print_as_svg(const char *color)
 //        color = "red";
 //    if (is_slotting)
 //        color = "pink";
-    if (is_optional) {
-        color = "purple";
-    }
+//    if (is_optional) {
+//        color = "purple";
+//    }
     for (auto i : polygons) {
         print_polygon(i, color, width);
         for (unsigned int j = 0; j < i->size(); j++)

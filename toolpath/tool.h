@@ -116,6 +116,7 @@ public:
     inputshape() {
         level = 0;
         polyhole = NULL;
+        iss = NULL;
     }
     void set_level(int _level);
     void add_child(class inputshape *child);
@@ -142,6 +143,7 @@ private:
 
     PolygonWithHoles *polyhole;
     vector<SsPtr>	skeleton;
+    SsPtr iss;
     
     vector<class toollevel*> toolpaths;
     
