@@ -159,7 +159,6 @@ void inputshape::create_toolpaths(int toolnr, double depth, int finish_pass, int
     
     if (!iss) {
         iss =  CGAL::create_interior_straight_skeleton_2(*polyhole);
-        printf("Interior created\n");
     }
     
     /* first inset is the radius (half diameter) of the tool, after that increment by stepover */
@@ -197,8 +196,6 @@ void inputshape::create_toolpaths(int toolnr, double depth, int finish_pass, int
         if (want_optional && (level > 1) && ((level & 1) == 0))
             tool->is_optional = 1;
             
-        printf("RING %i\n", toolnr);
-                
         PolygonWithHolesPtrVector  offset_polygons;
 //        offset_polygons = CGAL::create_interior_skeleton_and_offset_polygons_with_holes_2(inset, *polyhole);
 
@@ -293,7 +290,6 @@ void inputshape::create_toolpaths_vcarve(int toolnr, double angle)
     
     if (!iss) {
         iss =  CGAL::create_interior_straight_skeleton_2(*polyhole);
-        printf("Interior created\n");
     }
     
     class tooldepth * td = new(class tooldepth);

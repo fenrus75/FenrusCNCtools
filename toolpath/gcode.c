@@ -40,7 +40,6 @@ void set_tool_imperial(const char *name, double diameter_inch, double stepover_i
     tool_maxdepth = inch_to_mm(maxdepth_inch);
     tool_feedrate = ipm_to_metric(feedrate_ipm);
     tool_plungerate = ipm_to_metric(plungerate_ipm);
-    printf("FEEDRATE %5.2f\n", tool_feedrate);
 }
 
 void set_tool_metric(const char *name, double diameter_mm, double stepover_mm, double maxdepth_mm, double feedrate_metric, double plungerate_metric)
@@ -51,7 +50,6 @@ void set_tool_metric(const char *name, double diameter_mm, double stepover_mm, d
     tool_maxdepth = maxdepth_mm;
     tool_feedrate = feedrate_metric;
     tool_plungerate = plungerate_metric;
-    printf("FEEDRATE %5.2f\n", tool_feedrate);
 }
 
 double get_tool_diameter(void)
