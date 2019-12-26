@@ -20,6 +20,11 @@ double point_snap(double D)
     int i = (int)(D * 10 + 0.5);
     return i / 10.0;
 }
+double point_snap2(double D)
+{
+    int i = (int)(D * 100 + 0.5);
+    return i / 100.0;
+}
 
 void inputshape::set_level(int _level)
 {
@@ -315,12 +320,12 @@ void inputshape::create_toolpaths_vcarve(int toolnr)
     
     for (auto x = iss->halfedges_begin(); x != iss->halfedges_end(); ++x) {
             double X1, Y1, X2, Y2, d1, d2;
-            X1 = x->vertex()->point().x();
-            Y1 = x->vertex()->point().y();
+            X1 = point_snap2(x->vertex()->point().x());
+            Y1 = point_snap2(x->vertex()->point().y());
             d1 = distance_from_edge(X1, Y1);
             
-            X2 = point_snap(x->opposite()->vertex()->point().x());
-            Y2 = point_snap(x->opposite()->vertex()->point().y());
+            X2 = point_snap2(x->opposite()->vertex()->point().x());
+            Y2 = point_snap2(x->opposite()->vertex()->point().y());
             d2 = distance_from_edge(X2, Y2);
             if (x->is_bisector()) {
                 if (X1 != X2 || Y1 != Y2) {
