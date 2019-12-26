@@ -80,6 +80,7 @@ public:
 private:
     void output_gcode_slotting(void);
     void output_gcode_reverse(void);
+    void output_gcode_vcarve(void);
 };
 
 class toollevel {
@@ -177,7 +178,7 @@ public:
 
 
     void create_toolpaths(int toolnr, double depth, int finish_pass, int is_optional, double start_inset, double end_inset);
-    void create_toolpaths_vcarve(int toolnr, double angle);
+    void create_toolpaths_vcarve(int toolnr);
     void consolidate_toolpaths(void);
 
     double area;
@@ -196,7 +197,7 @@ private:
 
     
     Polygon_2 poly;    
-    
+    double distance_from_edge(double X, double Y);
 };
 
 extern int want_skeleton_path;

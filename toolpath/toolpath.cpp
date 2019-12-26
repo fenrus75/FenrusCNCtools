@@ -39,6 +39,10 @@ void toolpath::output_gcode(void)
   double speed = 1.0;
   double lX = -100000;
   double lY = -100000;
+  if (is_vcarve) {
+    output_gcode_vcarve();
+    return;
+  }
   if (is_slotting) {
     output_gcode_slotting();
     return;
@@ -67,6 +71,22 @@ void toolpath::output_gcode(void)
       gcode_mill_to(vi2.x(), vi2.y() - get_minY(), depth, speed);
       lX = vi2.x();
       lY = vi2.y();
+    }
+    speed = 1.0;
+  }
+}
+
+void toolpath::output_gcode_vcarve(void)
+{
+  double speed = 1.0;
+    
+  for (auto poly : polygons) {
+    if (depth > depth2) {
+      gcode_vconditional_travel_to((*poly)[0].x(), (*poly)[0].y() - get_minY(), depth, speed);
+      gcode_vmill_to((*poly)[1].x(), (*poly)[1].y() - get_minY(), depth2, speed);
+    } else {
+      gcode_vconditional_travel_to((*poly)[1].x(), (*poly)[1].y() - get_minY(), depth2, speed);
+      gcode_vmill_to((*poly)[0].x(), (*poly)[0].y() - get_minY(), depth, speed);
     }
     speed = 1.0;
   }

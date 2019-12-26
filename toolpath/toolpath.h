@@ -57,10 +57,12 @@ extern void set_rippem(double _rippem);
 extern void write_gcode_header(const char *filename);
 extern void write_gcode_footer(void);
 extern void gcode_mill_to(double X, double Y, double Z, double speedratio);
+extern void gcode_vmill_to(double X, double Y, double Z, double speedratio);
 extern void gcode_plunge_to(double Z, double speedratio);
 extern void gcode_retract(void);
 extern void gcode_travel_to(double X, double Y);
 extern void gcode_conditional_travel_to(double X, double Y, double Z, double speed);
+extern void gcode_vconditional_travel_to(double X, double Y, double Z, double speed);
 extern void gcode_write_comment(const char *comment);
 extern double get_minX(void);
 extern double get_minY(void);
@@ -78,6 +80,9 @@ extern void set_default_tool(int toolnr);
 extern const char * tool_svgcolor(int toolnr);
 extern double get_tool_stepover(int toolnr);
 extern void gcode_tool_change(int toolnr);
+extern double get_tool_angle(int toolnr);
+extern int tool_is_vcarve(int toolnr);
+
 
 
 static inline double px_to_inch(double px) { return px / 96.0; };

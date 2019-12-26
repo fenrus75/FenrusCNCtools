@@ -152,6 +152,26 @@ void gcode_mill_to(double X, double Y, double Z, double speedratio)
     mill_count++;
 }
 
+void gcode_vmill_to(double X, double Y, double Z, double speedratio)
+{
+
+    fprintf(gcode, "G1");
+    if (cX != X)
+        fprintf(gcode,"X%5.4f", X);
+    if (cY != Y)
+        fprintf(gcode,"Y%5.4f", Y);
+    if (cZ != Z)
+        fprintf(gcode,"Z%5.4f", Z);
+    if (cS != speedratio * tool_feedrate)
+        fprintf(gcode, "F%i", (int)(speedratio * tool_feedrate));
+    cX = X;
+    cY = Y;
+    cZ = Z;
+    cS = speedratio * tool_feedrate;
+    fprintf(gcode, "\n");
+    mill_count++;
+}
+
 void gcode_travel_to(double X, double Y)
 {
 
@@ -185,6 +205,18 @@ void gcode_conditional_travel_to(double X, double Y, double Z, double speed)
     gcode_travel_to(X, Y);
     if (Z > 0)
         gcode_plunge_to(Z, speed);
+        
+}
+
+void gcode_vconditional_travel_to(double X, double Y, double Z, double speed)
+{
+    if (cX == X && cY == Y && cZ == Z)
+        return;
+        
+    gcode_travel_to(X, Y);
+    if (Z > 0)
+        gcode_plunge_to(Z, speed);
+        
 }
 
 void gcode_write_comment(const char *comment)

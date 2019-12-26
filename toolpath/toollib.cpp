@@ -23,6 +23,8 @@ struct tool {
     double depth_inch;
     double feedrate_ipm;
     double plungerate_ipm;
+    double angle;
+    bool is_vcarve;
 };
 
 static vector<struct tool *> tools;
@@ -69,6 +71,11 @@ static void push_word(char *word, int level)
         current->name = strdup(word);
     if (level == 6)
         current->diameter_inch = strtod(word, NULL);
+    if (level == 10) {
+        current->angle = strtod(word, NULL);
+        if (current->angle > 0)
+            current->is_vcarve = true;
+    }
     if (level == 21)
         current->depth_inch = strtod(word, NULL);
     if (level == 19)
@@ -121,6 +128,25 @@ double get_tool_stepover(int toolnr)
             return inch_to_mm( tool->diameter_inch/2);
     return 0.125;
 }
+
+int tool_is_vcarve(int toolnr)
+{
+    toolnr = abs(toolnr);
+    for (auto tool : tools)
+        if (tool->number == toolnr && tool->is_vcarve)
+            return 1;
+    return 0;
+}
+
+double get_tool_angle(int toolnr)
+{
+    toolnr = abs(toolnr);
+    for (auto tool : tools)
+        if (tool->number == toolnr)
+            return tool->angle;
+    return 0;
+}
+
 
 
 static void parse_line(char *line)

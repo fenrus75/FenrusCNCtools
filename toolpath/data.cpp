@@ -205,13 +205,19 @@ void create_toolpaths(double depth)
     if (tool > 0)
       end = 2 * get_tool_stepover(toollist[tool-1]) + 2 * get_tool_stepover(toollist[tool]);
       
-    while (currentdepth < 0) {
-      for (auto i : shapes)
-        i->create_toolpaths(toolnr, currentdepth, finish, want_inbetween_paths, start, end);
-      currentdepth += depthstep;
-      depthstep = get_tool_maxdepth();
-      if (finish)
-        finish = -1;
+    if (tool_is_vcarve(toolnr)) {
+        for (auto i : shapes)
+          i->create_toolpaths_vcarve(toolnr);
+      
+    } else {
+      while (currentdepth < 0) {
+        for (auto i : shapes)
+          i->create_toolpaths(toolnr, currentdepth, finish, want_inbetween_paths, start, end);
+        currentdepth += depthstep;
+        depthstep = get_tool_maxdepth();
+        if (finish)
+          finish = -1;
+      }
     }
     
     tool--;

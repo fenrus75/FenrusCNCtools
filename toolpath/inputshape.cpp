@@ -10,6 +10,11 @@
 /* todo: get rid of this addiction to print.h */
 #include "print.h"
 
+static inline double dist(double X0, double Y0, double X1, double Y1)
+{
+  return sqrt((X1-X0)*(X1-X0) + (Y1-Y0)*(Y1-Y0));
+}
+
 double point_snap(double D)
 {
     int i = (int)(D * 10 + 0.5);
@@ -278,15 +283,15 @@ void inputshape::create_toolpaths(int toolnr, double depth, int finish_pass, int
     }
 }
 
-void inputshape::create_toolpaths_vcarve(int toolnr, double angle)
+void inputshape::create_toolpaths_vcarve(int toolnr)
 {
-    int level = 0;
-    
     if (!polyhole) {
         polyhole = new PolygonWithHoles(poly);
         for (auto i : children)
           polyhole->add_hole(i->poly);
     }
+    
+    printf("VCarve toolpath\n");
     
     if (!iss) {
         iss =  CGAL::create_interior_straight_skeleton_2(*polyhole);
@@ -294,29 +299,28 @@ void inputshape::create_toolpaths_vcarve(int toolnr, double angle)
     
     class tooldepth * td = new(class tooldepth);
     tooldepths.push_back(td);
-    td->depth = 0;
     td->toolnr = toolnr;
     
     class toollevel *tool = new(class toollevel);       
-    tool->level = level;
-    tool->is_slotting = true;
     tool->name = "VCarve path";
+    tool->toolnr = toolnr;
     td->toollevels.push_back(tool);
     
-    for (auto ss : skeleton) {
-            for (auto x = ss->halfedges_begin(); x != ss->halfedges_end(); ++x) {
-                        double X1, Y1, X2, Y2;
-                        X1 = point_snap(x->vertex()->point().x());
-                        Y1 = point_snap(x->vertex()->point().y());
-                        X2 = point_snap(x->opposite()->vertex()->point().x());
-                        Y2 = point_snap(x->opposite()->vertex()->point().y());
-                        if (X1 != X2 || Y1 != Y2) {
+    for (auto x = iss->halfedges_begin(); x != iss->halfedges_end(); ++x) {
+            double X1, Y1, X2, Y2, d1, d2;
+            X1 = x->vertex()->point().x();
+            Y1 = x->vertex()->point().y();
+            d1 = distance_from_edge(X1, Y1);
+            
+            X2 = point_snap(x->opposite()->vertex()->point().x());
+            Y2 = point_snap(x->opposite()->vertex()->point().y());
+            d2 = distance_from_edge(X2, Y2);
+            if (X1 != X2 || Y1 != Y2) {
                             Polygon_2 *p = new(Polygon_2);
                             p->push_back(Point(X1, Y1));
                             p->push_back(Point(X2, Y2));
-                            tool->add_poly(p, false);
-                        }
-                    }
+                            tool->add_poly_vcarve(p, -d1, -d2);
+            }
     }
 }
 
@@ -424,4 +428,21 @@ void inputshape::consolidate_toolpaths(void)
         }        
       }
     }
+}
+
+
+double inputshape::distance_from_edge(double X, double Y)
+{
+    double bestdist = 1000000000;
+    for(auto p = poly.vertices_begin() ; p != poly.vertices_end() ; ++ p ) {
+        double d = dist(X, Y, p->x(), p->y());
+        if (d < bestdist)
+            bestdist= d;
+    }
+    for (auto c : children) {
+        double d = c->distance_from_edge(X, Y);
+        if (d < bestdist)
+            bestdist = d;
+    }
+    return bestdist;
 }
