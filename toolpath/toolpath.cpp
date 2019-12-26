@@ -43,6 +43,11 @@ void toolpath::output_gcode(void)
     output_gcode_slotting();
     return;
   }
+  
+  if (run_reverse) {
+    output_gcode_reverse();
+    return;
+  }
     
   for (auto poly : polygons) {
     unsigned int i;
@@ -56,19 +61,53 @@ void toolpath::output_gcode(void)
       auto vi2 = (*poly)[next];
       
       if (i == 0 && dist(lX,lY, vi.x(), vi.y()) < diameter * 0.75) {
-        gcode_mill_to(vi.x(), vi.y() - get_minY(), depth, speed * 0.667);
+        gcode_mill_to(vi.x(), vi.y() - get_minY(), depth, speed * 0.5);
       }
       gcode_conditional_travel_to(vi.x(), vi.y() - get_minY(), depth, speed);
       gcode_mill_to(vi2.x(), vi2.y() - get_minY(), depth, speed);
       lX = vi2.x();
       lY = vi2.y();
     }
+    speed = 1.0;
+  }
+}
+
+void toolpath::output_gcode_reverse(void)
+{
+  double speed = 1.0;
+  double lX = -100000;
+  double lY = -100000;
+  
+  if (level == 0)
+    speed = 0.5;
+    
+  for (auto ppoly =  polygons.rbegin(); ppoly != polygons.rend(); ++ppoly) {  
+    auto poly = *ppoly;
+    unsigned int i;
+    for (i = 0; i < poly->size(); i++) {
+      int current;
+      int next;
+      current = (i + start_vertex) % poly->size();
+      next = (current + 1) % poly->size();
+      
+      auto vi = (*poly)[current];
+      auto vi2 = (*poly)[next];
+      
+      if (i == 0 && dist(lX,lY, vi.x(), vi.y()) < diameter * 0.75) {
+        gcode_mill_to(vi.x(), vi.y() - get_minY(), depth, speed * 0.5);
+      }
+      gcode_conditional_travel_to(vi.x(), vi.y() - get_minY(), depth, speed);
+      gcode_mill_to(vi2.x(), vi2.y() - get_minY(), depth, speed);
+      lX = vi2.x();
+      lY = vi2.y();
+    }
+    speed = 1.0;
   }
 }
 
 void toolpath::output_gcode_slotting(void)
 {
-  double speed = 0.666;
+  double speed = 0.5;
     
   for (auto poly : polygons) {
     if (poly->size() == 2) {

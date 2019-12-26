@@ -106,6 +106,7 @@ static void finish_tool(void)
 
 const char * tool_svgcolor(int toolnr)
 {
+    toolnr = abs(toolnr);
     for (auto tool : tools)
         if (tool->number == toolnr)
             return tool->svgcolor;
@@ -114,6 +115,7 @@ const char * tool_svgcolor(int toolnr)
 
 double get_tool_stepover(int toolnr)
 {
+    toolnr = abs(toolnr);
     for (auto tool : tools)
         if (tool->number == toolnr)
             return inch_to_mm( tool->diameter_inch/2);
@@ -177,6 +179,7 @@ void read_tool_lib(const char *filename)
 
 int have_tool(int nr)
 {
+    nr = abs(nr);
     for (auto tool : tools)
         if (tool->number == nr)
             return 1;
@@ -186,6 +189,7 @@ int have_tool(int nr)
 void activate_tool(int nr)
 {
     char toolnr[32];
+    nr = abs(nr);
     for (auto tool : tools)
         if (tool->number == nr) {
             sprintf(toolnr, "T%i", tool->number);

@@ -42,12 +42,13 @@ public:
         is_hole = false;
         is_slotting = false;
         is_optional = false;
+        is_vcarve = false;
+        run_reverse = false;
         diameter = 0;
         start_vertex = 0;
         depth = 0;
         depth2 = 0;
         toolnr = 0;
-        is_vcarve = false;
     }
 
     int level;
@@ -62,6 +63,7 @@ public:
     bool is_slotting;    
     bool is_optional;
     bool is_vcarve;
+    bool run_reverse;
     
     double length;
     
@@ -77,6 +79,7 @@ public:
     vector<Polygon_2*> polygons;
 private:
     void output_gcode_slotting(void);
+    void output_gcode_reverse(void);
 };
 
 class toollevel {
@@ -87,6 +90,7 @@ public:
         offset = 0.0;
         is_optional = false;
         is_slotting = false;
+        run_reverse = false;
         diameter = 0.0;
         name = "unknown";
         depth = 0.0;
@@ -110,6 +114,9 @@ public:
     /* the slotting level runs at a different speed and should not merge */
     bool is_slotting;
     
+    /* run the toolpath outside in */
+    bool run_reverse;
+    
     void print_as_svg(void);
     void output_gcode(void);
     
@@ -122,6 +129,7 @@ public:
     tooldepth() {
         level = 0;
         is_slotting = false;
+        run_reverse = false;
         diameter = 0.0;
         name = "unknown";
         depth = 0.0;
@@ -138,6 +146,8 @@ public:
     
     /* the slotting level runs at a different speed and should not merge */
     bool is_slotting;
+    /* run outside in */
+    bool run_reverse;
     
     void print_as_svg(void);
     void output_gcode(void);

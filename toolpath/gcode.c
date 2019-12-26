@@ -40,6 +40,7 @@ void set_tool_imperial(const char *name, double diameter_inch, double stepover_i
     tool_maxdepth = inch_to_mm(maxdepth_inch);
     tool_feedrate = ipm_to_metric(feedrate_ipm);
     tool_plungerate = ipm_to_metric(plungerate_ipm);
+    printf("FEEDRATE %5.2f\n", tool_feedrate);
 }
 
 void set_tool_metric(const char *name, double diameter_mm, double stepover_mm, double maxdepth_mm, double feedrate_metric, double plungerate_metric)
@@ -50,6 +51,7 @@ void set_tool_metric(const char *name, double diameter_mm, double stepover_mm, d
     tool_maxdepth = maxdepth_mm;
     tool_feedrate = feedrate_metric;
     tool_plungerate = plungerate_metric;
+    printf("FEEDRATE %5.2f\n", tool_feedrate);
 }
 
 double get_tool_diameter(void)
@@ -114,7 +116,7 @@ void gcode_plunge_to(double Z, double speedratio)
     if (cZ != Z)
         fprintf(gcode,"Z%5.4f", Z);
     if (cS != speedratio)
-        fprintf(gcode, "F%i", (int) ipm_to_metric(speedratio * tool_plungerate) );
+        fprintf(gcode, "F%i", (int)(speedratio * tool_plungerate) );
     cZ = Z;
     cS = speedratio * tool_plungerate;
     fprintf(gcode, "\n");
@@ -143,7 +145,7 @@ void gcode_mill_to(double X, double Y, double Z, double speedratio)
     if (cZ != Z)
         fprintf(gcode,"Z%5.4f", Z);
     if (cS != speedratio * tool_feedrate)
-        fprintf(gcode, "F%i", (int)ipm_to_metric(speedratio * tool_feedrate));
+        fprintf(gcode, "F%i", (int)(speedratio * tool_feedrate));
     cX = X;
     cY = Y;
     cZ = Z;

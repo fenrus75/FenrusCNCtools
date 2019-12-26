@@ -20,8 +20,14 @@ void tooldepth::print_as_svg(void)
 
 void tooldepth::output_gcode(void)
 {
-    for (auto i =  toollevels.rbegin(); i != toollevels.rend(); ++i) {
-      (*i)->output_gcode();
+    if (!run_reverse) {
+      for (auto i =  toollevels.rbegin(); i != toollevels.rend(); ++i) {
+        (*i)->output_gcode();
+      }
+    } else {
+      for (auto i =  toollevels.begin(); i != toollevels.end(); ++i) {
+        (*i)->output_gcode();
+      }
     }
 
 }

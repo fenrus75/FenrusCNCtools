@@ -67,6 +67,7 @@ void inputshape::print_as_svg(void)
 
 void inputshape::output_gcode(int tool)
 {
+    tool = abs(tool);
     gcode_write_comment("Shape");
     for (auto i =  tooldepths.rbegin(); i != tooldepths.rend(); ++i) {
         if ((*i)->toolnr == tool || tool == 0)
@@ -137,8 +138,16 @@ void inputshape::create_toolpaths(int toolnr, double depth, int finish_pass, int
 {
     int level = 0;
     double diameter = get_tool_diameter();
-    double stepover = get_tool_stepover(toolnr);
+    double stepover;
     double inset;
+    bool reverse;
+    
+    if (toolnr < 0) {
+        reverse = true;
+        toolnr = abs(toolnr);
+    }
+    
+    stepover = get_tool_stepover(toolnr);
     
     
     
@@ -170,6 +179,7 @@ void inputshape::create_toolpaths(int toolnr, double depth, int finish_pass, int
     td->depth = depth;
     td->toolnr = toolnr;
     td->diameter = diameter;
+    td->run_reverse = reverse;
     
     do {
         class toollevel *tool = new(class toollevel);
@@ -181,10 +191,13 @@ void inputshape::create_toolpaths(int toolnr, double depth, int finish_pass, int
         tool->diameter = diameter;
         tool->depth = depth;
         tool->toolnr = toolnr;
+        tool->run_reverse = reverse;
         tool->name = "Pocketing";
         
         if (want_optional && (level > 1) && ((level & 1) == 0))
             tool->is_optional = 1;
+            
+        printf("RING %i\n", toolnr);
                 
         PolygonWithHolesPtrVector  offset_polygons;
 //        offset_polygons = CGAL::create_interior_skeleton_and_offset_polygons_with_holes_2(inset, *polyhole);
