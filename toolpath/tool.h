@@ -45,7 +45,9 @@ public:
         diameter = 0;
         start_vertex = 0;
         depth = 0;
+        depth2 = 0;
         toolnr = 0;
+        is_vcarve = false;
     }
 
     int level;
@@ -53,11 +55,13 @@ public:
 
     double diameter;
     double depth;
+    double depth2; /* for vcarving */
     
     unsigned int start_vertex;
     bool is_hole;
     bool is_slotting;    
     bool is_optional;
+    bool is_vcarve;
     
     double length;
     
@@ -96,6 +100,7 @@ public:
     double depth;
     
     void add_poly(Polygon_2 *poly, bool is_hole);
+    void add_poly_vcarve(Polygon_2 *poly, double depth1, double depth2);
     vector<class toolpath*> toolpaths;
     
     /* for in-between paths, if a path has even deeper paths it will be optimized go away eventually */
@@ -162,6 +167,7 @@ public:
 
 
     void create_toolpaths(int toolnr, double depth, int finish_pass, int is_optional, double start_inset, double end_inset);
+    void create_toolpaths_vcarve(int toolnr, double angle);
     void consolidate_toolpaths(void);
 
     double area;

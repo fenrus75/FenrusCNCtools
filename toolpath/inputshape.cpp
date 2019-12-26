@@ -181,6 +181,7 @@ void inputshape::create_toolpaths(int toolnr, double depth, int finish_pass, int
         tool->diameter = diameter;
         tool->depth = depth;
         tool->toolnr = toolnr;
+        tool->name = "Pocketing";
         
         if (want_optional && (level > 1) && ((level & 1) == 0))
             tool->is_optional = 1;
@@ -266,6 +267,50 @@ void inputshape::create_toolpaths(int toolnr, double depth, int finish_pass, int
         }
     }
 }
+
+void inputshape::create_toolpaths_vcarve(int toolnr, double angle)
+{
+    int level = 0;
+    
+    if (!polyhole) {
+        polyhole = new PolygonWithHoles(poly);
+        for (auto i : children)
+          polyhole->add_hole(i->poly);
+    }
+    
+    if (!iss) {
+        iss =  CGAL::create_interior_straight_skeleton_2(*polyhole);
+        printf("Interior created\n");
+    }
+    
+    class tooldepth * td = new(class tooldepth);
+    tooldepths.push_back(td);
+    td->depth = 0;
+    td->toolnr = toolnr;
+    
+    class toollevel *tool = new(class toollevel);       
+    tool->level = level;
+    tool->is_slotting = true;
+    tool->name = "VCarve path";
+    td->toollevels.push_back(tool);
+    
+    for (auto ss : skeleton) {
+            for (auto x = ss->halfedges_begin(); x != ss->halfedges_end(); ++x) {
+                        double X1, Y1, X2, Y2;
+                        X1 = point_snap(x->vertex()->point().x());
+                        Y1 = point_snap(x->vertex()->point().y());
+                        X2 = point_snap(x->opposite()->vertex()->point().x());
+                        Y2 = point_snap(x->opposite()->vertex()->point().y());
+                        if (X1 != X2 || Y1 != Y2) {
+                            Polygon_2 *p = new(Polygon_2);
+                            p->push_back(Point(X1, Y1));
+                            p->push_back(Point(X2, Y2));
+                            tool->add_poly(p, false);
+                        }
+                    }
+    }
+}
+
 
 void inputshape::consolidate_toolpaths(void)
 {
