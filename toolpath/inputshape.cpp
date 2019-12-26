@@ -283,8 +283,15 @@ void inputshape::create_toolpaths(int toolnr, double depth, int finish_pass, int
     }
 }
 
+
+static double radius_to_depth(double r, double angle)
+{
+    return -r * tan(angle/360.0 * 3.1415);
+}
+
 void inputshape::create_toolpaths_vcarve(int toolnr)
 {
+    double angle = get_tool_angle(toolnr);
     if (!polyhole) {
         polyhole = new PolygonWithHoles(poly);
         for (auto i : children)
@@ -315,11 +322,13 @@ void inputshape::create_toolpaths_vcarve(int toolnr)
             X2 = point_snap(x->opposite()->vertex()->point().x());
             Y2 = point_snap(x->opposite()->vertex()->point().y());
             d2 = distance_from_edge(X2, Y2);
-            if (X1 != X2 || Y1 != Y2) {
+            if (x->is_bisector()) {
+                if (X1 != X2 || Y1 != Y2) {
                             Polygon_2 *p = new(Polygon_2);
                             p->push_back(Point(X1, Y1));
                             p->push_back(Point(X2, Y2));
-                            tool->add_poly_vcarve(p, -d1, -d2);
+                            tool->add_poly_vcarve(p, radius_to_depth(d1, angle), radius_to_depth(d2, angle));
+                }
             }
     }
 }
