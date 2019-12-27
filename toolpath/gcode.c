@@ -250,6 +250,6 @@ void gcode_tool_change(int toolnr)
  gcode_retract();
  fprintf(gcode, "M5\n");
  activate_tool(toolnr); 
- fprintf(gcode, "M6 T%i\n", toolnr);
+ fprintf(gcode, "M6 T%i\n", abs(toolnr));
  fprintf(gcode, "M3 S%i\n", (int)rippem);  
 }

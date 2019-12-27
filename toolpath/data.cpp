@@ -102,15 +102,20 @@ void write_svg(const char *filename)
 
 void write_gcode(const char *filename)
 {
+  activate_tool(toollist[0]);
   write_gcode_header(filename);
-  int j;
+  unsigned int j;
   
-  for (j = toollist.size() -1 ; j>=0 ; j--) {
+  printf("Tool list is %i \n", toollist.size());
+  for (j = 0; j < toollist.size() ; j++) {
+    printf("Managing tool %i\n", toollist[j]);
     for (auto i : shapes) {
       i->output_gcode(toollist[j]);
     }
-    if (j > 0)
-          gcode_tool_change(toollist[j-1]);
+    if (j < toollist.size() - 1) {
+          printf("Changing to %i\n", toollist[j + 1]);
+          gcode_tool_change(toollist[j + 1]);
+    }
     
   }
   
