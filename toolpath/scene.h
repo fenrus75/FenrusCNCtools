@@ -61,6 +61,9 @@ public:
         void enable_skeleton_paths(void);
         bool want_skeleton_paths(void);
         void set_filename(const char *f) { filename = strdup(f);};
+        
+        class scene * scene_from_vcarve(class scene *input, double depth, int toolnr);
+
 
         
 private:

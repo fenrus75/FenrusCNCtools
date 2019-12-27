@@ -281,3 +281,13 @@ scene::scene(const char *filename)
        filename = strdup(filename);
        parse_svg_file(this, filename);
 }
+
+class scene * scene::scene_from_vcarve(class scene *input, double depth, int toolnr)
+{
+  class scene *scene = input;
+  for (auto i : shapes)
+    scene = i->scene_from_vcarve(scene, depth, toolnr);
+
+  scene->process_nesting();    
+  return scene;
+}

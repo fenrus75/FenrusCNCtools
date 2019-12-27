@@ -196,6 +196,8 @@ public:
     
     void set_name(const char *n);
     void set_minY(double mY);
+    
+    class scene * scene_from_vcarve(class scene *input, double depth, int toolnr);
 
 private:
     const char *name;

@@ -31,7 +31,7 @@ int main(int argc, char **argv)
     int opt;
     int tool = 102;
     
-    class scene *scene;
+    class scene *scene, *vscene = NULL;
     
     scene = new(class scene);
     
@@ -102,5 +102,8 @@ int main(int argc, char **argv)
 		scene->write_svg("output.svg");
 		scene->write_gcode("output.nc");
     }
+    
+    vscene = scene->scene_from_vcarve(NULL, -depth, 302);
+    vscene->write_svg("vcarve.svg");
     return EXIT_SUCCESS;
 }

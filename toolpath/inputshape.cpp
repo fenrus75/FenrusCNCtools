@@ -473,3 +473,34 @@ void inputshape::set_minY(double mY)
 {
     minY = mY;
 }
+
+
+class scene * inputshape::scene_from_vcarve(class scene *input, double depth, int toolnr)
+{
+    class scene *scene;
+    
+    if (input)
+        scene = input;
+    else
+        scene = new(class scene);
+    scene->set_filename("from scene_from_vcarve");    
+    
+    /* step 1: clone our poly into the new scene */
+    for(auto vi = poly.vertices_begin() ; vi != poly.vertices_end() ; ++ vi ) {
+        scene->add_point_to_poly(vi->x(), vi->y());
+    }
+    scene->end_poly();
+    
+    /* step 2: and clone all our children as well, but instruct them not to inset by setting toolnr to 0 */
+    for (auto i : children)
+        scene = i->scene_from_vcarve(scene, 0.0, 0);
+
+        
+    if (depth != 0.0 && toolnr > 0) {
+        /* step 3: create an inset path */
+    
+        /* step 4: add the inset paths to the new scene */
+    }
+    
+    return scene;
+}
