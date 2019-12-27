@@ -82,6 +82,37 @@ static void quadratic_bezier(double x0, double y0,
     add_point_to_poly(px_to_mm(x3), px_to_mm(y3));
 }                    
 
+
+/*
+<circle cx="440.422" cy="312.878" r="12" stroke="black" stroke-width="1" fill="none" />
+*/
+static void parse_circle(char *line)
+{
+    char *cx, *cy, *r;
+    double X,Y,R,phi;
+    cx = strstr(line, "cx=\"");
+    cy = strstr(line, "cy=\"");
+    r = strstr(line, "r=\"");
+    if (!cx || !cy || !r) {
+        printf("Failed to parse circle: %s\n", line);
+        return;
+    }
+    end_poly();
+    set_poly_name("circle");
+    X = strtod(cx + 4, NULL);
+    Y = strtod(cy + 4, NULL);
+    R = strtod(r + 3, NULL);
+    phi = 0;
+    while (phi < 360) {
+        double P;
+        P = phi / 360.0 * 2 * M_PI;
+        add_point_to_poly(px_to_mm(X + R * cos(P)), px_to_mm(-Y + R * sin(P)));
+        phi = phi + 1;
+    }
+    last_X = X;
+    last_Y = Y;
+}
+
 static void push_chunk(char *chunk, char *line)
 {
     char command;
@@ -184,6 +215,11 @@ static void parse_line(char *line)
     if (c) {
         height = strtod(c+8, NULL);
         declare_minY(px_to_mm(-height));
+    }
+    
+    c = strstr(line,"<circle cx=");
+    if (c) {
+        parse_circle(line);
     }
     c = strstr(line, " d=\"");
     if (c == NULL)

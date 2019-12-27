@@ -82,7 +82,7 @@ extern double get_tool_stepover(int toolnr);
 extern void gcode_tool_change(int toolnr);
 extern double get_tool_angle(int toolnr);
 extern int tool_is_vcarve(int toolnr);
-
+extern void set_poly_name(const char *n);
 
 
 static inline double px_to_inch(double px) { return px / 96.0; };

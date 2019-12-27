@@ -291,7 +291,7 @@ void inputshape::create_toolpaths(int toolnr, double depth, int finish_pass, int
 
 static double radius_to_depth(double r, double angle)
 {
-    return -r * tan(angle/360.0 * 3.1415);
+    return -r * tan(angle/360.0 * M_PI);
 }
 
 void inputshape::create_toolpaths_vcarve(int toolnr)
@@ -459,4 +459,9 @@ double inputshape::distance_from_edge(double X, double Y)
             bestdist = d;
     }
     return bestdist;
+}
+
+void inputshape::set_name(const char *n)
+{
+    name = strdup(n);
 }

@@ -162,6 +162,7 @@ public:
         level = 0;
         polyhole = NULL;
         iss = NULL;
+        name = "unknown";
     }
     void set_level(int _level);
     void add_child(class inputshape *child);
@@ -184,8 +185,11 @@ public:
     double area;
     int level;
     vector<class inputshape*> children;
+    
+    void set_name(const char *n);
 
 private:
+    const char *name;
 
     PolygonWithHoles *polyhole;
     vector<SsPtr>	skeleton;

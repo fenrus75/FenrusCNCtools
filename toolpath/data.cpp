@@ -53,6 +53,13 @@ void new_poly(double X, double Y)
   add_point_to_poly(X, Y);
 }
 
+void set_poly_name(const char *n)
+{
+  if (!shape)
+    shape = new(class inputshape);
+  shape->set_name(n);
+}
+
 void add_point_to_poly(double X, double Y)
 {
   if (!shape)
@@ -106,14 +113,11 @@ void write_gcode(const char *filename)
   write_gcode_header(filename);
   unsigned int j;
   
-  printf("Tool list is %i \n", toollist.size());
   for (j = 0; j < toollist.size() ; j++) {
-    printf("Managing tool %i\n", toollist[j]);
     for (auto i : shapes) {
       i->output_gcode(toollist[j]);
     }
     if (j < toollist.size() - 1) {
-          printf("Changing to %i\n", toollist[j + 1]);
           gcode_tool_change(toollist[j + 1]);
     }
     
@@ -210,11 +214,13 @@ void create_toolpaths(double depth)
     if (tool > 0)
       end = 2 * get_tool_stepover(toollist[tool-1]) + 2 * get_tool_stepover(toollist[tool]);
       
+      
     if (tool_is_vcarve(toolnr)) {
         for (auto i : shapes)
           i->create_toolpaths_vcarve(toolnr);
       
     } else {
+      printf("Tool %i goes from %5.2f mm to %5.2f mm\n", toolnr, start, end);
       while (currentdepth < 0) {
         for (auto i : shapes)
           i->create_toolpaths(toolnr, currentdepth, finish, want_inbetween_paths, start, end);
