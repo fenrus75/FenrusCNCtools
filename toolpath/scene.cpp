@@ -100,11 +100,11 @@ void scene::write_svg(const char *filename)
   write_svg_footer();
 }
 
-void scene::write_gcode(const char *filename)
+void scene::write_naked_gcode()
 {
-  activate_tool(toollist[0]);
-  write_gcode_header(filename);
   unsigned int j;
+
+  gcode_tool_change(toollist[0]);
   
   for (j = 0; j < toollist.size() ; j++) {
     for (auto i : shapes) {
@@ -115,6 +115,18 @@ void scene::write_gcode(const char *filename)
     }
     
   }
+}
+
+
+void scene::write_gcode(const char *filename)
+{
+  activate_tool(toollist[0]);
+  write_gcode_header(filename);
+
+  write_naked_gcode();
+  
+  if (vcarve_scene)
+    vcarve_scene->write_naked_gcode();  
   
   write_gcode_footer();
 }

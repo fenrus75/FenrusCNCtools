@@ -27,6 +27,7 @@ public:
             _want_skeleton_paths = false;
             shape = NULL;
             filename = "unknown";            
+            vcarve_scene = NULL;
         }
         
         scene(const char *filename);
@@ -48,6 +49,7 @@ public:
         
         void write_svg(const char *filename);
         void write_gcode(const char *filename);
+        void write_naked_gcode(void);
 
         void process_nesting(void);
         void create_toolpaths(double depth);
@@ -79,6 +81,8 @@ private:
         
         void consolidate_toolpaths(void);
         void flatten_nesting(void);
+        
+        struct scene *vcarve_scene;
 };
 
 

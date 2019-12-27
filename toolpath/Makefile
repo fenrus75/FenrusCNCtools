@@ -1,7 +1,7 @@
 all: toolpath
 
 
-OBJS := tooldepth.o toollib.o gcode.o toolpath.o inputshape.o main.o data.o toollevel.o svg.o parse_svg.o
+OBJS := tooldepth.o toollib.o gcode.o toolpath.o inputshape.o main.o scene.o toollevel.o svg.o parse_svg.o
 
 
 %.o : %.c toolpath.h Makefile

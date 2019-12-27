@@ -220,7 +220,7 @@ void activate_tool(int nr)
         if (tool->number == nr) {
             sprintf(toolnr, "T%i", tool->number);
             print_tool(tool);
-            set_tool_imperial(toolnr, tool->diameter_inch, tool->diameter_inch/2, tool->depth_inch, tool->feedrate_ipm, tool->plungerate_ipm);
+            set_tool_imperial(toolnr, nr, tool->diameter_inch, tool->diameter_inch/2, tool->depth_inch, tool->feedrate_ipm, tool->plungerate_ipm);
         }
 }
 

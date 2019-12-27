@@ -498,7 +498,52 @@ class scene * inputshape::scene_from_vcarve(class scene *input, double depth, in
         
     if (depth != 0.0 && toolnr > 0) {
         /* step 3: create an inset path */
+        double inset;
+        int had_exception = 1;
     
+        if (!polyhole) {
+            polyhole = new PolygonWithHoles(poly);
+            for (auto i : children)
+            polyhole->add_hole(i->poly);
+        }
+    
+        if (!iss) {
+            iss =  CGAL::create_interior_straight_skeleton_2(*polyhole);
+        }
+    
+        /* first inset is the radius of the Vcutter at the point of max depth */
+        inset = 2.5;
+    
+        PolygonWithHolesPtrVector  offset_polygons;
+
+        while (had_exception) {
+            had_exception = 0;
+            try {
+                offset_polygons = arrange_offset_polygons_2(CGAL::create_offset_polygons_2<Polygon_2>(inset,*iss) );
+            } catch (...) { had_exception = 1;};
+            
+            if (had_exception)
+                inset = inset + 0.00001;
+        }
+        
+        for (auto ply : offset_polygons) {
+            Polygon_2 *p;
+            p = new(Polygon_2);
+            *p = ply->outer_boundary();
+
+            for(auto vi = p->vertices_begin() ; vi != p->vertices_end() ; ++ vi ) {
+                scene->add_point_to_poly(vi->x(), vi->y());
+            }
+            scene->end_poly();
+
+            for(auto hi = ply->holes_begin() ; hi != ply->holes_end() ; ++ hi ) {
+                for(auto vi = hi->vertices_begin() ; vi != hi->vertices_end() ; ++ vi ) {
+                    scene->add_point_to_poly(vi->x(), vi->y());
+                }
+                scene->end_poly();
+            }
+        }
+        
         /* step 4: add the inset paths to the new scene */
     }
     
