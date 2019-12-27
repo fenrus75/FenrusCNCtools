@@ -7,6 +7,7 @@
  */
 #ifndef __INCLUDE_GUARD_SCENE_H_
 #define __INCLUDE_GUARD_SCENE_H_
+#include <string.h>
 
 using namespace std;
 
@@ -25,8 +26,10 @@ public:
             _want_inbetween_paths = false;
             _want_skeleton_paths = false;
             shape = NULL;
-            
+            filename = "unknown";            
         }
+        
+        scene(const char *filename);
         
         double get_minX(void);
         double get_minY(void);
@@ -57,6 +60,7 @@ public:
 
         void enable_skeleton_paths(void);
         bool want_skeleton_paths(void);
+        void set_filename(const char *f) { filename = strdup(f);};
 
         
 private:
@@ -68,6 +72,7 @@ private:
         bool _want_finishing_pass;
         bool _want_inbetween_paths;
         bool _want_skeleton_paths;
+        const char *filename;
         
         void consolidate_toolpaths(void);
         void flatten_nesting(void);

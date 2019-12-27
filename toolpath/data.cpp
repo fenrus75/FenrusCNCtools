@@ -266,3 +266,18 @@ bool scene::want_skeleton_paths(void)
 {
   return _want_skeleton_paths;
 }
+
+
+scene::scene(const char *filename)
+{
+       minX = 1000000;
+       minY = 1000000;
+       maxX = -1000000;
+       maxY = -1000000;
+       _want_finishing_pass = false;
+       _want_inbetween_paths = false;
+       _want_skeleton_paths = false;
+       shape = NULL;
+       filename = strdup(filename);
+       parse_svg_file(this, filename);
+}
