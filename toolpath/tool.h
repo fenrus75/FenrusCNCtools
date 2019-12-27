@@ -188,6 +188,7 @@ public:
     
     void set_name(const char *n);
 
+
 private:
     const char *name;
 

@@ -111,6 +111,7 @@ static void parse_circle(char *line)
     }
     last_X = X;
     last_Y = Y;
+    end_poly();
 }
 
 static void push_chunk(char *chunk, char *line)

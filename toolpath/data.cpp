@@ -157,6 +157,7 @@ void process_nesting(void)
     unsigned int j;
     for (j = i + 1; j < shapes.size(); j++) {
       if (shapes[i]->fits_inside(shapes[j])) {
+//        printf("Adding shape %s (%5.2f) to %s (%5.2f) \n", shapes[i]->name, shapes[i]->area, shapes[j]->name, shapes[j]->area);
         shapes[j]->add_child(shapes[i]);
         shapes.erase(shapes.begin() + i);
         i--;
@@ -220,7 +221,7 @@ void create_toolpaths(double depth)
           i->create_toolpaths_vcarve(toolnr);
       
     } else {
-      printf("Tool %i goes from %5.2f mm to %5.2f mm\n", toolnr, start, end);
+//      printf("Tool %i goes from %5.2f mm to %5.2f mm\n", toolnr, start, end);
       while (currentdepth < 0) {
         for (auto i : shapes)
           i->create_toolpaths(toolnr, currentdepth, finish, want_inbetween_paths, start, end);
