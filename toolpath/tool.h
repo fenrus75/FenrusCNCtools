@@ -49,6 +49,7 @@ public:
         depth = 0;
         depth2 = 0;
         toolnr = 0;
+        minY = 0;
     }
 
     int level;
@@ -66,6 +67,7 @@ public:
     bool run_reverse;
     
     double length;
+    double minY;
     
     void add_polygon(Polygon_2 *poly);
     bool fits_inside(class toolpath *shape);
@@ -75,6 +77,7 @@ public:
     void print_as_svg(const char *color);
     void output_gcode(void);
     void recalculate();
+    double get_minY(void);
 
     vector<Polygon_2*> polygons;
 private:
@@ -89,6 +92,7 @@ public:
     toollevel() {
         level = 0;
         offset = 0.0;
+        minY = 0.0;
         is_optional = false;
         is_slotting = false;
         run_reverse = false;
@@ -97,12 +101,15 @@ public:
         depth = 0.0;
         toolnr = 0;
     }
+    
+    double get_minY(void) { return minY;};
     int level;
     int toolnr;
     double offset; /* offset used to create this level */
     const char *name;
     double diameter;
     double depth;
+    double minY;
     
     void add_poly(Polygon_2 *poly, bool is_hole);
     void add_poly_vcarve(Polygon_2 *poly, double depth1, double depth2);
@@ -163,6 +170,7 @@ public:
         polyhole = NULL;
         iss = NULL;
         name = "unknown";
+        minY = 0;
     }
     void set_level(int _level);
     void add_child(class inputshape *child);
@@ -178,16 +186,16 @@ public:
     bool fits_inside(class inputshape *shape);
 
 
-    void create_toolpaths(int toolnr, double depth, int finish_pass, int is_optional, double start_inset, double end_inset);
+    void create_toolpaths(int toolnr, double depth, int finish_pass, int is_optional, double start_inset, double end_inset, bool _want_skeleton_path);
     void create_toolpaths_vcarve(int toolnr);
-    void consolidate_toolpaths(void);
+    void consolidate_toolpaths(bool _want_inbetween_paths);
 
     double area;
     int level;
     vector<class inputshape*> children;
     
     void set_name(const char *n);
-
+    void set_minY(double mY);
 
 private:
     const char *name;
@@ -199,14 +207,17 @@ private:
     vector<class tooldepth*> tooldepths;
     
     double bbX1, bbY1, bbX2, bbY2;
+    double minY;
 
     
     Polygon_2 poly;    
     double distance_from_edge(double X, double Y);
 };
 
-extern int want_skeleton_path;
-extern int want_inbetween_paths;
+
+#include "scene.h"
+
+extern void parse_svg_file(class scene * scene, const char *filename);
 
 
 #endif

@@ -24,8 +24,6 @@ static double tool_plungerate = 0;
 static double rippem = 10000;
 static double safe_retract_height = 2;
 
-static int want_finishing_pass;
-
 static FILE *gcode;
 static int retract_count;
 static int mill_count;
@@ -79,16 +77,6 @@ void set_retract_height_imperial(double _rh_inch)
 void set_retract_height_metric(double _rh_mm)
 {
     safe_retract_height = _rh_mm;
-}
-
-void enable_finishing_pass(void)
-{
-  want_finishing_pass = 1;
-}
-
-int get_finishing_pass(void)
-{
-  return want_finishing_pass;
 }
 
 void write_gcode_header(const char *filename)

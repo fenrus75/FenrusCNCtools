@@ -9,13 +9,13 @@
 #include <stdio.h>
 #include <stdlib.h>
 
+#include "scene.h"
+
 extern "C" {
     #include "toolpath.h"
 }
 
 int verbose = 0;
-int want_skeleton_path = 0;
-int want_inbetween_paths = 0;
 
 static int depth;
 
@@ -31,6 +31,10 @@ int main(int argc, char **argv)
     int opt;
     int tool = 102;
     
+    class scene *scene;
+    
+    scene = new(class scene);
+    
     read_tool_lib("toollib.csv");
     
     depth = inch_to_mm(0.044);
@@ -42,15 +46,15 @@ int main(int argc, char **argv)
 				verbose = 1;
 				break;
 			case 'f':
-				enable_finishing_pass();
+				scene->enable_finishing_pass();
 				printf("Finishing pass enabled\n");
 				break;
 			case 's':
-				want_skeleton_path = 1;
+				scene->enable_skeleton_paths();
 				printf("Skeleton path enabled\n");
 				break;
 			case 'i':
-				want_inbetween_paths = 1;
+				scene->enable_inbetween_paths();
 				printf("Inbetween paths enabled\n");
 				break;
 			case 'l':
@@ -67,7 +71,7 @@ int main(int argc, char **argv)
 				arg = strtoull(optarg, NULL, 10);
 				if (have_tool(arg)) {
 					tool = arg;
-					push_tool(tool);
+					scene->push_tool(tool);
 				} else {
 					printf("Unknown tool requested\n");
 					print_tools();
@@ -85,18 +89,17 @@ int main(int argc, char **argv)
     
     set_rippem(15000);
     set_retract_height_imperial(0.06);
-    set_default_tool(tool);
+    scene->set_default_tool(tool);
 
     for(; optind < argc; optind++) {      
-		parse_svg_file(argv[optind]);
+		parse_svg_file(scene, argv[optind]);
 		
-		process_nesting();
+		scene->process_nesting();
 		
-		create_toolpaths(-depth);
-		consolidate_toolpaths();
+		scene->create_toolpaths(-depth);
 		
-		write_svg("output.svg");
-		write_gcode("output.nc");
+		scene->write_svg("output.svg");
+		scene->write_gcode("output.nc");
     }
     return EXIT_SUCCESS;
 }

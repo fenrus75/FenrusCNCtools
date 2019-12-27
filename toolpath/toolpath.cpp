@@ -268,3 +268,8 @@ void toolpath::recalculate()
     if (best_i >= 0)
       start_vertex = best_i;
 }
+
+double toolpath::get_minY()
+{
+  return minY;
+}

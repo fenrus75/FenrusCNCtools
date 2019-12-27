@@ -7,18 +7,11 @@
  */
 #include "tool.h"
 
+#include "scene.h"
+
 extern "C" {
   #include "toolpath.h"
 }
-
-static vector<int> toollist;
-
-
-static vector<class inputshape *> shapes;
-
-static class inputshape *shape;
-static double minX = 10000, minY = 10000, maxY = -10000, maxX = -10000;
-
 
 static bool compare_shape(class inputshape *A, class inputshape *B)
 {
@@ -26,25 +19,25 @@ static bool compare_shape(class inputshape *A, class inputshape *B)
 }
 
 
-double get_minX(void)
+double scene::get_minX(void)
 {
   return minX;
 }
-double get_minY(void)
+double scene::get_minY(void)
 {
   return minY;
 }
-double get_maxY(void)
+double scene::get_maxY(void)
 {
   return maxY;
 }
 
-void declare_minY(double Y)
+void scene::declare_minY(double Y)
 {
   minY = fmin(Y, minY);
 }
 
-void new_poly(double X, double Y)
+void scene::new_poly(double X, double Y)
 {
   end_poly();
 
@@ -53,14 +46,14 @@ void new_poly(double X, double Y)
   add_point_to_poly(X, Y);
 }
 
-void set_poly_name(const char *n)
+void scene::set_poly_name(const char *n)
 {
   if (!shape)
     shape = new(class inputshape);
   shape->set_name(n);
 }
 
-void add_point_to_poly(double X, double Y)
+void scene::add_point_to_poly(double X, double Y)
 {
   if (!shape)
     shape = new(class inputshape);
@@ -72,7 +65,7 @@ void add_point_to_poly(double X, double Y)
   maxY = fmax(Y, maxY);
 }
 
-void end_poly(void)
+void scene::end_poly(void)
 {
   if (shape) {
     shape->close_shape();
@@ -82,19 +75,19 @@ void end_poly(void)
   sort(shapes.begin(), shapes.end(), compare_shape);
 }
 
-void push_tool(int toolnr)
+void scene::push_tool(int toolnr)
 {
   toollist.push_back(toolnr);
 }
 
-void set_default_tool(int toolnr)
+void scene::set_default_tool(int toolnr)
 {
   if (toollist.size() > 0)
     return;
   toollist.push_back(toolnr);
 }
 
-void write_svg(const char *filename)
+void scene::write_svg(const char *filename)
 {
 
   printf("Work size: %5.2f x %5.2f inch\n", mm_to_inch(maxX-minX), mm_to_inch(maxY - minY));
@@ -107,7 +100,7 @@ void write_svg(const char *filename)
   write_svg_footer();
 }
 
-void write_gcode(const char *filename)
+void scene::write_gcode(const char *filename)
 {
   activate_tool(toollist[0]);
   write_gcode_header(filename);
@@ -129,7 +122,7 @@ void write_gcode(const char *filename)
 
 /* input: arbitrary nested vector of shapes */
 /* output: odd/even split, max nesting level is 1 */
-static void flatten_nesting(void)
+void scene::flatten_nesting(void)
 {
   unsigned int i, j, z;
   for (i = 0; i < shapes.size(); i++) {
@@ -145,7 +138,7 @@ static void flatten_nesting(void)
 
 /* input: a vector of shapes, output: nested shapes are properly parented */
 /* This is an O(N^2) algorithm for now */
-void process_nesting(void)
+void scene::process_nesting(void)
 {
   unsigned int i;
   /* first sort so that the vector is smallest first */
@@ -169,12 +162,13 @@ void process_nesting(void)
   flatten_nesting();
 
   for (i = 0; i < shapes.size(); i++) {
+      shapes[i]->set_minY(get_minY());
       shapes[i]->set_level(0);
       shapes[i]->fix_orientation();
   }
 }
 
-void create_toolpaths(double depth)
+void scene::create_toolpaths(double depth)
 {
   double currentdepth;
   double depthstep;
@@ -199,7 +193,7 @@ void create_toolpaths(double depth)
     depthstep = depthstep - surplus / 2;
 
 
-    if (get_finishing_pass()) {
+    if (want_finishing_pass()) {
       /* finishing rules: deepest cut is small */
       depthstep = fmin(depthstep, 0.25);
       finish  = 1;
@@ -224,7 +218,7 @@ void create_toolpaths(double depth)
 //      printf("Tool %i goes from %5.2f mm to %5.2f mm\n", toolnr, start, end);
       while (currentdepth < 0) {
         for (auto i : shapes)
-          i->create_toolpaths(toolnr, currentdepth, finish, want_inbetween_paths, start, end);
+          i->create_toolpaths(toolnr, currentdepth, finish, want_inbetween_paths(), start, end, _want_skeleton_paths);
         currentdepth += depthstep;
         depthstep = get_tool_maxdepth();
         if (finish)
@@ -234,11 +228,41 @@ void create_toolpaths(double depth)
     
     tool--;
   }
+  consolidate_toolpaths();
 }
-void consolidate_toolpaths()
+void scene::consolidate_toolpaths(void)
 {
   for (auto i : shapes)
-    i->consolidate_toolpaths();
+    i->consolidate_toolpaths(_want_inbetween_paths);
 
 }
 
+void scene::enable_finishing_pass(void)
+{
+  _want_finishing_pass = true;
+}
+
+bool scene::want_finishing_pass(void)
+{
+  return _want_finishing_pass;
+}
+
+void scene::enable_inbetween_paths(void)
+{
+  _want_inbetween_paths = true;
+}
+
+bool scene::want_inbetween_paths(void)
+{
+  return _want_inbetween_paths;
+}
+
+void scene::enable_skeleton_paths(void)
+{
+  _want_skeleton_paths = true;
+}
+
+bool scene::want_skeleton_paths(void)
+{
+  return _want_skeleton_paths;
+}

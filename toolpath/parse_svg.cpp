@@ -12,6 +12,7 @@
 #include <string.h>
 #include <math.h>
 
+#include "scene.h"
 #include "toolpath.h"
 
 /* SVG path supports relative-to-last coordinates... even across elements */
@@ -35,7 +36,8 @@ static inline double distance(double x0, double y0, double x1, double y1)
     return sqrt( (x1-x0) * (x1-x0) + (y1-y0) * (y1-y0));
 }
 
-static void cubic_bezier(double x0, double y0,
+static void cubic_bezier(class scene *scene,
+                         double x0, double y0,
                          double x1, double y1,
                          double x2, double y2,
                          double x3, double y3)
@@ -50,16 +52,17 @@ static void cubic_bezier(double x0, double y0,
         nX = (1-t)*(1-t)*(1-t)*x0 + 3*(1-t)*(1-t)*t*x1 + 3 * (1-t)*t*t*x2 + t*t*t*x3;
         nY = (1-t)*(1-t)*(1-t)*y0 + 3*(1-t)*(1-t)*t*y1 + 3 * (1-t)*t*t*y2 + t*t*t*y3;
         if (distance(lX,lY, nX,nY) > 1) {
-            add_point_to_poly(px_to_mm(nX), px_to_mm(nY));
+            scene->add_point_to_poly(px_to_mm(nX), px_to_mm(nY));
             lX = nX;
             lY = nY;
         }
         t = t + delta;
     }
-    add_point_to_poly(px_to_mm(x3),px_to_mm(y3));
+    scene->add_point_to_poly(px_to_mm(x3),px_to_mm(y3));
 }                    
 
-static void quadratic_bezier(double x0, double y0,
+static void quadratic_bezier(class scene *scene,
+                         double x0, double y0,
                          double x1, double y1,
                          double x3, double y3)
 {
@@ -73,20 +76,20 @@ static void quadratic_bezier(double x0, double y0,
         nX = (1-t)*(1-t)*x0 + 2*(1-t)*t*x1 + t*t*x3;
         nY = (1-t)*(1-t)*y0 + 2*(1-t)*t*y1 + t*t*y3;
         if (distance(lX,lY, nX,nY) > 1) {
-            add_point_to_poly(px_to_mm(nX), px_to_mm(nY));
+            scene->add_point_to_poly(px_to_mm(nX), px_to_mm(nY));
             lX = nX;
             lY = nY;
         }
         t = t + delta;
     }
-    add_point_to_poly(px_to_mm(x3), px_to_mm(y3));
+    scene->add_point_to_poly(px_to_mm(x3), px_to_mm(y3));
 }                    
 
 
 /*
 <circle cx="440.422" cy="312.878" r="12" stroke="black" stroke-width="1" fill="none" />
 */
-static void parse_circle(char *line)
+static void parse_circle(class scene *scene, char *line)
 {
     char *cx, *cy, *r;
     double X,Y,R,phi;
@@ -97,8 +100,8 @@ static void parse_circle(char *line)
         printf("Failed to parse circle: %s\n", line);
         return;
     }
-    end_poly();
-    set_poly_name("circle");
+    scene->end_poly();
+    scene->set_poly_name("circle");
     X = strtod(cx + 4, NULL);
     Y = strtod(cy + 4, NULL);
     R = strtod(r + 3, NULL);
@@ -106,15 +109,15 @@ static void parse_circle(char *line)
     while (phi < 360) {
         double P;
         P = phi / 360.0 * 2 * M_PI;
-        add_point_to_poly(px_to_mm(X + R * cos(P)), px_to_mm(-Y + R * sin(P)));
+        scene->add_point_to_poly(px_to_mm(X + R * cos(P)), px_to_mm(-Y + R * sin(P)));
         phi = phi + 1;
     }
     last_X = X;
     last_Y = Y;
-    end_poly();
+    scene->end_poly();
 }
 
-static void push_chunk(char *chunk, char *line)
+static void push_chunk(class scene *scene, char *chunk, char *line)
 {
     char command;
     char *c;
@@ -144,17 +147,17 @@ static void push_chunk(char *chunk, char *line)
             /* for long lines, split in 2 */
             if (distance > 4)  {
                 printf("Distance %5.2f\n", distance);
-                add_point_to_poly((last_X + arg1)/2, (-arg2 - last_Y)/2);
+                scene->add_point_to_poly((last_X + arg1)/2, (-arg2 - last_Y)/2);
             }
 #endif
 //            printf("Line         : %5.2f %5.2f\n", arg1, arg2);
-            add_point_to_poly(px_to_mm(arg1), px_to_mm(-arg2));
+            scene->add_point_to_poly(px_to_mm(arg1), px_to_mm(-arg2));
             last_X = arg1;
             last_Y = arg2;
             break;
         case 'M':
 //            printf("Start of poly: %5.2f %5.2f\n", arg1, arg2);
-            new_poly(px_to_mm(arg1), px_to_mm(-arg2));
+            scene->new_poly(px_to_mm(arg1), px_to_mm(-arg2));
             last_X = arg1;
             last_Y = arg2;
             break;
@@ -162,33 +165,33 @@ static void push_chunk(char *chunk, char *line)
 //            printf("Start of poly: %5.2f %5.2f\n", arg1, arg2);
             arg1 += last_X;
             arg2 += last_Y;
-            new_poly(px_to_mm(arg1), px_to_mm(-arg2));
+            scene->new_poly(px_to_mm(arg1), px_to_mm(-arg2));
             last_X = arg1;
             last_Y = arg2;
             break;
         case 'H':
 //            printf("Start of poly: %5.2f %5.2f\n", arg1, arg2);
-            add_point_to_poly(px_to_mm(arg1), px_to_mm(-last_Y));
+            scene->add_point_to_poly(px_to_mm(arg1), px_to_mm(-last_Y));
             last_X = arg1;
             break;
         case 'V':
 //            printf("Start of poly: %5.2f %5.2f\n", arg1, arg2);
-            add_point_to_poly(px_to_mm(last_X), px_to_mm(-arg1));
+            scene->add_point_to_poly(px_to_mm(last_X), px_to_mm(-arg1));
             last_Y = arg1;
             break;
         case 'C':
-            cubic_bezier(last_X, -last_Y, arg1, -arg2, arg3, -arg4, arg5, -arg6);
+            cubic_bezier(scene, last_X, -last_Y, arg1, -arg2, arg3, -arg4, arg5, -arg6);
             last_X = arg5;
             last_Y = arg6;
             break;
         case 'Q':
-            quadratic_bezier(last_X, -last_Y, arg1, -arg2, arg3, -arg4);
+            quadratic_bezier(scene, last_X, -last_Y, arg1, -arg2, arg3, -arg4);
             last_X = arg3;
             last_Y = arg4;
             break;
         case 'Z':
         case 'z':
-            end_poly();
+            scene->end_poly();
             break;
         default:
             printf("Unknown command in chunk: %s  (%s)\n", chunk, line);
@@ -206,7 +209,7 @@ static void strip_str(char *line)
             line[strlen(line)-1] = 0;
 }
 
-static void parse_line(char *line)
+static void parse_line(class scene *scene, char *line)
 {
     char *c;
     char chunk[4095];
@@ -215,12 +218,12 @@ static void parse_line(char *line)
     c = strstr(line, "height=\"");
     if (c) {
         height = strtod(c+8, NULL);
-        declare_minY(px_to_mm(-height));
+        scene->declare_minY(px_to_mm(-height));
     }
     
     c = strstr(line,"<circle cx=");
     if (c) {
-        parse_circle(line);
+        parse_circle(scene, line);
     }
     c = strstr(line, " d=\"");
     if (c == NULL)
@@ -237,7 +240,7 @@ static void parse_line(char *line)
         } else {
             strip_str(chunk);
             if (strlen(chunk) > 0)
-                push_chunk(chunk, line);
+                push_chunk(scene, chunk, line);
             memset(chunk, 0, sizeof(chunk));
             chunk[strlen(chunk)] = *c;           
         }
@@ -245,11 +248,11 @@ static void parse_line(char *line)
     }
     strip_str(chunk);
     if (strlen(chunk) > 0)
-        push_chunk(chunk, line);
-    end_poly();
+        push_chunk(scene, chunk, line);
+    scene->end_poly();
 }
 
-void parse_svg_file(const char *filename)
+void parse_svg_file(class scene *scene, const char *filename)
 {
     size_t n;
     FILE *file;
@@ -265,7 +268,7 @@ void parse_svg_file(const char *filename)
         char *line = NULL;
         ret = getline(&line, &n, file);
         if (ret >= 0) {
-            parse_line(line);
+            parse_line(scene, line);
             free(line);
         }
     }

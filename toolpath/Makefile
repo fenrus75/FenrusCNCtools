@@ -8,7 +8,7 @@ OBJS := tooldepth.o toollib.o gcode.o toolpath.o inputshape.o main.o data.o tool
 	    @echo "Compiling: $< => $@"
 	    @gcc $(CFLAGS) -march=native -flto -ffunction-sections  -Wall -W -O3 -g -c $< -o $@
 
-%.o : %.cpp toolpath.h print.h tool.h Makefile
+%.o : %.cpp toolpath.h print.h tool.h Makefile scene.h
 	    @echo "Compiling: $< => $@"
 	    @g++ $(CFLAGS) -O3 -flto -march=native -ffunction-sections -fno-common -Wall -W -g -c $< -o $@
 

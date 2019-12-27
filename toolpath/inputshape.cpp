@@ -144,7 +144,7 @@ bool inputshape::fits_inside(class inputshape *shape)
 }
 
 
-void inputshape::create_toolpaths(int toolnr, double depth, int finish_pass, int want_optional, double start_inset, double end_inset)
+void inputshape::create_toolpaths(int toolnr, double depth, int finish_pass, int want_optional, double start_inset, double end_inset, bool want_skeleton_path)
 {
     int level = 0;
     double diameter = get_tool_diameter();
@@ -201,6 +201,7 @@ void inputshape::create_toolpaths(int toolnr, double depth, int finish_pass, int
         tool->depth = depth;
         tool->toolnr = toolnr;
         tool->run_reverse = reverse;
+        tool->minY = minY;
         tool->name = "Pocketing";
         
         if (want_optional && (level > 1) && ((level & 1) == 0))
@@ -267,6 +268,7 @@ void inputshape::create_toolpaths(int toolnr, double depth, int finish_pass, int
         tool->name = "Bisector Slotting";
         tool->diameter = diameter;
         tool->depth = depth;
+        tool->minY = minY;
         td->toollevels.push_back(tool);
         for (auto ss : skeleton) {
             for (auto x = ss->halfedges_begin(); x != ss->halfedges_end(); ++x) {
@@ -316,6 +318,7 @@ void inputshape::create_toolpaths_vcarve(int toolnr)
     class toollevel *tool = new(class toollevel);       
     tool->name = "VCarve path";
     tool->toolnr = toolnr;
+    tool->minY = minY;
     td->toollevels.push_back(tool);
     
     for (auto x = iss->halfedges_begin(); x != iss->halfedges_end(); ++x) {
@@ -339,7 +342,7 @@ void inputshape::create_toolpaths_vcarve(int toolnr)
 }
 
 
-void inputshape::consolidate_toolpaths(void)
+void inputshape::consolidate_toolpaths(bool want_inbetween_paths)
 {
     unsigned int level;
 
@@ -464,4 +467,9 @@ double inputshape::distance_from_edge(double X, double Y)
 void inputshape::set_name(const char *n)
 {
     name = strdup(n);
+}
+
+void inputshape::set_minY(double mY)
+{
+    minY = mY;
 }
