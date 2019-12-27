@@ -293,7 +293,12 @@ void inputshape::create_toolpaths(int toolnr, double depth, int finish_pass, int
 
 static double radius_to_depth(double r, double angle)
 {
-    return -r * tan(angle/360.0 * M_PI);
+    return -r / tan(angle/360.0 * M_PI);
+}
+
+static double depth_to_radius(double d, double angle)
+{
+    return fabs(d) * tan(angle/360.0 * M_PI);
 }
 
 void inputshape::create_toolpaths_vcarve(int toolnr)
@@ -478,6 +483,7 @@ void inputshape::set_minY(double mY)
 class scene * inputshape::scene_from_vcarve(class scene *input, double depth, int toolnr)
 {
     class scene *scene;
+    double angle = get_tool_angle(toolnr);
     
     if (input)
         scene = input;
@@ -511,8 +517,8 @@ class scene * inputshape::scene_from_vcarve(class scene *input, double depth, in
             iss =  CGAL::create_interior_straight_skeleton_2(*polyhole);
         }
     
-        /* first inset is the radius of the Vcutter at the point of max depth */
-        inset = 2.5;
+        /* first inset is the diameter of the Vcutter at the point of max depth */
+        inset = 2 * depth_to_radius(depth, angle);
     
         PolygonWithHolesPtrVector  offset_polygons;
 
