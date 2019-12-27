@@ -126,6 +126,14 @@ static void push_chunk(char *chunk, char *line)
             last_X = arg1;
             last_Y = arg2;
             break;
+        case 'm':
+//            printf("Start of poly: %5.2f %5.2f\n", arg1, arg2);
+            arg1 += last_X;
+            arg2 += last_Y;
+            new_poly(px_to_mm(arg1), px_to_mm(-arg2));
+            last_X = arg1;
+            last_Y = arg2;
+            break;
         case 'H':
 //            printf("Start of poly: %5.2f %5.2f\n", arg1, arg2);
             add_point_to_poly(px_to_mm(arg1), px_to_mm(-last_Y));
@@ -147,6 +155,7 @@ static void push_chunk(char *chunk, char *line)
             last_Y = arg4;
             break;
         case 'Z':
+        case 'z':
             end_poly();
             break;
         default:
