@@ -8,7 +8,7 @@ extern "C" {
     #include "toolpath.h"
 }
 
-static const char *colors[8] = {"darkgray", "green", "blue", "purple", "orange", "yellow", "cyan", "red"};
+static const char *colors[8] = {"darkgray", "red", "green", "blue", "purple", "orange", "yellow", "cyan"};
 static int colornr;
 
 #include <vector>

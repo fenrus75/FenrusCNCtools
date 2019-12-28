@@ -15,6 +15,9 @@ static double dist(double X0, double Y0, double X1, double Y1)
 void toolpath::print_as_svg(const char *color)
 {
     double width = diameter * 0.333;
+
+//    if (is_vcarve) width = diameter;
+
 //    if (is_hole)
 //        color = "red";
 //    if (is_slotting)
@@ -39,6 +42,7 @@ void toolpath::output_gcode(void)
   double speed = 1.0;
   double lX = -100000;
   double lY = -100000;
+  
   if (is_vcarve) {
     output_gcode_vcarve();
     return;

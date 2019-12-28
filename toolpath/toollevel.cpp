@@ -109,6 +109,8 @@ void toollevel::add_poly_vcarve(Polygon_2 *poly, double depth1, double depth2)
     tp->recalculate();
     tp->toolnr = toolnr;
     tp->is_vcarve = true;
+    tp->minY = minY;
+    tp->diameter = diameter;
     toolpaths.push_back(tp);    
 }
 

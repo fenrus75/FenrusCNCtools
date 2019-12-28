@@ -8,6 +8,7 @@
 #ifndef __INCLUDE_GUARD_TOOLPATH_H_
 #define __INCLUDE_GUARD_TOOLPATH_H_
 
+#include <math.h>
 
 struct segment {
     double X1, Y1, X2, Y2;
@@ -67,6 +68,7 @@ extern double get_tool_stepover(int toolnr);
 extern void gcode_tool_change(int toolnr);
 extern double get_tool_angle(int toolnr);
 extern int tool_is_vcarve(int toolnr);
+extern double distance_point_from_vector(double X1, double Y1, double X2, double Y2, double pX, double pY);
 
 
 static inline double px_to_inch(double px) { return px / 96.0; };
@@ -76,6 +78,8 @@ static inline double inch_to_px(double inch) { return inch * 96.0; };
 static inline double inch_to_mm(double inch) { return 25.4 * inch; };
 static inline double mm_to_inch(double inch) { return inch / 25.4; };
 static inline double ipm_to_metric(double inch) { return 25.4 * inch; };
+static inline double radius_to_depth(double r, double angle) { return -r / tan(angle/360.0 * M_PI); }
+static inline double depth_to_radius(double d, double angle) { return fabs(d) * tan(angle/360.0 * M_PI); }
 
 extern int verbose;
 

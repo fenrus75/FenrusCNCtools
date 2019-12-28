@@ -17,7 +17,7 @@ extern "C" {
 
 int verbose = 0;
 
-static int depth;
+static double depth;
 
 void usage(void)
 {
@@ -31,7 +31,7 @@ int main(int argc, char **argv)
     int opt;
     int tool = 102;
     
-    class scene *scene, *vscene = NULL;
+    class scene *scene;
     
     scene = new(class scene);
     
@@ -62,6 +62,7 @@ int main(int argc, char **argv)
 				break;	
 			case 'd': /* inch */
 				depth = inch_to_mm(strtod(optarg, NULL));
+				printf("Depth set to %5.2fmm\n", depth);
 				break;
 			case 'D': /* metric mm*/
 				depth = strtod(optarg, NULL);
@@ -103,7 +104,5 @@ int main(int argc, char **argv)
 		scene->write_gcode("output.nc");
     }
     
-    vscene = scene->scene_from_vcarve(NULL, -depth, 302);
-    vscene->write_svg("vcarve.svg");
     return EXIT_SUCCESS;
 }

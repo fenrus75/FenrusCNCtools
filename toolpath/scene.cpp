@@ -87,6 +87,14 @@ void scene::set_default_tool(int toolnr)
   toollist.push_back(toolnr);
 }
 
+void scene::write_naked_svg()
+{
+
+  for (auto i : shapes) {
+    i->print_as_svg();
+  }
+}
+
 void scene::write_svg(const char *filename)
 {
 
@@ -94,10 +102,16 @@ void scene::write_svg(const char *filename)
   set_svg_bounding_box(minX, minY, maxX, maxY);
   write_svg_header(filename, 1.0);
 
+  write_naked_svg();
   for (auto i : shapes) {
     i->print_as_svg();
   }
+  if (vcarve_scene) {
+    vcarve_scene->write_naked_svg();
+  }
   write_svg_footer();
+  if (vcarve_scene)
+    vcarve_scene->write_svg("vcarve.svg");
 }
 
 void scene::write_naked_gcode()
@@ -189,6 +203,8 @@ void scene::create_toolpaths(double depth)
   int toolnr;
   int tool;
   
+  printf("create_toolpaths with depth %5.2f\n", depth);
+  
   tool = toollist.size() -1;
   while (tool >= 0) {
     double start, end;
@@ -217,15 +233,36 @@ void scene::create_toolpaths(double depth)
     /* we want courser tools to not get within the stepover of the finer tool */
     if (tool < (int)toollist.size() -1)
       start = get_tool_stepover(toollist[tool+1]);
+    
+    /* if tool 0 is a vcarve bit, tool 1 needs to start at radius at depth of cut */
+    /* and all others need an offset */
+    if (tool > 0 and tool_is_vcarve(toollist[0])) {
+      double angle = get_tool_angle(toollist[0]);
+      if (tool == 1)
+        start = 0;
+      start += depth_to_radius(depth, angle);
+    }
       
     if (tool > 0)
       end = 2 * get_tool_stepover(toollist[tool-1]) + 2 * get_tool_stepover(toollist[tool]);
       
+    if (tool == 1 && tool_is_vcarve(toollist[0]))
+      end = 600000000;
       
-    if (tool_is_vcarve(toolnr)) {
-        for (auto i : shapes)
-          i->create_toolpaths_vcarve(toolnr);
       
+    if (tool_is_vcarve(toolnr) && tool == 0) {
+        if (toollist.size() == 1) {
+          for (auto i : shapes)
+            i->create_toolpaths_vcarve(toolnr, depth);
+        } else {
+          if (!vcarve_scene) {
+            printf("Creating special vcarve_scene\n");
+            vcarve_scene = scene_from_vcarve(NULL, depth, toollist[0]);
+            vcarve_scene->push_tool(toollist[0]);
+            vcarve_scene->create_toolpaths(depth);
+          }
+        }
+        
     } else {
 //      printf("Tool %i goes from %5.2f mm to %5.2f mm\n", toolnr, start, end);
       while (currentdepth < 0) {
@@ -297,9 +334,9 @@ scene::scene(const char *filename)
 class scene * scene::scene_from_vcarve(class scene *input, double depth, int toolnr)
 {
   class scene *scene = input;
+  printf("SCENE_FROM_VCARVE for depth %5.2f\n", depth);
   for (auto i : shapes)
     scene = i->scene_from_vcarve(scene, depth, toolnr);
-
   scene->process_nesting();    
   return scene;
 }

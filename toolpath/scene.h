@@ -47,6 +47,7 @@ public:
         void push_tool(int toolnr);
         void set_default_tool(int toolnr);
         
+        void write_naked_svg(void);
         void write_svg(const char *filename);
         void write_gcode(const char *filename);
         void write_naked_gcode(void);

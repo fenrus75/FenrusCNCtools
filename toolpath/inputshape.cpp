@@ -291,17 +291,7 @@ void inputshape::create_toolpaths(int toolnr, double depth, int finish_pass, int
 }
 
 
-static double radius_to_depth(double r, double angle)
-{
-    return -r / tan(angle/360.0 * M_PI);
-}
-
-static double depth_to_radius(double d, double angle)
-{
-    return fabs(d) * tan(angle/360.0 * M_PI);
-}
-
-void inputshape::create_toolpaths_vcarve(int toolnr)
+void inputshape::create_toolpaths_vcarve(int toolnr, double maxdepth)
 {
     double angle = get_tool_angle(toolnr);
     if (!polyhole) {
@@ -330,17 +320,24 @@ void inputshape::create_toolpaths_vcarve(int toolnr)
             double X1, Y1, X2, Y2, d1, d2;
             X1 = point_snap2(x->vertex()->point().x());
             Y1 = point_snap2(x->vertex()->point().y());
-            d1 = distance_from_edge(X1, Y1);
             
             X2 = point_snap2(x->opposite()->vertex()->point().x());
             Y2 = point_snap2(x->opposite()->vertex()->point().y());
-            d2 = distance_from_edge(X2, Y2);
             if (x->is_bisector()) {
+                d1 = radius_to_depth(distance_from_edge(X1, Y1), angle);
+                /* BAD HACK */
+                if (d1 < maxdepth)
+                    d1 = maxdepth;
+                d2 = radius_to_depth(distance_from_edge(X2, Y2), angle);
+                if (d2 < maxdepth)
+                    d2 = maxdepth;
                 if (X1 != X2 || Y1 != Y2) {
                             Polygon_2 *p = new(Polygon_2);
                             p->push_back(Point(X1, Y1));
                             p->push_back(Point(X2, Y2));
-                            tool->add_poly_vcarve(p, radius_to_depth(d1, angle), radius_to_depth(d2, angle));
+                            tool->diameter = fmax(tool->diameter, d1 * 2);
+                            tool->diameter = fmax(tool->diameter, d2 * 2);
+                            tool->add_poly_vcarve(p, d1, d2);
                 }
             }
     }
@@ -456,15 +453,24 @@ void inputshape::consolidate_toolpaths(bool want_inbetween_paths)
 double inputshape::distance_from_edge(double X, double Y)
 {
     double bestdist = 1000000000;
-    for(auto p = poly.vertices_begin() ; p != poly.vertices_end() ; ++ p ) {
-        double d = dist(X, Y, p->x(), p->y());
-        if (d < bestdist)
+    unsigned int i;
+    
+    for (i = 0; i < poly.size(); i++) {
+        unsigned int next = i + 1;
+        if (next >= poly.size())
+            next = 0;
+            
+        double d = distance_point_from_vector(poly[i].x(), poly[i].y(), poly[next].x(), poly[next].y(), X, Y);
+        if (d < bestdist) {
+//            printf("New best distance %5.2f   %5.2f,%5.2f -> %5.2f,%5.2f\n", d, X,Y, poly[i].x(), poly[i].y());
             bestdist= d;
+        }
     }
     for (auto c : children) {
         double d = c->distance_from_edge(X, Y);
-        if (d < bestdist)
+        if (d < bestdist) {
             bestdist = d;
+        }
     }
     return bestdist;
 }
@@ -477,6 +483,8 @@ void inputshape::set_name(const char *n)
 void inputshape::set_minY(double mY)
 {
     minY = mY;
+    for (auto i: children)
+        i->set_minY(mY);
 }
 
 
@@ -489,6 +497,8 @@ class scene * inputshape::scene_from_vcarve(class scene *input, double depth, in
         scene = input;
     else
         scene = new(class scene);
+
+    scene->declare_minY(minY);
     scene->set_filename("from scene_from_vcarve");    
     
     /* step 1: clone our poly into the new scene */
@@ -519,6 +529,8 @@ class scene * inputshape::scene_from_vcarve(class scene *input, double depth, in
     
         /* first inset is the diameter of the Vcutter at the point of max depth */
         inset = 2 * depth_to_radius(depth, angle);
+        
+        printf("INSET is %5.2f for depth %5.2f\n", inset, depth);
     
         PolygonWithHolesPtrVector  offset_polygons;
 
@@ -555,3 +567,4 @@ class scene * inputshape::scene_from_vcarve(class scene *input, double depth, in
     
     return scene;
 }
+
