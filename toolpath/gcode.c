@@ -205,7 +205,7 @@ void gcode_vconditional_travel_to(double X, double Y, double Z, double speed)
         return;
         
     gcode_travel_to(X, Y);
-    if (Z > 0)
+    if (Z < 0)
         gcode_plunge_to(Z, speed);
         
 }
