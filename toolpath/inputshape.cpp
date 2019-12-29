@@ -66,6 +66,8 @@ void inputshape::print_as_svg(void)
 #if 0
     for (auto i : skeleton)
         print_straight_skeleton(*i);
+    if (iss)
+        print_straight_skeleton(*iss);
 #endif
     for (auto i : children)
         i->print_as_svg();
@@ -150,7 +152,7 @@ void inputshape::create_toolpaths(int toolnr, double depth, int finish_pass, int
     double diameter = get_tool_diameter();
     double stepover;
     double inset;
-    bool reverse;
+    bool reverse = false;
     
     if (toolnr < 0) {
         reverse = true;

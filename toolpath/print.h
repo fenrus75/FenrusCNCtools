@@ -151,7 +151,7 @@ void print_straight_skeleton( CGAL::Straight_skeleton_2<K> const& ss )
       color = "purple";
       width = 0.15;
     }
-    std::cout << " " << ( i->is_bisector() ? "bisector" : "contour" ) << color << std::endl;
+//    std::cout << " " << ( i->is_bisector() ? "bisector" : "contour" ) << color << std::endl;
     
     if (i->is_bisector())
     svg_line(i->opposite()->vertex()->point().x(), i->opposite()->vertex()->point().y(), 
