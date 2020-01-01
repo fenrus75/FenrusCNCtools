@@ -20,6 +20,7 @@ static double last_X, last_Y;
 
 
 
+static double svgheight = 0;
 
 static void chr_replace(char *line, char a, char r)
 {
@@ -52,13 +53,13 @@ static void cubic_bezier(class scene *scene,
         nX = (1-t)*(1-t)*(1-t)*x0 + 3*(1-t)*(1-t)*t*x1 + 3 * (1-t)*t*t*x2 + t*t*t*x3;
         nY = (1-t)*(1-t)*(1-t)*y0 + 3*(1-t)*(1-t)*t*y1 + 3 * (1-t)*t*t*y2 + t*t*t*y3;
         if (distance(lX,lY, nX,nY) > 1) {
-            scene->add_point_to_poly(px_to_mm(nX), px_to_mm(nY));
+            scene->add_point_to_poly(px_to_mm(nX), px_to_mm(svgheight + nY));
             lX = nX;
             lY = nY;
         }
         t = t + delta;
     }
-    scene->add_point_to_poly(px_to_mm(x3),px_to_mm(y3));
+    scene->add_point_to_poly(px_to_mm(x3),px_to_mm(svgheight + y3));
 }                    
 
 static void quadratic_bezier(class scene *scene,
@@ -76,13 +77,13 @@ static void quadratic_bezier(class scene *scene,
         nX = (1-t)*(1-t)*x0 + 2*(1-t)*t*x1 + t*t*x3;
         nY = (1-t)*(1-t)*y0 + 2*(1-t)*t*y1 + t*t*y3;
         if (distance(lX,lY, nX,nY) > 1) {
-            scene->add_point_to_poly(px_to_mm(nX), px_to_mm(nY));
+            scene->add_point_to_poly(px_to_mm(nX), px_to_mm(svgheight + nY));
             lX = nX;
             lY = nY;
         }
         t = t + delta;
     }
-    scene->add_point_to_poly(px_to_mm(x3), px_to_mm(y3));
+    scene->add_point_to_poly(px_to_mm(x3), px_to_mm(svgheight + y3));
 }                    
 
 
@@ -109,7 +110,7 @@ static void parse_circle(class scene *scene, char *line)
     while (phi < 360) {
         double P;
         P = phi / 360.0 * 2 * M_PI;
-        scene->add_point_to_poly(px_to_mm(X + R * cos(P)), px_to_mm(-Y + R * sin(P)));
+        scene->add_point_to_poly(px_to_mm(X + R * cos(P)), px_to_mm(svgheight -Y + R * sin(P)));
         phi = phi + 1;
     }
     last_X = X;
@@ -151,13 +152,13 @@ static void push_chunk(class scene *scene, char *chunk, char *line)
             }
 #endif
 //            printf("Line         : %5.2f %5.2f\n", arg1, arg2);
-            scene->add_point_to_poly(px_to_mm(arg1), px_to_mm(-arg2));
+            scene->add_point_to_poly(px_to_mm(arg1), px_to_mm(svgheight-arg2));
             last_X = arg1;
             last_Y = arg2;
             break;
         case 'M':
 //            printf("Start of poly: %5.2f %5.2f\n", arg1, arg2);
-            scene->new_poly(px_to_mm(arg1), px_to_mm(-arg2));
+            scene->new_poly(px_to_mm(arg1), px_to_mm(svgheight-arg2));
             last_X = arg1;
             last_Y = arg2;
             break;
@@ -165,18 +166,18 @@ static void push_chunk(class scene *scene, char *chunk, char *line)
 //            printf("Start of poly: %5.2f %5.2f\n", arg1, arg2);
             arg1 += last_X;
             arg2 += last_Y;
-            scene->new_poly(px_to_mm(arg1), px_to_mm(-arg2));
+            scene->new_poly(px_to_mm(arg1), px_to_mm(svgheight-arg2));
             last_X = arg1;
             last_Y = arg2;
             break;
         case 'H':
 //            printf("Start of poly: %5.2f %5.2f\n", arg1, arg2);
-            scene->add_point_to_poly(px_to_mm(arg1), px_to_mm(-last_Y));
+            scene->add_point_to_poly(px_to_mm(arg1), px_to_mm(svgheight-last_Y));
             last_X = arg1;
             break;
         case 'V':
 //            printf("Start of poly: %5.2f %5.2f\n", arg1, arg2);
-            scene->add_point_to_poly(px_to_mm(last_X), px_to_mm(-arg1));
+            scene->add_point_to_poly(px_to_mm(last_X), px_to_mm(svgheight-arg1));
             last_Y = arg1;
             break;
         case 'C':
@@ -213,13 +214,22 @@ static void parse_line(class scene *scene, char *line)
 {
     char *c;
     char chunk[4095];
-    double height;
+    double height, width;
     
     c = strstr(line, "height=\"");
     if (c) {
         height = strtod(c+8, NULL);
-        scene->declare_minY(px_to_mm(-height));
+//        scene->declare_minY(px_to_mm(-height));
+        svgheight = height;
     }
+    /*
+    c = strstr(line, "width=\"");
+    if (c) {
+        width = strtod(c+7, NULL);
+        scene->declare_maxX(px_to_mm(width));
+        printf("MAX X %5.2f\n", width);
+    }
+    */
     
     c = strstr(line,"<circle cx=");
     if (c) {
