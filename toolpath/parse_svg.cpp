@@ -214,7 +214,7 @@ static void parse_line(class scene *scene, char *line)
 {
     char *c;
     char chunk[4095];
-    double height, width;
+    double height;
     
     c = strstr(line, "height=\"");
     if (c) {

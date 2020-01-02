@@ -18,10 +18,10 @@ class input_shape;
 class scene {
 public:
         scene() {
-            minX = 1000000;
-            minY = 1000000;
-            maxX = -1000000;
-            maxY = -1000000;
+            minX = 0;
+            minY = 0;
+            maxX = 0;
+            maxY = 0;
             _want_finishing_pass = false;
             _want_inbetween_paths = false;
             _want_skeleton_paths = false;
@@ -38,6 +38,7 @@ public:
         double get_maxY(void);
         
         void declare_minY(double Y);
+        void declare_maxX(double X) { if (X > maxX) maxX = X;};
 
         void new_poly(double X, double Y);
         void set_poly_name(const char *n);
@@ -67,6 +68,8 @@ public:
         
         class scene * scene_from_vcarve(class scene *input, double depth, int toolnr);
 
+
+        double distance_from_edge(double X, double Y);
 
         
 private:

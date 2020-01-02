@@ -43,6 +43,7 @@ public:
         is_slotting = false;
         is_optional = false;
         is_vcarve = false;
+        is_single = false;
         run_reverse = false;
         diameter = 0;
         start_vertex = 0;
@@ -64,6 +65,7 @@ public:
     bool is_slotting;    
     bool is_optional;
     bool is_vcarve;
+    bool is_single;
     bool run_reverse;
     
     double length;
@@ -95,6 +97,7 @@ public:
         minY = 0.0;
         is_optional = false;
         is_slotting = false;
+        is_single = false;
         run_reverse = false;
         diameter = 0.0;
         name = "unknown";
@@ -124,6 +127,9 @@ public:
     
     /* run the toolpath outside in */
     bool run_reverse;
+    
+    /* don't complete the poly */
+    bool is_single;
     
     void print_as_svg(void);
     void output_gcode(void);
@@ -196,8 +202,11 @@ public:
     
     void set_name(const char *n);
     void set_minY(double mY);
+    double distance_from_edge(double X, double Y);
     
     class scene * scene_from_vcarve(class scene *input, double depth, int toolnr);
+    
+    class scene *parent;
 
 private:
     const char *name;
@@ -213,7 +222,6 @@ private:
 
     
     Polygon_2 poly;    
-    double distance_from_edge(double X, double Y);
 };
 
 

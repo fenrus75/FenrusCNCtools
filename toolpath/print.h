@@ -34,6 +34,23 @@ void print_polygon ( CGAL::Polygon_2<K,C> const& poly, const char * color )
 }
 
 template<class K, class C>
+void print_polygon_noclose ( CGAL::Polygon_2<K,C> const& poly, const char * color )
+{
+  typedef CGAL::Polygon_2<K,C> Polygon ;
+  
+//  std::cout << "Polygon with " << poly.size() << " vertices" << std::endl ;
+  
+  for( typename Polygon::Vertex_const_iterator vi = poly.vertices_begin() ; vi != poly.vertices_end() ; ++ vi )
+  {
+    typename Polygon::Vertex_const_iterator vi2;
+    vi2 = vi+1;
+    if (vi2 != poly.vertices_end())
+      svg_line(vi->x(), vi->y(), vi2->x(), vi2->y(), color, 0.42);
+    
+  }
+}
+
+template<class K, class C>
 void print_polygon ( CGAL::Polygon_2<K,C> const * poly, const char * color )
 {
   typedef CGAL::Polygon_2<K,C> Polygon ;
@@ -53,6 +70,23 @@ void print_polygon ( CGAL::Polygon_2<K,C> const * poly, const char * color )
 }
 
 template<class K, class C>
+void print_polygon_noclose ( CGAL::Polygon_2<K,C> const * poly, const char * color )
+{
+  typedef CGAL::Polygon_2<K,C> Polygon ;
+  
+//  std::cout << "Polygon with " << poly->size() << " vertices and area " << poly->area() << std::endl ;
+  
+  for( typename Polygon::Vertex_const_iterator vi = poly->vertices_begin() ; vi != poly->vertices_end() ; ++ vi )
+  {
+    typename Polygon::Vertex_const_iterator vi2;
+    vi2 = vi+1;
+    if (vi2 != poly->vertices_end())
+      svg_line(vi->x(), vi->y(), vi2->x(), vi2->y(), color, 0.42);
+    
+  }
+}
+
+template<class K, class C>
 void print_polygon ( CGAL::Polygon_2<K,C> const * poly, const char * color, double width )
 {
   typedef CGAL::Polygon_2<K,C> Polygon ;
@@ -67,6 +101,23 @@ void print_polygon ( CGAL::Polygon_2<K,C> const * poly, const char * color, doub
       vi2 = poly->vertices_begin();
       
     svg_line(vi->x(), vi->y(), vi2->x(), vi2->y(), color, width);
+    
+  }
+}
+
+template<class K, class C>
+void print_polygon_noclose ( CGAL::Polygon_2<K,C> const * poly, const char * color, double width )
+{
+  typedef CGAL::Polygon_2<K,C> Polygon ;
+  
+//  std::cout << "Polygon with " << poly->size() << " vertices and area " << poly->area() << std::endl ;
+  
+  for( typename Polygon::Vertex_const_iterator vi = poly->vertices_begin() ; vi != poly->vertices_end() ; ++ vi )
+  {
+    typename Polygon::Vertex_const_iterator vi2;
+    vi2 = vi+1;
+    if (vi2 != poly->vertices_end())
+      svg_line(vi->x(), vi->y(), vi2->x(), vi2->y(), color, width);
     
   }
 }

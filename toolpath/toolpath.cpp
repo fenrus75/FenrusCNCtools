@@ -17,6 +17,10 @@ void toolpath::print_as_svg(const char *color)
     double width = diameter * 0.333;
 
 //    if (is_vcarve) width = diameter;
+      if (is_vcarve) {
+//          width = 4;
+          color = "purple";
+      }
 
 //    if (is_hole)
 //        color = "red";

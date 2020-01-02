@@ -100,8 +100,24 @@ void toollevel::add_poly(Polygon_2 *poly, bool is_hole)
 
 void toollevel::add_poly_vcarve(Polygon_2 *poly, double depth1, double depth2)
 {
-    class toolpath *tp;
+    /* check if the same path is already there if we're slotting */
+
+    for (auto tp : toolpaths) {
+            if (tp->polygons.size() > 1) {
+                printf("GOT HERE\n");
+                continue;
+            }
+            Polygon_2 *p2;
+            p2 = tp->polygons[0];
+            if ( (*p2)[0].x() == (*poly)[0].x() && (*p2)[0].y() == (*poly)[0].y() &&
+                (*p2)[1].x() == (*poly)[1].x() && (*p2)[1].y() == (*poly)[1].y())
+                    return;
+            if ( (*p2)[0].x() == (*poly)[1].x() && (*p2)[0].y() == (*poly)[1].y() &&
+                (*p2)[1].x() == (*poly)[0].x() && (*p2)[1].y() == (*poly)[0].y())
+                    return;
+    }
     
+    class toolpath *tp;
     tp = new(class toolpath);
     tp->add_polygon(poly);
     tp->depth = depth1;
@@ -111,6 +127,7 @@ void toollevel::add_poly_vcarve(Polygon_2 *poly, double depth1, double depth2)
     tp->is_vcarve = true;
     tp->minY = minY;
     tp->diameter = diameter;
+    tp->is_single = true;
     toolpaths.push_back(tp);    
 }
 

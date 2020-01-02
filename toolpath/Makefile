@@ -15,5 +15,8 @@ OBJS := linalg.o tooldepth.o toollib.o gcode.o toolpath.o inputshape.o main.o sc
 toolpath: Makefile $(OBJS)
 	g++ -O2 $(OBJS) -o toolpath -lCGAL -lgmp -lCGAL_Core -lmpfr
 	
+la_test: Makefile la_test.o linalg.o
+	gcc la_test.o linalg.o -lm -o la_test
+	
 clean:
 	rm -f *.o *~ DEADJOE toolpath

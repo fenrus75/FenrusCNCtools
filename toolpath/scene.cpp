@@ -42,21 +42,26 @@ void scene::new_poly(double X, double Y)
   end_poly();
 
   shape = new(class inputshape);
+  shape->parent = this;
   
   add_point_to_poly(X, Y);
 }
 
 void scene::set_poly_name(const char *n)
 {
-  if (!shape)
+  if (!shape) {
     shape = new(class inputshape);
+    shape->parent = this;
+  }
   shape->set_name(n);
 }
 
 void scene::add_point_to_poly(double X, double Y)
 {
-  if (!shape)
+  if (!shape) { 
     shape = new(class inputshape);
+    shape->parent = this;
+  }
     
   shape->add_point(X, Y);
   minX = fmin(X, minX);
@@ -98,7 +103,8 @@ void scene::write_naked_svg()
 void scene::write_svg(const char *filename)
 {
 
-  printf("Work size: %5.2f x %5.2f inch\n", mm_to_inch(maxX-minX), mm_to_inch(maxY - minY));
+  printf("Work size: %5.2f x %5.2f inch\n", mm_to_inch(maxX), mm_to_inch(maxY-minY));
+//  printf("%5.2f,%5.2f  x %5.2f, %5.2f\n", minX,minY, maxX,maxY);
   set_svg_bounding_box(minX, minY, maxX, maxY);
   write_svg_header(filename, 1.0);
 
@@ -203,7 +209,7 @@ void scene::create_toolpaths(double depth)
   int toolnr;
   int tool;
   
-  printf("create_toolpaths with depth %5.2f\n", depth);
+//  printf("create_toolpaths with depth %5.2f\n", depth);
   
   tool = toollist.size() -1;
   while (tool >= 0) {
@@ -256,7 +262,7 @@ void scene::create_toolpaths(double depth)
             i->create_toolpaths_vcarve(toolnr, depth);
         } else {
           if (!vcarve_scene) {
-            printf("Creating special vcarve_scene\n");
+//            printf("Creating special vcarve_scene\n");
             vcarve_scene = scene_from_vcarve(NULL, depth, toollist[0]);
             vcarve_scene->push_tool(toollist[0]);
             vcarve_scene->create_toolpaths(depth);
@@ -334,9 +340,18 @@ scene::scene(const char *filename)
 class scene * scene::scene_from_vcarve(class scene *input, double depth, int toolnr)
 {
   class scene *scene = input;
-  printf("SCENE_FROM_VCARVE for depth %5.2f\n", depth);
+//  printf("SCENE_FROM_VCARVE for depth %5.2f\n", depth);
   for (auto i : shapes)
     scene = i->scene_from_vcarve(scene, depth, toolnr);
   scene->process_nesting();    
   return scene;
+}
+
+double scene::distance_from_edge(double X, double Y)
+{
+  double d = 1000000000;
+  for (auto i : shapes) {
+       d = fmin(d, i->distance_from_edge(X, Y));
+  }
+  return d;
 }

@@ -302,7 +302,7 @@ void inputshape::create_toolpaths_vcarve(int toolnr, double maxdepth)
           polyhole->add_hole(i->poly);
     }
     
-    printf("VCarve toolpath\n");
+//    printf("VCarve toolpath\n");
     
     if (!iss) {
         iss =  CGAL::create_interior_straight_skeleton_2(*polyhole);
@@ -326,20 +326,122 @@ void inputshape::create_toolpaths_vcarve(int toolnr, double maxdepth)
             X2 = point_snap2(x->opposite()->vertex()->point().x());
             Y2 = point_snap2(x->opposite()->vertex()->point().y());
             if (x->is_bisector()) {
-                d1 = radius_to_depth(distance_from_edge(X1, Y1), angle);
-                /* BAD HACK */
-                if (d1 < maxdepth)
-                    d1 = maxdepth;
-                d2 = radius_to_depth(distance_from_edge(X2, Y2), angle);
-                if (d2 < maxdepth)
-                    d2 = maxdepth;
-                if (X1 != X2 || Y1 != Y2) {
+                d1 = radius_to_depth(parent->distance_from_edge(X1, Y1), angle);
+                d2 = radius_to_depth(parent->distance_from_edge(X2, Y2), angle);
+                
+                /* four cases to deal with */
+                
+                /* case 1: d1 and d2 are both ok wrt max depth */
+                if (d1 >= maxdepth && d2 >= maxdepth) {
+//                    printf(" CASE 1 \n");
+                    if (X1 != X2 || Y1 != Y2) { 
                             Polygon_2 *p = new(Polygon_2);
                             p->push_back(Point(X1, Y1));
                             p->push_back(Point(X2, Y2));
-                            tool->diameter = fmax(tool->diameter, d1 * 2);
-                            tool->diameter = fmax(tool->diameter, d2 * 2);
+                            tool->diameter = fmax(tool->diameter, -d1 * 2);
+                            tool->diameter = fmax(tool->diameter, -d2 * 2);
                             tool->add_poly_vcarve(p, d1, d2);
+                    }
+                }
+                
+                /* case 2: d1 and d2 are both not ok wrt max depth */
+                if (d1 < maxdepth && d2 < maxdepth) {
+                  if (X1 != X2 || Y1 != Y2) { 
+                    double x1,y1,x2,y2,x3,y3,x4,y4;
+                    
+                    lines_tangent_to_two_circles(X1, Y1, depth_to_radius(fabs(d1) - fabs(maxdepth), angle), 
+                                X2, Y2, depth_to_radius(fabs(d2) - fabs(maxdepth), angle),
+                                0,
+                                &x1, &y1, &x2, &y2);
+                    lines_tangent_to_two_circles(X1, Y1, depth_to_radius(fabs(d1) - fabs(maxdepth), angle), 
+                                X2, Y2, depth_to_radius(fabs(d2) - fabs(maxdepth), angle),
+                                1,
+                                &x3, &y3, &x4, &y4);
+                                
+                    Polygon_2 *p = new(Polygon_2);
+//                    printf("x1 %5.2f y1 %5.2f   x2 %5.2f  y2 %5.2f\n", x1, y1, x2, y2);
+//                    printf("x3 %5.2f y3 %5.2f   x4 %5.2f  y4 %5.2f\n", x3, y3, x4, y4);
+                    p->push_back(Point(x1, y1));
+                    p->push_back(Point(x2, y2));
+                    tool->diameter = depth_to_radius(maxdepth, angle) * 2;
+                    tool->add_poly_vcarve(p, maxdepth, maxdepth);
+                    
+                    Polygon_2 *p2 = new(Polygon_2);
+                    p2->push_back(Point(x3, y3));
+                    p2->push_back(Point(x4, y4));
+                    tool->diameter = depth_to_radius(maxdepth, angle) * 2;
+                    tool->add_poly_vcarve(p2, maxdepth, maxdepth);
+                
+//                    printf(" CASE 2 \n");
+                  }
+                }
+                
+                /* case 3: d1 is not ok but d2 is ok */
+                /* if we swap 1 and 2 we're at case 4 so swap and cheap out */
+                if (d1 < maxdepth && d2 >= maxdepth) {
+                    double t;
+                    
+                    t = X1; X1 = X2; X2 = t;
+                    t = Y1; Y1 = Y2; Y2 = t;
+                    t = d1; d1 = d2; d2 = t;
+                    
+//                    printf(" CASE 3 \n");
+                }
+                
+                /* case 4: d1 is ok d2 is not ok */
+                if (d1 >= maxdepth && d2 < maxdepth) {
+                  if (X1 != X2 || Y1 != Y2) { 
+                    double x1,y1,x2,y2,x3,y3,x4,y4;
+//                    printf(" CASE 4 \n");
+                    double Xm, Ym; /* midpoint of the vector at the place it crosses the depth */
+                    double ratio;
+                    
+                    x1 = X2 - X1;
+                    y1 = Y2 - Y1;
+                    
+                    ratio = (d1 - maxdepth) / (d1 - d2);
+                    Xm = X1 + ratio * x1;
+                    Ym = Y1 + ratio * y1;
+//                    printf("Point 1 (%5.2f,%5.2f) at %5.2f\n", X1, Y1, d1);
+//                    printf("Point 2 (%5.2f,%5.2f) at %5.2f\n", X2, Y2, d2);
+//                    printf("Point M (%5.2f,%5.2f) at %5.2f\n", Xm, Ym, maxdepth);
+
+                    /* From X1 to Xm is business as usual */
+                    Polygon_2 *p = new(Polygon_2);
+                    p->push_back(Point(X1, Y1));
+                    p->push_back(Point(Xm, Ym));
+                    tool->diameter = fmax(tool->diameter, -d1 * 2);
+                    tool->diameter = fmax(tool->diameter, -fabs(maxdepth) * 2);
+                    tool->add_poly_vcarve(p, d1, maxdepth);
+                    
+                    /* and from Xm to X2 is like case 2 */
+                    lines_tangent_to_two_circles(Xm, Ym, 0, 
+                                X2, Y2, depth_to_radius(fabs(d2) - fabs(maxdepth), angle),
+                                0,
+                                &x1, &y1, &x2, &y2);
+                    lines_tangent_to_two_circles(Xm, Ym, 0, 
+                                X2, Y2, depth_to_radius(fabs(d2) - fabs(maxdepth), angle),
+                                1,
+                                &x3, &y3, &x4, &y4);
+                                
+                    Polygon_2 *p3 = new(Polygon_2);
+//                    printf("x1 %5.2f y1 %5.2f   x2 %5.2f  y2 %5.2f\n", x1, y1, x2, y2);
+//                    printf("x3 %5.2f y3 %5.2f   x4 %5.2f  y4 %5.2f\n", x3, y3, x4, y4);
+                    p3->push_back(Point(x1, y1));
+                    p3->push_back(Point(x2, y2));
+                    tool->diameter = depth_to_radius(maxdepth, angle) * 2;
+                    tool->add_poly_vcarve(p3, maxdepth, maxdepth);
+                    
+                    Polygon_2 *p2 = new(Polygon_2);
+                    p2->push_back(Point(x3, y3));
+                    p2->push_back(Point(x4, y4));
+                    tool->diameter = depth_to_radius(maxdepth, angle) * 2;
+                    tool->add_poly_vcarve(p2, maxdepth, maxdepth);
+                
+                    
+                    
+                    
+                  }        
                 }
             }
     }
@@ -463,6 +565,14 @@ double inputshape::distance_from_edge(double X, double Y)
             next = 0;
             
         double d = distance_point_from_vector(poly[i].x(), poly[i].y(), poly[next].x(), poly[next].y(), X, Y);
+//        if (d < 20) {
+//            printf("-----------\n");
+//            double d = distance_point_from_vector(poly[i].x(), poly[i].y(), poly[next].x(), poly[next].y(), X, Y);
+//            printf("Point %5.4f %5.4f\n", X, Y);
+//            printf("Vector %5.4f,%5.4f -> %5.4f,%5.4f\n", poly[i].x(), poly[i].y(), poly[next].x(), poly[next].y());
+//            printf("Distance is %6.4f\n", d);
+//            printf("-----------\n");
+//        }
         if (d < bestdist) {
 //            printf("New best distance %5.2f   %5.2f,%5.2f -> %5.2f,%5.2f\n", d, X,Y, poly[i].x(), poly[i].y());
             bestdist= d;
@@ -493,7 +603,7 @@ void inputshape::set_minY(double mY)
 class scene * inputshape::scene_from_vcarve(class scene *input, double depth, int toolnr)
 {
     class scene *scene;
-    double angle = get_tool_angle(toolnr);
+    //double angle = get_tool_angle(toolnr);
     
     if (input)
         scene = input;
@@ -513,7 +623,8 @@ class scene * inputshape::scene_from_vcarve(class scene *input, double depth, in
     for (auto i : children)
         scene = i->scene_from_vcarve(scene, 0.0, 0);
 
-        
+
+#if 0        
     if (depth != 0.0 && toolnr > 0) {
         /* step 3: create an inset path */
         double inset;
@@ -532,7 +643,7 @@ class scene * inputshape::scene_from_vcarve(class scene *input, double depth, in
         /* first inset is the diameter of the Vcutter at the point of max depth */
         inset = 2 * depth_to_radius(depth, angle);
         
-        printf("INSET is %5.2f for depth %5.2f\n", inset, depth);
+//        printf("INSET is %5.2f for depth %5.2f\n", inset, depth);
     
         PolygonWithHolesPtrVector  offset_polygons;
 
@@ -566,7 +677,7 @@ class scene * inputshape::scene_from_vcarve(class scene *input, double depth, in
         
         /* step 4: add the inset paths to the new scene */
     }
-    
+#endif    
     return scene;
 }
 

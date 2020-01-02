@@ -69,6 +69,7 @@ extern void gcode_tool_change(int toolnr);
 extern double get_tool_angle(int toolnr);
 extern int tool_is_vcarve(int toolnr);
 extern double distance_point_from_vector(double X1, double Y1, double X2, double Y2, double pX, double pY);
+extern void lines_tangent_to_two_circles(double X1, double Y1, double R1, double X2, double Y2, double R2, int select, double *pX1, double *pY1, double *pX2, double *pY2);
 
 
 static inline double px_to_inch(double px) { return px / 96.0; };
