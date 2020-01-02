@@ -74,5 +74,95 @@ double distance_point_from_vector(double X1, double Y1, double X2, double Y2, do
      
      /* if l < 0 or l > 1, the intersect point is actually outside our vector and one of the two edges
         is the shortest distance instead */
+//     printf("Point does not hit vector  %5.2f\n", fmin(dist(pX,pY,X1,X2), dist(pX,pY,X2,Y2)));
      return fmin(dist(pX,pY,X1,X2), dist(pX,pY,X2,Y2));
+}
+
+
+/* Creating 2 vectors that are outer tangents to two circles, as needed for limited depth v-carving */
+/* Math based on https://en.wikipedia.org/wiki/Tangent_lines_to_circles */
+
+/* Circle 1 is allowed to have a radius of 0 (point) */
+
+/* If R1 > R2 then we flip the inputs so that always R1 <= R2*/
+
+/* there are two answers, select = 0 and select = 1 return them */
+
+void lines_tangent_to_two_circles(double X1, double Y1, double R1, double X2, double Y2, double R2, int select, double *pX1, double *pY1, double *pX2, double *pY2)
+{
+     double dr;
+     
+     double length;
+     double Dcenter;
+     double phi;
+     
+     double l;
+     
+     double ux, uy; /* unit vector from x1/y1 to x2/y2 */
+     double ox, oy; /* vector orthogonal to this unit vector */
+     
+     double vx, vy, ovx, ovy;
+     
+     if (R2 < R1) {
+        return lines_tangent_to_two_circles(X2,Y2,R1,X1,Y1,R1, select, pX1, pY1, pX2, pY2);
+     }
+     
+     if (select <= 0)
+       select = -1;
+     else
+       select = 1;
+     
+
+     Dcenter = dist(X1, Y1, X2, Y2);
+     
+     
+     /* calculate unit vector */
+     ux = (X2-X1)/Dcenter;
+     uy = (Y2-Y1)/Dcenter;
+     
+     /* vector of length 1 orthogonal to this unit vector */
+     ox = -uy;
+     oy = ux;
+     
+//     printf("(ox, oy) is (%5.2f, %5.2f)\n", ox, oy);
+//     printf("(ux, uy) is (%5.2f, %5.2f)\n", ux, uy);
+     
+     
+     /* most of the math below assumes the first circle is a point, we just offset the line by "dr" later to correct */
+     dr = R2 - R1;
+     
+     /* length is the distance from the center of C1 to the point where the vector is tangent to C2 */
+     /* dr^2 + length^2 = Dcenter^2 => length = sqrt(Dcenter^2 - dr^2) */
+     length = sqrt(Dcenter * Dcenter - dr*dr);
+     
+//     printf("length is %5.2f\n", length);
+     
+     /* phi is the angle at C1 */
+     phi = asin(dr/Dcenter);
+//     printf("phi is %5.2f which is %5.2f degrees\n", phi, phi /2  / 3.1415 * 360.0);
+     
+     /* so now we know the angle and "length" so we can compute the distance along u and how high on o the new point is */
+     
+//     printf("cos phi is %5.2f   sin phi is %5.2f\n", cos(phi), sin(phi));
+     
+     vx = ux * cos(phi) * length + select * sin(phi) * length * ox;
+     vy = uy * cos(phi) * length + select * sin(phi) * length * oy;
+     
+//     printf("(vx, vy) is (%5.2f, %5.2f)\n", vx, vy);
+ 
+          
+     ovx = -vy;
+     ovy = vx;
+     
+     l = sqrt(ovx*ovx + ovy*ovy);
+     ovx /= l;
+     ovy /= l;
+ 
+     *pX1 = X1 + select * R1 * ovx;
+     *pY1 = Y1 + select * R1 * ovy;
+     
+     *pX2 = X1 + vx + select * R1 * ovx;
+     *pY2 = Y1 + vy + select * R1 * ovy;
+  
+//     printf("----\n");    
 }
