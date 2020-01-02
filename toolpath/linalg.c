@@ -88,7 +88,7 @@ double distance_point_from_vector(double X1, double Y1, double X2, double Y2, do
 
 /* there are two answers, select = 0 and select = 1 return them */
 
-void lines_tangent_to_two_circles(double X1, double Y1, double R1, double X2, double Y2, double R2, int select, double *pX1, double *pY1, double *pX2, double *pY2)
+int lines_tangent_to_two_circles(double X1, double Y1, double R1, double X2, double Y2, double R2, int select, double *pX1, double *pY1, double *pX2, double *pY2)
 {
      double dr;
      
@@ -133,13 +133,16 @@ void lines_tangent_to_two_circles(double X1, double Y1, double R1, double X2, do
      
      /* length is the distance from the center of C1 to the point where the vector is tangent to C2 */
      /* dr^2 + length^2 = Dcenter^2 => length = sqrt(Dcenter^2 - dr^2) */
+     
+     if ((Dcenter * Dcenter - dr*dr) < 0)
+      return -1;
      length = sqrt(Dcenter * Dcenter - dr*dr);
      
 //     printf("length is %5.2f\n", length);
      
      /* phi is the angle at C1 */
      phi = asin(dr/Dcenter);
-//     printf("phi is %5.2f which is %5.2f degrees\n", phi, phi /2  / 3.1415 * 360.0);
+ //    printf("phi is %5.2f which is %5.2f degrees\n", phi, phi /2  / 3.1415 * 360.0);
      
      /* so now we know the angle and "length" so we can compute the distance along u and how high on o the new point is */
      
@@ -165,4 +168,5 @@ void lines_tangent_to_two_circles(double X1, double Y1, double R1, double X2, do
      *pY2 = Y1 + vy + select * R1 * ovy;
   
 //     printf("----\n");    
+     return 0;
 }

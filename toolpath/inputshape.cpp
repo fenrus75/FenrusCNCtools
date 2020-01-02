@@ -348,29 +348,38 @@ void inputshape::create_toolpaths_vcarve(int toolnr, double maxdepth)
                 if (d1 < maxdepth && d2 < maxdepth) {
                   if (X1 != X2 || Y1 != Y2) { 
                     double x1,y1,x2,y2,x3,y3,x4,y4;
+                    int ret = 0;
                     
-                    lines_tangent_to_two_circles(X1, Y1, depth_to_radius(fabs(d1) - fabs(maxdepth), angle), 
+                    ret += lines_tangent_to_two_circles(X1, Y1, depth_to_radius(fabs(d1) - fabs(maxdepth), angle), 
                                 X2, Y2, depth_to_radius(fabs(d2) - fabs(maxdepth), angle),
                                 0,
                                 &x1, &y1, &x2, &y2);
-                    lines_tangent_to_two_circles(X1, Y1, depth_to_radius(fabs(d1) - fabs(maxdepth), angle), 
+                    ret += lines_tangent_to_two_circles(X1, Y1, depth_to_radius(fabs(d1) - fabs(maxdepth), angle), 
                                 X2, Y2, depth_to_radius(fabs(d2) - fabs(maxdepth), angle),
                                 1,
                                 &x3, &y3, &x4, &y4);
                                 
-                    Polygon_2 *p = new(Polygon_2);
-//                    printf("x1 %5.2f y1 %5.2f   x2 %5.2f  y2 %5.2f\n", x1, y1, x2, y2);
-//                    printf("x3 %5.2f y3 %5.2f   x4 %5.2f  y4 %5.2f\n", x3, y3, x4, y4);
-                    p->push_back(Point(x1, y1));
-                    p->push_back(Point(x2, y2));
-                    tool->diameter = depth_to_radius(maxdepth, angle) * 2;
-                    tool->add_poly_vcarve(p, maxdepth, maxdepth);
+                    if (ret == 0) {
+                                
+                      Polygon_2 *p = new(Polygon_2);
+                      if (isnan(x1) || isnan(x2) || isnan(y1) || isnan(y2)) {
+                        printf("%5.5f,%5.5f   -> %5.5f,%5.5f\n", X1, Y1, X2, Y2);
+                        printf("d1 %5.2f   d2 %5.2f\n", d1, d2);
+                        printf("d2r %5.5f  %5.5f\n", depth_to_radius(fabs(d1) - fabs(maxdepth),angle), depth_to_radius(fabs(d2) - fabs(maxdepth), angle));
+                        printf("x1 %5.2f y1 %5.2f   x2 %5.2f  y2 %5.2f\n", x1, y1, x2, y2);
+                        printf("x3 %5.2f y3 %5.2f   x4 %5.2f  y4 %5.2f\n", x3, y3, x4, y4);
+                      }
+                      p->push_back(Point(x1, y1));
+                      p->push_back(Point(x2, y2));
+                      tool->diameter = depth_to_radius(maxdepth, angle) * 2;
+                      tool->add_poly_vcarve(p, maxdepth, maxdepth);
                     
-                    Polygon_2 *p2 = new(Polygon_2);
-                    p2->push_back(Point(x3, y3));
-                    p2->push_back(Point(x4, y4));
-                    tool->diameter = depth_to_radius(maxdepth, angle) * 2;
-                    tool->add_poly_vcarve(p2, maxdepth, maxdepth);
+                      Polygon_2 *p2 = new(Polygon_2);
+                      p2->push_back(Point(x3, y3));
+                      p2->push_back(Point(x4, y4));
+                      tool->diameter = depth_to_radius(maxdepth, angle) * 2;
+                      tool->add_poly_vcarve(p2, maxdepth, maxdepth);
+                    }
                 
 //                    printf(" CASE 2 \n");
                   }
@@ -392,6 +401,7 @@ void inputshape::create_toolpaths_vcarve(int toolnr, double maxdepth)
                 if (d1 >= maxdepth && d2 < maxdepth) {
                   if (X1 != X2 || Y1 != Y2) { 
                     double x1,y1,x2,y2,x3,y3,x4,y4;
+                    int ret = 0;
 //                    printf(" CASE 4 \n");
                     double Xm, Ym; /* midpoint of the vector at the place it crosses the depth */
                     double ratio;
@@ -415,11 +425,11 @@ void inputshape::create_toolpaths_vcarve(int toolnr, double maxdepth)
                     tool->add_poly_vcarve(p, d1, maxdepth);
                     
                     /* and from Xm to X2 is like case 2 */
-                    lines_tangent_to_two_circles(Xm, Ym, 0, 
+                    ret += lines_tangent_to_two_circles(Xm, Ym, 0, 
                                 X2, Y2, depth_to_radius(fabs(d2) - fabs(maxdepth), angle),
                                 0,
                                 &x1, &y1, &x2, &y2);
-                    lines_tangent_to_two_circles(Xm, Ym, 0, 
+                    ret += lines_tangent_to_two_circles(Xm, Ym, 0, 
                                 X2, Y2, depth_to_radius(fabs(d2) - fabs(maxdepth), angle),
                                 1,
                                 &x3, &y3, &x4, &y4);
@@ -430,13 +440,15 @@ void inputshape::create_toolpaths_vcarve(int toolnr, double maxdepth)
                     p3->push_back(Point(x1, y1));
                     p3->push_back(Point(x2, y2));
                     tool->diameter = depth_to_radius(maxdepth, angle) * 2;
-                    tool->add_poly_vcarve(p3, maxdepth, maxdepth);
+                    if (ret == 0)
+                        tool->add_poly_vcarve(p3, maxdepth, maxdepth);
                     
                     Polygon_2 *p2 = new(Polygon_2);
                     p2->push_back(Point(x3, y3));
                     p2->push_back(Point(x4, y4));
                     tool->diameter = depth_to_radius(maxdepth, angle) * 2;
-                    tool->add_poly_vcarve(p2, maxdepth, maxdepth);
+                    if (ret == 0)
+                        tool->add_poly_vcarve(p2, maxdepth, maxdepth);
                 
                     
                     

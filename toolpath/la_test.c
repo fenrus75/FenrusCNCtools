@@ -4,26 +4,31 @@
 #include <stdlib.h>
 #include <math.h>
 
-extern void lines_tangent_to_two_circles(double X1, double Y1, double R1, double X2, double Y2, double R2, int select, double *pX1, double *pY1, double *pX2, double *pY2);
+extern int lines_tangent_to_two_circles(double X1, double Y1, double R1, double X2, double Y2, double R2, int select, double *pX1, double *pY1, double *pX2, double *pY2);
 
 int main(int argc, char **argv)
 {
     FILE *file;
     double X1, Y1, X2, Y2;
     double R1, R2;
+    int ret = 0;
     
     
     double x1,y1,x2,y2;
     double x3,y3,x4,y4;
 
 
-    X1 = 0; Y1 = 0; R1 = 1;
+    X1 = 143.15; Y1 = 105.89; R1 = 8.08893;
     
-    X2 = 4; Y2 = 4; R2 = 2;
+    X2 = 142.70; Y2 = 105.56; R2 = 12.17702;
     
-    lines_tangent_to_two_circles(X1, Y1, R1, X2, Y2, R2, 0, &x1, &y1, &x2, &y2);
-    lines_tangent_to_two_circles(X1, Y1, R1, X2, Y2, R2, 1, &x3, &y3, &x4, &y4);
+    ret += lines_tangent_to_two_circles(X1, Y1, R1, X2, Y2, R2, 0, &x1, &y1, &x2, &y2);
+    ret += lines_tangent_to_two_circles(X1, Y1, R1, X2, Y2, R2, 1, &x3, &y3, &x4, &y4);
         
+    if (ret != 0) {
+            printf("Invalid result\n");
+            exit(0);
+    }
         
     file = fopen("output.svg", "w");
     fprintf(file, "<?xml version=\"1.0\" encoding=\"UTF-8\" ?>\n");

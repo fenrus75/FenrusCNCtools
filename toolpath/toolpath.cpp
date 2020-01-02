@@ -20,6 +20,7 @@ void toolpath::print_as_svg(const char *color)
       if (is_vcarve) {
 //          width = 4;
           color = "purple";
+          width = 0.5;
       }
 
 //    if (is_hole)
