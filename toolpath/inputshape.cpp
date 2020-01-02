@@ -22,8 +22,9 @@ double point_snap(double D)
 }
 double point_snap2(double D)
 {
-    int i = (int)(D * 100 + 0.5);
-    return i / 100.0;
+    return D;
+    int i = (int)(D * 1000 + 0.5);
+    return i / 1000.0;
 }
 
 void inputshape::set_level(int _level)
@@ -330,7 +331,7 @@ void inputshape::create_toolpaths_vcarve(int toolnr, double maxdepth)
                 d2 = radius_to_depth(parent->distance_from_edge(X2, Y2), angle);
                 
                 /* four cases to deal with */
-                
+#if 1                
                 /* case 1: d1 and d2 are both ok wrt max depth */
                 if (d1 >= maxdepth && d2 >= maxdepth) {
 //                    printf(" CASE 1 \n");
@@ -343,19 +344,26 @@ void inputshape::create_toolpaths_vcarve(int toolnr, double maxdepth)
                             tool->add_poly_vcarve(p, d1, d2);
                     }
                 }
-                
+#endif                
                 /* case 2: d1 and d2 are both not ok wrt max depth */
                 if (d1 < maxdepth && d2 < maxdepth) {
                   if (X1 != X2 || Y1 != Y2) { 
                     double x1,y1,x2,y2,x3,y3,x4,y4;
+                    double r1, r2;
+                    
+                    r1 = depth_to_radius(fabs(maxdepth) - fabs(d1), angle);
+                    r2 = depth_to_radius(fabs(maxdepth) - fabs(d2), angle); 
+                    
+//                    printf("D2R1  %5.2f   ->   %5.2f    %5.3f, %5.3f \n", depth_to_radius(d1, angle), r1,X1,Y1);
+//                    printf("D2R2  %5.2f   ->   %5.2f    %5.3f, %5.3f \n", depth_to_radius(d2, angle), r2,X2,Y2);
                     int ret = 0;
                     
-                    ret += lines_tangent_to_two_circles(X1, Y1, depth_to_radius(fabs(d1) - fabs(maxdepth), angle), 
-                                X2, Y2, depth_to_radius(fabs(d2) - fabs(maxdepth), angle),
+                    ret += lines_tangent_to_two_circles(X1, Y1, r1, 
+                                X2, Y2, r2,
                                 0,
                                 &x1, &y1, &x2, &y2);
-                    ret += lines_tangent_to_two_circles(X1, Y1, depth_to_radius(fabs(d1) - fabs(maxdepth), angle), 
-                                X2, Y2, depth_to_radius(fabs(d2) - fabs(maxdepth), angle),
+                    ret += lines_tangent_to_two_circles(X1, Y1, r1, 
+                                X2, Y2, r2,
                                 1,
                                 &x3, &y3, &x4, &y4);
                                 
@@ -384,7 +392,7 @@ void inputshape::create_toolpaths_vcarve(int toolnr, double maxdepth)
 //                    printf(" CASE 2 \n");
                   }
                 }
-                
+#if 1
                 /* case 3: d1 is not ok but d2 is ok */
                 /* if we swap 1 and 2 we're at case 4 so swap and cheap out */
                 if (d1 < maxdepth && d2 >= maxdepth) {
@@ -396,7 +404,8 @@ void inputshape::create_toolpaths_vcarve(int toolnr, double maxdepth)
                     
 //                    printf(" CASE 3 \n");
                 }
-                
+#endif
+#if 1                
                 /* case 4: d1 is ok d2 is not ok */
                 if (d1 >= maxdepth && d2 < maxdepth) {
                   if (X1 != X2 || Y1 != Y2) { 
@@ -414,7 +423,7 @@ void inputshape::create_toolpaths_vcarve(int toolnr, double maxdepth)
                     Ym = Y1 + ratio * y1;
 //                    printf("Point 1 (%5.2f,%5.2f) at %5.2f\n", X1, Y1, d1);
 //                    printf("Point 2 (%5.2f,%5.2f) at %5.2f\n", X2, Y2, d2);
-//                    printf("Point M (%5.2f,%5.2f) at %5.2f\n", Xm, Ym, maxdepth);
+//                    printf("Point M (%5.2f,%5.2f) at %5.2f\n", Xm, Ym, d1 + ratio * (d2-d1));
 
                     /* From X1 to Xm is business as usual */
                     Polygon_2 *p = new(Polygon_2);
@@ -426,13 +435,20 @@ void inputshape::create_toolpaths_vcarve(int toolnr, double maxdepth)
                     
                     /* and from Xm to X2 is like case 2 */
                     ret += lines_tangent_to_two_circles(Xm, Ym, 0, 
-                                X2, Y2, depth_to_radius(fabs(d2) - fabs(maxdepth), angle),
+                                X2, Y2, depth_to_radius(fabs(maxdepth) - fabs(d2), angle),
                                 0,
                                 &x1, &y1, &x2, &y2);
                     ret += lines_tangent_to_two_circles(Xm, Ym, 0, 
-                                X2, Y2, depth_to_radius(fabs(d2) - fabs(maxdepth), angle),
-                                1,
+                                X2, Y2, depth_to_radius(fabs(maxdepth) - fabs(d2), angle),
+                                1, 
                                 &x3, &y3, &x4, &y4);
+                      if (isnan(x1) || isnan(x2) || isnan(y1) || isnan(y2)) {
+                        printf("%5.5f,%5.5f   -> %5.5f,%5.5f\n", X1, Y1, X2, Y2);
+                        printf("d1 %5.2f   d2 %5.2f\n", d1, d2);
+                        printf("d2r %5.5f  %5.5f\n", depth_to_radius(fabs(d1) - fabs(maxdepth),angle), depth_to_radius(fabs(d2) - fabs(maxdepth), angle));
+                        printf("x1 %5.2f y1 %5.2f   x2 %5.2f  y2 %5.2f\n", x1, y1, x2, y2);
+                        printf("x3 %5.2f y3 %5.2f   x4 %5.2f  y4 %5.2f\n", x3, y3, x4, y4);
+                      }
                                 
                     Polygon_2 *p3 = new(Polygon_2);
 //                    printf("x1 %5.2f y1 %5.2f   x2 %5.2f  y2 %5.2f\n", x1, y1, x2, y2);
@@ -455,6 +471,7 @@ void inputshape::create_toolpaths_vcarve(int toolnr, double maxdepth)
                     
                   }        
                 }
+#endif
             }
     }
 }
@@ -578,7 +595,7 @@ double inputshape::distance_from_edge(double X, double Y)
             
         double d = distance_point_from_vector(poly[i].x(), poly[i].y(), poly[next].x(), poly[next].y(), X, Y);
 //        if (d < 20) {
-//            printf("-----------\n");
+//             printf("-----------\n");
 //            double d = distance_point_from_vector(poly[i].x(), poly[i].y(), poly[next].x(), poly[next].y(), X, Y);
 //            printf("Point %5.4f %5.4f\n", X, Y);
 //            printf("Vector %5.4f,%5.4f -> %5.4f,%5.4f\n", poly[i].x(), poly[i].y(), poly[next].x(), poly[next].y());

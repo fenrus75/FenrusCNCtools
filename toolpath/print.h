@@ -193,13 +193,13 @@ void print_straight_skeleton( CGAL::Straight_skeleton_2<K> const& ss )
   for ( Halfedge_const_iterator i = ss.halfedges_begin(); i != ss.halfedges_end(); ++i )
   {
     const char *color;
-    double width = 0.0;
+    double width = 0.04;
 //    print_point(i->opposite()->vertex()->point()) ;
 //    std::cout << "->" ;
 //    print_point(i->vertex()->point());
     color = "orange";
     if (i->is_inner_bisector()) {
-      color = "purple";
+      color = "green";
       width = 0.15;
     }
 //    std::cout << " " << ( i->is_bisector() ? "bisector" : "contour" ) << color << std::endl;

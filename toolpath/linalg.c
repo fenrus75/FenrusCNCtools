@@ -14,6 +14,7 @@
 
 #include "toolpath.h"
 
+//static FILE *dump = NULL;
 
 /*
  * Distance from a point to a vector
@@ -63,6 +64,7 @@ double distance_point_from_vector(double X1, double Y1, double X2, double Y2, do
      t1 = y2 * y2 + x2 * x2;
      t2 = - Y1*y2 + y2 * pY*x2*x2 - x2 * X1 + x2 * pX;
      l = t2/t1;
+//     printf("t1 %6.4f  t2 %6.4f   l %6.4f\n", t1, t2, l);
 //     printf("x2 %5.2f  y2 %5.2f\n", x2, y2);
 //     printf("l is %5.2f  t1 %5.2f  t2 %5.2f\n", l, t1, t2);
      
@@ -71,11 +73,13 @@ double distance_point_from_vector(double X1, double Y1, double X2, double Y2, do
      
      if (l >= 0 && l <= 1)
        return dist(pX,pY, iX, iY);
+       
+     
      
      /* if l < 0 or l > 1, the intersect point is actually outside our vector and one of the two edges
         is the shortest distance instead */
 //     printf("Point does not hit vector  %5.2f\n", fmin(dist(pX,pY,X1,X2), dist(pX,pY,X2,Y2)));
-     return fmin(dist(pX,pY,X1,X2), dist(pX,pY,X2,Y2));
+     return fmin(dist(pX,pY,X1,Y1), dist(pX,pY,X2,Y2));
 }
 
 
@@ -104,14 +108,29 @@ int lines_tangent_to_two_circles(double X1, double Y1, double R1, double X2, dou
      double vx, vy, ovx, ovy;
      
      if (R2 < R1) {
-        return lines_tangent_to_two_circles(X2,Y2,R1,X1,Y1,R1, select, pX1, pY1, pX2, pY2);
+//        printf("FLIP\n");
+        return lines_tangent_to_two_circles(X2,Y2,R2,X1,Y1,R1, select, pX1, pY1, pX2, pY2);
      }
-     
+     *pX1 = 0;
+     *pX2 = 0;
+     *pY1 = 0;
+     *pY2 = 0; 
      if (select <= 0)
        select = -1;
      else
        select = 1;
-     
+ 
+//    if (!dump) {    
+//     dump = fopen("linalg.svg", "w");
+//     fprintf(dump, "<?xml version=\"1.0\" encoding=\"UTF-8\" ?>\n");
+//     fprintf(dump, "<svg width=\"200px\" height=\"200px\" xmlns=\"http://www.w3.org/2000/svg\">\n");
+//   }
+   
+   
+//   fprintf(dump, "<circle cx=\"%5.3f\" cy=\"%5.3f\" r=\"%5.3f\" fill=\"blue\" stroke-width=\"0.2\" />\n", X1, Y1, R1);
+//   fprintf(dump, "<circle cx=\"%5.3f\" cy=\"%5.3f\" r=\"%5.3f\" fill=\"red\" stroke-width=\"0.2\" />\n", X2, Y2, R2);
+    
+
 
      Dcenter = dist(X1, Y1, X2, Y2);
      
@@ -134,9 +153,28 @@ int lines_tangent_to_two_circles(double X1, double Y1, double R1, double X2, dou
      /* length is the distance from the center of C1 to the point where the vector is tangent to C2 */
      /* dr^2 + length^2 = Dcenter^2 => length = sqrt(Dcenter^2 - dr^2) */
      
-     if ((Dcenter * Dcenter - dr*dr) < 0)
+     double delta;
+     
+     delta = Dcenter * Dcenter - dr*dr;
+     
+     if (delta > -0.001 && delta <=0)
+      delta = 0;
+      
+     
+     if (delta <= 0) {
+      if (R1 == 0) {
+         *pX1 = X1;
+         *pX2 = X1;
+         *pY1 = Y1;
+         *pY2 = Y1;
+         return 0;
+      }
+      //printf("DC %5.6f   dr %5.6f   R1 %5.2f  R2 %5.2f\n", Dcenter, dr, R1, R2);
+      //printf("NAN  (%5.3f,%5.3f)@%5.3f -> (%5.3f,%5.3f)@%5.3f\n",X1,Y1,R1,X2,Y2,R2);
+      //fflush(dump);
       return -1;
-     length = sqrt(Dcenter * Dcenter - dr*dr);
+     }
+     length = sqrt(delta);
      
 //     printf("length is %5.2f\n", length);
      
@@ -166,6 +204,10 @@ int lines_tangent_to_two_circles(double X1, double Y1, double R1, double X2, dou
      
      *pX2 = X1 + vx + select * R1 * ovx;
      *pY2 = Y1 + vy + select * R1 * ovy;
+
+//    fprintf(dump, "<line x1=\"%5.3f\" y1=\"%5.3f\" x2=\"%5.3f\" y2=\"%5.3f\" stroke=\"black\" stroke-width=\"0.2\"/>\n", *pX1, *pY1, *pX2, *pY2);
+//    fflush(dump);
+     
   
 //     printf("----\n");    
      return 0;
