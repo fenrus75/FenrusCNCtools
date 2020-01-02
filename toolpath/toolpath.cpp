@@ -179,7 +179,7 @@ double toolpath::distance_from(double X, double Y)
 {
   double d = 100000000000;
   
-  if (is_slotting) {
+  if (is_slotting || is_single) {
     for (auto poly : polygons) {
       for (auto vi = poly->vertices_begin() ; vi != poly->vertices_end() ; ++ vi ) {
           double di;
