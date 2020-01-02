@@ -56,7 +56,7 @@ double distance_point_from_vector(double X1, double Y1, double X2, double Y2, do
      * l * (x2 + y2 * y2 / x2) = pX - X1 - y2/x2 * Y1 + y2 / x2 * pY
      
      * (Y1 + l * y2 -pY) / x2 + (X1 + l * x2 -pX) / y2 = 0
-     * Y1/x2 + l * y2 - pY/x2 + X1/y2 + l * x2/y2 - pX/y2 = 0
+     * Y1/x2 + l * y2/x2 - pY/x2 + X1/y2 + l * x2/y2 - pX/y2 = 0
      * l * (y2/x2 + x2/y2) = - Y1/x2 + pY/x2 -X1/y2 + pX/y2
      
      */
