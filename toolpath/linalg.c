@@ -62,7 +62,7 @@ double distance_point_from_vector(double X1, double Y1, double X2, double Y2, do
      */
      
      t1 = y2 * y2 + x2 * x2;
-     t2 = - Y1*y2 + y2 * pY*x2*x2 - x2 * X1 + x2 * pX;
+     t2 = - Y1*y2 + y2 * pY - x2 * X1 + x2 * pX;
      l = t2/t1;
 //     printf("t1 %6.4f  t2 %6.4f   l %6.4f\n", t1, t2, l);
 //     printf("x2 %5.2f  y2 %5.2f\n", x2, y2);
