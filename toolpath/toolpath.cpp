@@ -90,22 +90,33 @@ void toolpath::output_gcode_vcarve(void)
   double speed = 1.0;
     
   for (auto poly : polygons) {
-    if (gcode_current_X() == (*poly)[0].x() && gcode_current_Y() == (*poly)[0].y() - get_minY()) {
+  
+//    printf("current X %5.4f   current Y %5.4f  \n", gcode_current_X(), gcode_current_Y());
+//    printf("poly[0]   %5.4f,            %5.4f  \n", (*poly)[0].x(), (*poly)[0].y());
+//    printf("poly[1]   %5.4f,            %5.4f  \n", (*poly)[1].x(), (*poly)[1].y());
+//    printf("get_minY  %5.9f\n", get_minY());
+    if ( (*poly).size() != 2)
+      printf("size %i\n", (*poly).size());
+    if (dist(gcode_current_X(), gcode_current_Y(), (*poly)[0].x(), (*poly)[0].y() - get_minY()) < 0.001) {
       gcode_vconditional_travel_to((*poly)[0].x(), (*poly)[0].y() - get_minY(), depth, speed);
       gcode_vmill_to((*poly)[1].x(), (*poly)[1].y() - get_minY(), depth2, speed);
+//      printf("match 0\n");
       continue;
     }
-    if (gcode_current_X() == (*poly)[1].x() && gcode_current_Y() == (*poly)[1].y() - get_minY()) {
+    if (dist(gcode_current_X(), gcode_current_Y(), (*poly)[1].x(), (*poly)[1].y() - get_minY()) < 0.001) {
       gcode_vconditional_travel_to((*poly)[1].x(), (*poly)[1].y() - get_minY(), depth2, speed);
       gcode_vmill_to((*poly)[0].x(), (*poly)[0].y() - get_minY(), depth, speed);
+//      printf("match 1\n");
       continue;
     }
     if (depth > depth2) {
       gcode_vconditional_travel_to((*poly)[0].x(), (*poly)[0].y() - get_minY(), depth, speed);
       gcode_vmill_to((*poly)[1].x(), (*poly)[1].y() - get_minY(), depth2, speed);
+//      printf("d1d2\n");
       continue;
     }
     
+//    printf("fallback\n");
     gcode_vconditional_travel_to((*poly)[1].x(), (*poly)[1].y() - get_minY(), depth2, speed);
     gcode_vmill_to((*poly)[0].x(), (*poly)[0].y() - get_minY(), depth, speed);
     speed = 1.0;
@@ -179,7 +190,7 @@ double toolpath::distance_from(double X, double Y)
 {
   double d = 100000000000;
   
-  if (is_slotting || is_single) {
+  if (is_slotting || is_single || is_vcarve) {
     for (auto poly : polygons) {
       for (auto vi = poly->vertices_begin() ; vi != poly->vertices_end() ; ++ vi ) {
           double di;

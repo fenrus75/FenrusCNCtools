@@ -64,7 +64,7 @@ void inputshape::print_as_svg(void)
         color = "red";
     print_polygon(poly, color);
 
-#if 0
+#if 1
     for (auto i : skeleton)
         print_straight_skeleton(*i);
     if (iss)
@@ -326,7 +326,7 @@ void inputshape::create_toolpaths_vcarve(int toolnr, double maxdepth)
             
             X2 = point_snap2(x->opposite()->vertex()->point().x());
             Y2 = point_snap2(x->opposite()->vertex()->point().y());
-            if (x->is_bisector()) {
+            if (x->is_inner_bisector()) {
                 d1 = radius_to_depth(parent->distance_from_edge(X1, Y1), angle);
                 d2 = radius_to_depth(parent->distance_from_edge(X2, Y2), angle);
                 
@@ -377,6 +377,8 @@ void inputshape::create_toolpaths_vcarve(int toolnr, double maxdepth)
                         printf("x1 %5.2f y1 %5.2f   x2 %5.2f  y2 %5.2f\n", x1, y1, x2, y2);
                         printf("x3 %5.2f y3 %5.2f   x4 %5.2f  y4 %5.2f\n", x3, y3, x4, y4);
                       }
+//                      printf("generate %5.5f %5.5f\n", x1,y1);
+//                      printf("generate %5.5f %5.5f\n", x2,y2);
                       p->push_back(Point(x1, y1));
                       p->push_back(Point(x2, y2));
                       tool->diameter = depth_to_radius(maxdepth, angle) * 2;

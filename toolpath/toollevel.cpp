@@ -101,7 +101,7 @@ void toollevel::add_poly(Polygon_2 *poly, bool is_hole)
 void toollevel::add_poly_vcarve(Polygon_2 *poly, double depth1, double depth2)
 {
     /* check if the same path is already there if we're slotting */
-
+#if 1
     for (auto tp : toolpaths) {
             if (tp->polygons.size() > 1) {
                 printf("GOT HERE\n");
@@ -116,7 +116,7 @@ void toollevel::add_poly_vcarve(Polygon_2 *poly, double depth1, double depth2)
                 (*p2)[1].x() == (*poly)[0].x() && (*p2)[1].y() == (*poly)[0].y())
                     return;
     }
-    
+#endif
     class toolpath *tp;
     tp = new(class toolpath);
     tp->add_polygon(poly);

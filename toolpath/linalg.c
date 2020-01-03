@@ -166,6 +166,7 @@ int lines_tangent_to_two_circles(double X1, double Y1, double R1, double X2, dou
       
      
      if (delta <= 0) {
+      printf("Delta is %5.4f\n", delta);     
       if (R1 == 0) {
          *pX1 = X1;
          *pX2 = X1;

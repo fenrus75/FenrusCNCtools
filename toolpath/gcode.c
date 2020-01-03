@@ -113,6 +113,7 @@ void gcode_plunge_to(double Z, double speedratio)
 
 void gcode_retract(void)
 {
+//    printf("retract\n");
     fprintf(gcode, "G0");
     if (cZ != safe_retract_height)
         fprintf(gcode,"Z%5.4f", safe_retract_height);
@@ -146,6 +147,7 @@ void gcode_mill_to(double X, double Y, double Z, double speedratio)
 void gcode_vmill_to(double X, double Y, double Z, double speedratio)
 {
 
+//    printf("Mill to %5.4f %5.4f %5.4f\n", X, Y, Z);
     fprintf(gcode, "G1");
     if (cX != X)
         fprintf(gcode,"X%5.4f", X);
@@ -203,6 +205,8 @@ void gcode_vconditional_travel_to(double X, double Y, double Z, double speed)
 {
     if (cX == X && cY == Y && cZ == Z)
         return;
+
+//    printf("Travel to %5.4f %5.4f %5.4f\n", X, Y, Z);
         
     gcode_travel_to(X, Y);
     if (Z < 0)
