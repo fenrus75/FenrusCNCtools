@@ -94,8 +94,6 @@ void write_gcode_header(const char *filename)
     fprintf(gcode, "G90\n"); /* all relative to work piece zero */
     fprintf(gcode, "G0X0Y0Z%5.4f\n", safe_retract_height);
     cZ = safe_retract_height;
-    fprintf(gcode, "M6 %s\n", tool_name);
-    fprintf(gcode, "M3 S%i\n", (int)rippem);
     fprintf(gcode, "(FILENAME: %s)\n", filename);
 }
 
@@ -240,13 +238,17 @@ double gcode_current_Y(void)
     return cY;
 }
 
+static int first_time = 1;
 void gcode_tool_change(int toolnr)
 {
  if (toolnr == current_tool_nr) 
    return;
- gcode_retract();
- fprintf(gcode, "M5\n");
+ if (!first_time) {
+  gcode_retract();
+  fprintf(gcode, "M5\n");
+ }
  activate_tool(toolnr); 
  fprintf(gcode, "M6 T%i\n", abs(toolnr));
  fprintf(gcode, "M3 S%i\n", (int)rippem);  
+ first_time = 0;
 }
