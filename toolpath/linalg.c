@@ -39,6 +39,10 @@ double distance_point_from_vector(double X1, double Y1, double X2, double Y2, do
     x2 = X2-X1;
     y2 = Y2-Y1;
     
+    double bestD;
+    
+    bestD = fmin(dist(pX,pY,X1,Y1), dist(pX,pY,X2,Y2));
+    
     /* find the intersection point, e.g. l and k such that V1 and V2 intersect */
     
     /* 
@@ -72,14 +76,14 @@ double distance_point_from_vector(double X1, double Y1, double X2, double Y2, do
      iY = Y1 + l * y2;
      
      if (l >= 0 && l <= 1)
-       return dist(pX,pY, iX, iY);
+       bestD = fmin(bestD, dist(pX,pY, iX, iY));
        
      
      
      /* if l < 0 or l > 1, the intersect point is actually outside our vector and one of the two edges
         is the shortest distance instead */
 //     printf("Point does not hit vector  %5.2f\n", fmin(dist(pX,pY,X1,X2), dist(pX,pY,X2,Y2)));
-     return fmin(dist(pX,pY,X1,Y1), dist(pX,pY,X2,Y2));
+     return bestD;
 }
 
 
