@@ -95,8 +95,6 @@ void toolpath::output_gcode_vcarve(void)
 //    printf("poly[0]   %5.4f,            %5.4f  \n", (*poly)[0].x(), (*poly)[0].y());
 //    printf("poly[1]   %5.4f,            %5.4f  \n", (*poly)[1].x(), (*poly)[1].y());
 //    printf("get_minY  %5.9f\n", get_minY());
-    if ( (*poly).size() != 2)
-      printf("size %i\n", (*poly).size());
     if (dist(gcode_current_X(), gcode_current_Y(), (*poly)[0].x(), (*poly)[0].y() - get_minY()) < 0.001) {
       gcode_vconditional_travel_to((*poly)[0].x(), (*poly)[0].y() - get_minY(), depth, speed);
       gcode_vmill_to((*poly)[1].x(), (*poly)[1].y() - get_minY(), depth2, speed);
@@ -158,7 +156,7 @@ void toolpath::output_gcode_reverse(void)
 
 void toolpath::output_gcode_slotting(void)
 {
-  double speed = 0.5;
+  double speed = 1.0;;
     
   for (auto poly : polygons) {
     if (poly->size() == 2) {
