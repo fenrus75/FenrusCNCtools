@@ -20,6 +20,11 @@ static double last_X, last_Y;
 
 
 
+static double dist(double X0, double Y0, double X1, double Y1)
+{
+  return sqrt((X1-X0)*(X1-X0) + (Y1-Y0)*(Y1-Y0));
+}
+
 static double svgheight = 0;
 
 static void chr_replace(char *line, char a, char r)
@@ -46,6 +51,18 @@ static void cubic_bezier(class scene *scene,
     double delta = 0.01;
     double t;
     double lX = x0, lY = y0;
+    
+    if (dist(x0,y0,x3,y3) < 150)
+            delta = 1/40.0;
+    if (dist(x0,y0,x3,y3) < 50)
+            delta = 1/20.0;
+    if (dist(x0,y0,x3,y3) < 10)
+            delta = 1/10.0;
+    if (dist(x0,y0,x3,y3) < 5)
+            delta = 1/5.0;
+
+    if (dist(x0,y0,x3,y3) < 0.5)
+            delta = 1.0;
     
     t = 0;
     while (t < 1.0) {
