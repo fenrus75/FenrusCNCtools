@@ -255,6 +255,21 @@ void scene::create_toolpaths(double depth)
       vprintf("Tool %i goes from %5.2f mm to %5.2f mm\n", toolnr, start, end);
 	  bool inbetween = want_inbetween_paths();
       while (currentdepth < 0) {
+	    
+	    	/* we want courser tools to not get within the stepover of the finer tool */
+		    if (tool < (int)toollist.size() -1)
+	      start = get_tool_stepover(toollist[tool+1]);
+    
+		    /* if tool 0 is a vcarve bit, tool 1 needs to start at radius at depth of cut */
+		    /* and all others need an offset */
+		    if (tool > 0 and tool_is_vcarve(toollist[0])) {
+		      double angle = get_tool_angle(toollist[0]);
+		      if (tool == 1)
+		        start = 0;
+		      start += depth_to_radius(currentdepth, angle);
+		    }
+
+
         for (auto i : shapes)
           i->create_toolpaths(toolnr, currentdepth, finish, inbetween, start, end, _want_skeleton_paths);
         currentdepth += depthstep;
