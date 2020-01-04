@@ -235,7 +235,7 @@ void gcode_vconditional_travel_to(double X, double Y, double Z, double speed, do
         
 
     /* can we just go back */
-    if (Z == nextZ && prev_valid && prevX1 == X && prevY1 == Y) {
+    if (Z == nextZ && prev_valid && dist(prevX1, prevY1, X,Y) < 0.005) {
          gcode_write_comment("Going back");
          gcode_vmill_to(X, Y, Z, speed);
     }  else
