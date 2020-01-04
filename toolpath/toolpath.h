@@ -55,7 +55,7 @@ extern void gcode_plunge_to(double Z, double speedratio);
 extern void gcode_retract(void);
 extern void gcode_travel_to(double X, double Y);
 extern void gcode_conditional_travel_to(double X, double Y, double Z, double speed);
-extern void gcode_vconditional_travel_to(double X, double Y, double Z, double speed);
+extern void gcode_vconditional_travel_to(double X, double Y, double Z, double speed, double nextX, double nextY, double nextZ);
 extern void gcode_write_comment(const char *comment);
 extern double gcode_current_X(void);
 extern double gcode_current_Y(void);
@@ -70,6 +70,7 @@ extern double get_tool_angle(int toolnr);
 extern int tool_is_vcarve(int toolnr);
 extern double distance_point_from_vector(double X1, double Y1, double X2, double Y2, double pX, double pY);
 extern int lines_tangent_to_two_circles(double X1, double Y1, double R1, double X2, double Y2, double R2, int select, double *pX1, double *pY1, double *pX2, double *pY2);
+extern int vector_intersects_vector(double X1, double Y1, double X2, double Y2, double X3, double Y3, double X4, double Y4, double *pX, double *pY);
 
 
 static inline double px_to_inch(double px) { return px / 96.0; };

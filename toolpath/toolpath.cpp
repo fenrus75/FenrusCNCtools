@@ -98,35 +98,31 @@ void toolpath::output_gcode_vcarve(void)
 //    printf("poly[1]   %5.4f,            %5.4f  \n", (*poly)[1].x(), (*poly)[1].y());
 //    printf("get_minY  %5.9f\n", get_minY());
     if (dist(gcode_current_X(), gcode_current_Y(), (*poly)[0].x(), (*poly)[0].y() - get_minY()) < 0.001) {
-      gcode_vconditional_travel_to((*poly)[0].x(), (*poly)[0].y() - get_minY(), depth, speed);
+      gcode_vconditional_travel_to((*poly)[0].x(), (*poly)[0].y() - get_minY(), depth, speed, (*poly)[1].x(), (*poly)[1].y() - get_minY(), depth2);
       gcode_vmill_to((*poly)[1].x(), (*poly)[1].y() - get_minY(), depth2, speed);
-//      printf("match 0\n");
       continue;
     }
     if (dist(gcode_current_X(), gcode_current_Y(), (*poly)[1].x(), (*poly)[1].y() - get_minY()) < 0.001) {
-      gcode_vconditional_travel_to((*poly)[1].x(), (*poly)[1].y() - get_minY(), depth2, speed);
+      gcode_vconditional_travel_to((*poly)[1].x(), (*poly)[1].y() - get_minY(), depth2, speed, (*poly)[0].x(), (*poly)[0].y() - get_minY(), depth);
       gcode_vmill_to((*poly)[0].x(), (*poly)[0].y() - get_minY(), depth, speed);
-//      printf("match 1\n");
       continue;
     }
     if (depth > depth2) {
-      gcode_vconditional_travel_to((*poly)[0].x(), (*poly)[0].y() - get_minY(), depth, speed);
+      gcode_vconditional_travel_to((*poly)[0].x(), (*poly)[0].y() - get_minY(), depth, speed, (*poly)[1].x(), (*poly)[1].y() - get_minY(), depth2);
       gcode_vmill_to((*poly)[1].x(), (*poly)[1].y() - get_minY(), depth2, speed);
-//      printf("d1d2\n");
       continue;
     }
     
     if (d0 > d1) {
-      gcode_vconditional_travel_to((*poly)[1].x(), (*poly)[1].y() - get_minY(), depth2, speed);
+      gcode_vconditional_travel_to((*poly)[1].x(), (*poly)[1].y() - get_minY(), depth2, speed, (*poly)[0].x(), (*poly)[0].y() - get_minY(), depth);
       gcode_vmill_to((*poly)[0].x(), (*poly)[0].y() - get_minY(), depth, speed);
-    
       continue;
     }    
   
     
 //    printf("fallback\n");
-    gcode_vconditional_travel_to((*poly)[0].x(), (*poly)[0].y() - get_minY(), depth2, speed);
-    gcode_vmill_to((*poly)[1].x(), (*poly)[1].y() - get_minY(), depth, speed);
+    gcode_vconditional_travel_to((*poly)[0].x(), (*poly)[0].y() - get_minY(), depth, speed, (*poly)[1].x(), (*poly)[1].y() - get_minY(), depth2);
+    gcode_vmill_to((*poly)[1].x(), (*poly)[1].y() - get_minY(), depth2, speed);
     speed = 1.0;
   }
 }

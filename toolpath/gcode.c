@@ -31,6 +31,11 @@ static int mill_count;
 /* in mm */
 static double cX, cY, cZ, cS;
 
+/* for vcarving */
+
+static double prevX1, prevY1, prevX2, prevY2;
+static int prev_valid;
+
 static double dist(double X0, double Y0, double X1, double Y1)
 {
   return sqrt((X1-X0)*(X1-X0) + (Y1-Y0)*(Y1-Y0));
@@ -48,6 +53,7 @@ void set_tool_imperial(const char *name, int nr, double diameter_inch, double st
     tool_maxdepth = inch_to_mm(maxdepth_inch);
     tool_feedrate = ipm_to_metric(feedrate_ipm);
     tool_plungerate = ipm_to_metric(plungerate_ipm);
+    prev_valid = 0;
 }
 
 void set_tool_metric(const char *name, int nr, double diameter_mm, double stepover_mm, double maxdepth_mm, double feedrate_metric, double plungerate_metric)
@@ -58,6 +64,7 @@ void set_tool_metric(const char *name, int nr, double diameter_mm, double stepov
     tool_maxdepth = maxdepth_mm;
     tool_feedrate = feedrate_metric;
     tool_plungerate = plungerate_metric;
+    prev_valid = 0;
 }
 
 double get_tool_diameter(void)
@@ -113,6 +120,7 @@ void gcode_plunge_to(double Z, double speedratio)
         fprintf(gcode, "F%i", (int)(speedratio * tool_plungerate) );
     cZ = Z;
     cS = speedratio * tool_plungerate;
+    prev_valid = 0;
     fprintf(gcode, "\n");
 }
 
@@ -125,6 +133,7 @@ void gcode_retract(void)
     cZ = safe_retract_height;
     fprintf(gcode, "\n");
     retract_count++;
+    prev_valid = 0;
 }
 
 void gcode_mill_to(double X, double Y, double Z, double speedratio)
@@ -147,6 +156,7 @@ void gcode_mill_to(double X, double Y, double Z, double speedratio)
     cS = speedratio * tool_feedrate;
     fprintf(gcode, "\n");
     mill_count++;
+    prev_valid = 0;
 }
 
 void gcode_vmill_to(double X, double Y, double Z, double speedratio)
@@ -162,6 +172,12 @@ void gcode_vmill_to(double X, double Y, double Z, double speedratio)
         fprintf(gcode,"Z%5.4f", Z);
     if (cS != speedratio * tool_feedrate)
         fprintf(gcode, "F%i", (int)(speedratio * tool_feedrate));
+        
+    prevX1 = cX;
+    prevY1 = cY;
+    prevX2 = X;
+    prevY2 = Y;
+    prev_valid = 1;
     cX = X;
     cY = Y;
     cZ = Z;
@@ -185,6 +201,7 @@ void gcode_travel_to(double X, double Y)
     cX = X;
     cY = Y;
     fprintf(gcode, "\n");
+    prev_valid = 0;
 }
 
 void gcode_conditional_travel_to(double X, double Y, double Z, double speed)
@@ -194,7 +211,7 @@ void gcode_conditional_travel_to(double X, double Y, double Z, double speed)
         
     /* rounding error handling: if we're within 0.01 mm just mill to it */
     if (cZ == Z && dist(X,Y,cX,cY) < 0.07) {
-        gcode_mill_to(X, Y, Z, speed);
+        gcode_vmill_to(X, Y, Z, speed);
         return;
     }
     if (cX !=X || cY != Y)
@@ -204,8 +221,9 @@ void gcode_conditional_travel_to(double X, double Y, double Z, double speed)
         
 }
 
-void gcode_vconditional_travel_to(double X, double Y, double Z, double speed)
+void gcode_vconditional_travel_to(double X, double Y, double Z, double speed, double nextX, double nextY, double nextZ)
 {
+    double pX, pY;
     if (cX == X && cY == Y && cZ == Z)
         return;
 
@@ -213,6 +231,30 @@ void gcode_vconditional_travel_to(double X, double Y, double Z, double speed)
     if (dist3(X,Y,Z,cX,cY,cZ) < 0.07) {
         gcode_mill_to(X, Y, Z, speed);
         return;
+    }
+        
+
+    /* can we just go back */
+    if (Z == nextZ && prev_valid && prevX1 == X && prevY1 == Y) {
+         gcode_write_comment("Going back");
+         gcode_vmill_to(X, Y, Z, speed);
+    }  else
+    /* we have cases where due to math precision, it's easier to go back a bit over the existing line  */
+    if (Z == nextZ && prev_valid && vector_intersects_vector(prevX1, prevY1, prevX2, prevY2, X, Y, nextX, nextY, &pX, &pY)) {
+         if (dist(pX,pY, cX,cY) + dist(pX,pY, X,Y) < fabs(2 * Z)) {
+            gcode_write_comment("Split X toolpath");
+            gcode_vmill_to(pX,pY, Z, speed);
+            gcode_vmill_to(X,Y, Z, speed);
+//          printf("HAVE GOOD PATH %5.2fx%5.2f \n", pX, pY);
+//          printf("D1 is %5.4f\n", dist(pX,pY, cX,cY));
+//          printf("D2 is %5.4f\n", dist(pX,pY, X,Y));
+         } else {
+//          printf("line 1: %5.2f,%5.2f -> %5.2f,%5.2f\n", prevX1, prevY1, prevX2, prevY2);
+//          printf("line 2: %5.2f,%5.2f -> %5.2f,%5.2f\n", X, Y, nextX, nextY);
+//          printf("HAVE LONG PATH %5.2fx%5.2f \n", pX, pY);
+//          printf("D1 is %5.2f\n", dist(pX,pY, cX,cY));
+//          printf("D2 is %5.2f\n", dist(pX,pY, X,Y));
+         }
     }
         
     if (cX !=X || cY != Y)
@@ -262,4 +304,5 @@ void gcode_tool_change(int toolnr)
  fprintf(gcode, "M6 T%i\n", abs(toolnr));
  fprintf(gcode, "M3 S%i\n", (int)rippem);  
  first_time = 0;
+    prev_valid = 0;
 }
