@@ -262,7 +262,7 @@ void toollevel::consolidate(void)
 			toolpaths.erase(toolpaths.begin() + i + 1);
 			if (i >= 2)
 				i -= 2;	
-			printf("Can merge %i, %i \n", i, i+1);
+//			vprintf("Can merge %i, %i \n", i, i+1);
 			continue;
 		}
 		tp = can_merge(toolpaths[i], toolpaths[i + 2], i);
@@ -271,20 +271,22 @@ void toollevel::consolidate(void)
 			toolpaths.erase(toolpaths.begin() + i + 2);
 			if (i >= 2)
 				i -= 2;	
-			printf("Can merge2 %i, %i \n", i, i+2);
+//			vprintf("Can merge2 %i, %i \n", i, i+2);
 			continue;
 		}
 	}
 
 	/* first, now the O(N^2) part */
 
-	for (i = 0; i < toolpaths.size() - 1; i++) {
+	for (i = 0; i < toolpaths.size(); i++) {
 	  for (j = 0; j < toolpaths.size(); j++) {
+		if (i == j)
+			continue;
 		tp = can_merge(toolpaths[i], toolpaths[j], i);
 		if (tp && i != j) {
 			toolpaths[i] = tp;
 			toolpaths.erase(toolpaths.begin() + j);
-			printf("Can merge square %i, %i \n", i, j);
+//			vprintf("Can merge square %i, %i \n", i, j);
 			if (i >= 2)
 				i -= 2;	
 			continue;
@@ -302,7 +304,8 @@ void toollevel::output_gcode(void)
 	consolidate();
 	vprintf("Work size after consolidate  %i\n", (int)toolpaths.size());
     worklist = toolpaths;
-	
+
+#if 0	
 	for (unsigned int i = 0; i < worklist.size(); i++) {
 		class toolpath *tp = worklist[i];
 		for (auto p : tp->polygons) {
@@ -320,6 +323,7 @@ void toollevel::output_gcode(void)
 			printf("%4i: %5.4f,%5.4f --> %5.4f, %5.4f     uv %5.8f,%5.8f\n", i, x1, y1, x2, y2, ox, oy);
 		}
     }
+#endif
     gcode_write_comment(name);
     sortX = gcode_current_X();
     sortY = gcode_current_Y() + get_minY();
