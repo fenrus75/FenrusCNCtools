@@ -384,14 +384,15 @@ void inputshape::create_toolpaths_vcarve(int toolnr, double maxdepth)
                       }
 //                      printf("generate %5.5f %5.5f\n", x1,y1);
 //                      printf("generate %5.5f %5.5f\n", x2,y2);
-                      p->push_back(Point(x1, y1));
-                      p->push_back(Point(x2, y2));
+
+					  p->push_back(Point(x1, y1));
+    	              p->push_back(Point(x2, y2));
                       tool->diameter = depth_to_radius(maxdepth, angle) * 2;
                       tool->add_poly_vcarve(p, maxdepth, maxdepth);
                     
                       Polygon_2 *p2 = new(Polygon_2);
-                      p2->push_back(Point(x3, y3));
-                      p2->push_back(Point(x4, y4));
+					  p2->push_back(Point(x3, y3));
+        	          p2->push_back(Point(x4, y4));
                       tool->diameter = depth_to_radius(maxdepth, angle) * 2;
                       tool->add_poly_vcarve(p2, maxdepth, maxdepth);
                     }

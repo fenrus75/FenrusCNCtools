@@ -85,6 +85,10 @@ static inline double depth_to_radius(double d, double angle) { return fabs(d) * 
 
 extern int verbose;
 
+static inline int approx3(double A, double B) { if (fabs(A-B) < 0.001) return 1; return 0; }
+static inline int approx4(double A, double B) { if (fabs(A-B) < 0.0001) return 1; return 0; }
+static inline int approx5(double A, double B) { if (fabs(A-B) < 0.00001) return 1; return 0; }
+
 #define vprintf(...) do { if (verbose) printf(__VA_ARGS__); } while (0)
 
 #endif

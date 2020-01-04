@@ -117,6 +117,8 @@ public:
     void add_poly(Polygon_2 *poly, bool is_hole);
     void add_poly_vcarve(Polygon_2 *poly, double depth1, double depth2);
     vector<class toolpath*> toolpaths;
+
+	void consolidate(void);
     
     /* for in-between paths, if a path has even deeper paths it will be optimized go away eventually */
     /* so that the only places the half inbetween paths stay is at the very inner cuts */

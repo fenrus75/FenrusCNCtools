@@ -164,22 +164,26 @@ void gcode_vmill_to(double X, double Y, double Z, double speedratio)
 
 //    printf("Mill to %5.4f %5.4f %5.4f\n", X, Y, Z);
     fprintf(gcode, "G1");
-    if (cX != X)
+    prevX1 = cX;
+    prevY1 = cY;
+    prevX2 = X;
+    prevY2 = Y;
+
+
+    if (!approx4(cX,X)) {
         fprintf(gcode,"X%5.4f", X);
-    if (cY != Y)
+	    cX = X;
+	}
+    if (!approx4(cX,Y)) {
         fprintf(gcode,"Y%5.4f", Y);
+	    cY = Y;
+	}
     if (cZ != Z)
         fprintf(gcode,"Z%5.4f", Z);
     if (cS != speedratio * tool_feedrate)
         fprintf(gcode, "F%i", (int)(speedratio * tool_feedrate));
         
-    prevX1 = cX;
-    prevY1 = cY;
-    prevX2 = X;
-    prevY2 = Y;
     prev_valid = 1;
-    cX = X;
-    cY = Y;
     cZ = Z;
     cS = speedratio * tool_feedrate;
     fprintf(gcode, "\n");
