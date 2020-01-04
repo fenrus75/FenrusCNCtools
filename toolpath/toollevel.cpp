@@ -60,9 +60,6 @@ static class toolpath *can_merge(class toolpath *tp1, class toolpath *tp2, int v
 	double ox2, oy2, ox4, oy4;
 	double len;
 
-	if (verbose != 561)
-		verbose = 0;
-
 	if (tp1->depth != tp2->depth) 
 		return NULL;
 	if (tp1->depth2 != tp2->depth2) 
@@ -160,6 +157,21 @@ static class toolpath *can_merge(class toolpath *tp1, class toolpath *tp2, int v
 			newtp->add_polygon(p);
 			return newtp;
 		}
+
+		/* if X3,Y3 is a point on the first vector and same unit vector ... */
+		if (distance_point_from_vector(X1,Y1,X2,Y2,X3,Y3) < 0.0000001) {
+			class toolpath *newtp = clone_tp(tp1);
+			Polygon_2 *p = new(Polygon_2);
+			if (dist(X1,Y1,X2,Y2) > dist(X1,Y1,X4,Y4)) {
+				p->push_back(Point(X1, Y1));
+			    p->push_back(Point(X2, Y2));
+			} else {
+				p->push_back(Point(X1, Y1));
+			    p->push_back(Point(X4, Y4));
+			}
+			newtp->add_polygon(p);
+			return newtp;			
+		}
 	}
 
 
@@ -187,7 +199,6 @@ static class toolpath *can_merge(class toolpath *tp1, class toolpath *tp2, int v
 			return newtp;
 		}
 
-#if 1
 		if (approx4(X2,X3) && approx4(Y2,Y3)) {
 			class toolpath *newtp = clone_tp(tp1);
 			Polygon_2 *p = new(Polygon_2);
@@ -201,8 +212,6 @@ static class toolpath *can_merge(class toolpath *tp1, class toolpath *tp2, int v
 			newtp->add_polygon(p);
 			return newtp;
 		}
-#endif
-#if 1
 
 		/* same end point opposing unit vector */
 		if (approx4(X2,X4) && approx4(Y2,Y4)) {
@@ -213,7 +222,22 @@ static class toolpath *can_merge(class toolpath *tp1, class toolpath *tp2, int v
 			newtp->add_polygon(p);
 			return newtp;
 		}
-#endif
+
+
+		/* if X4,Y4 is a point on the first vector and same unit vector ... */
+		if (distance_point_from_vector(X1,Y1,X2,Y2,X4,Y4) < 0.0000001) {
+			class toolpath *newtp = clone_tp(tp1);
+			Polygon_2 *p = new(Polygon_2);
+			if (dist(X1,Y1,X2,Y2) > dist(X1,Y1,X3,Y3)) {
+				p->push_back(Point(X1, Y1));
+			    p->push_back(Point(X2, Y2));
+			} else {
+				p->push_back(Point(X1, Y1));
+			    p->push_back(Point(X3, Y3));
+			}
+			newtp->add_polygon(p);
+			return newtp;			
+		}
 	}
 
 
