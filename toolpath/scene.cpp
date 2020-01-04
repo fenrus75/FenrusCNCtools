@@ -104,7 +104,7 @@ void scene::write_svg(const char *filename)
 {
 
   printf("Work size: %5.2f x %5.2f inch\n", mm_to_inch(maxX), mm_to_inch(maxY-minY));
-//  printf("%5.2f,%5.2f  x %5.2f, %5.2f\n", minX,minY, maxX,maxY);
+// printf("%5.2f,%5.2f  x %5.2f, %5.2f\n", minX,minY, maxX,maxY);
   set_svg_bounding_box(minX, minY, maxX, maxY);
   write_svg_header(filename, 1.0);
 
@@ -209,7 +209,7 @@ void scene::create_toolpaths(double depth)
   int toolnr;
   int tool;
   
-//  printf("create_toolpaths with depth %5.2f\n", depth);
+  vprintf("create_toolpaths with depth %5.2f\n", depth);
   
   tool = toollist.size() -1;
   while (tool >= 0) {
@@ -262,7 +262,7 @@ void scene::create_toolpaths(double depth)
             i->create_toolpaths_vcarve(toolnr, depth);
         } else {
           if (!vcarve_scene) {
-//            printf("Creating special vcarve_scene\n");
+            vprintf("Creating special vcarve_scene\n");
             vcarve_scene = scene_from_vcarve(NULL, depth, toollist[0]);
             vcarve_scene->push_tool(toollist[0]);
             vcarve_scene->create_toolpaths(depth);
@@ -270,7 +270,7 @@ void scene::create_toolpaths(double depth)
         }
         
     } else {
-//      printf("Tool %i goes from %5.2f mm to %5.2f mm\n", toolnr, start, end);
+      vprintf("Tool %i goes from %5.2f mm to %5.2f mm\n", toolnr, start, end);
       while (currentdepth < 0) {
         for (auto i : shapes)
           i->create_toolpaths(toolnr, currentdepth, finish, want_inbetween_paths(), start, end, _want_skeleton_paths);
