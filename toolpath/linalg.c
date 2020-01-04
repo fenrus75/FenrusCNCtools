@@ -14,7 +14,9 @@
 
 #include "toolpath.h"
 
-//static FILE *dump = NULL;
+
+extern int verbose;
+static FILE *dump = NULL;
 
 /*
  * Distance from a point to a vector
@@ -124,15 +126,14 @@ int lines_tangent_to_two_circles(double X1, double Y1, double R1, double X2, dou
      else
        select = 1;
  
-//    if (!dump) {    
-//     dump = fopen("linalg.svg", "w");
-//     fprintf(dump, "<?xml version=\"1.0\" encoding=\"UTF-8\" ?>\n");
-//     fprintf(dump, "<svg width=\"200px\" height=\"200px\" xmlns=\"http://www.w3.org/2000/svg\">\n");
-//   }
+    if (verbose && !dump) {    
+       dump = fopen("linalg.svg", "w");
+       fprintf(dump, "<?xml version=\"1.0\" encoding=\"UTF-8\" ?>\n");
+       fprintf(dump, "<svg width=\"200px\" height=\"200px\" xmlns=\"http://www.w3.org/2000/svg\">\n");
+     }
    
-   
-//   fprintf(dump, "<circle cx=\"%5.3f\" cy=\"%5.3f\" r=\"%5.3f\" fill=\"blue\" stroke-width=\"0.2\" />\n", X1, Y1, R1);
-//   fprintf(dump, "<circle cx=\"%5.3f\" cy=\"%5.3f\" r=\"%5.3f\" fill=\"red\" stroke-width=\"0.2\" />\n", X2, Y2, R2);
+     if (dump) fprintf(dump, "<circle cx=\"%5.3f\" cy=\"%5.3f\" r=\"%5.3f\" fill=\"blue\" stroke-width=\"0.2\" />\n", X1, Y1, R1);
+     if (dump) fprintf(dump, "<circle cx=\"%5.3f\" cy=\"%5.3f\" r=\"%5.3f\" fill=\"red\" stroke-width=\"0.2\" />\n", X2, Y2, R2);
     
 
 
@@ -176,7 +177,7 @@ int lines_tangent_to_two_circles(double X1, double Y1, double R1, double X2, dou
       }
       //printf("DC %5.6f   dr %5.6f   R1 %5.2f  R2 %5.2f\n", Dcenter, dr, R1, R2);
       //printf("NAN  (%5.3f,%5.3f)@%5.3f -> (%5.3f,%5.3f)@%5.3f\n",X1,Y1,R1,X2,Y2,R2);
-      //fflush(dump);
+      if (dump) fflush(dump);
       return -1;
      }
      length = sqrt(delta);
@@ -210,8 +211,8 @@ int lines_tangent_to_two_circles(double X1, double Y1, double R1, double X2, dou
      *pX2 = X1 + vx + select * R1 * ovx;
      *pY2 = Y1 + vy + select * R1 * ovy;
 
-//    fprintf(dump, "<line x1=\"%5.3f\" y1=\"%5.3f\" x2=\"%5.3f\" y2=\"%5.3f\" stroke=\"black\" stroke-width=\"0.2\"/>\n", *pX1, *pY1, *pX2, *pY2);
-//    fflush(dump);
+     if (dump) fprintf(dump, "<line x1=\"%5.3f\" y1=\"%5.3f\" x2=\"%5.3f\" y2=\"%5.3f\" stroke=\"black\" stroke-width=\"0.2\"/>\n", *pX1, *pY1, *pX2, *pY2);
+     if (dump) fflush(dump);
      
   
 //     printf("----\n");    
