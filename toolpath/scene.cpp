@@ -112,12 +112,7 @@ void scene::write_svg(const char *filename)
   for (auto i : shapes) {
     i->print_as_svg();
   }
-  if (vcarve_scene) {
-    vcarve_scene->write_naked_svg();
-  }
   write_svg_footer();
-  if (vcarve_scene)
-    vcarve_scene->write_svg("vcarve.svg");
 }
 
 void scene::write_naked_gcode()
@@ -144,9 +139,6 @@ void scene::write_gcode(const char *filename)
   write_gcode_header(filename);
 
   write_naked_gcode();
-  
-  if (vcarve_scene)
-    vcarve_scene->write_naked_gcode();  
   
   write_gcode_footer();
 }
@@ -257,18 +249,8 @@ void scene::create_toolpaths(double depth)
       
       
     if (tool_is_vcarve(toolnr) && tool == 0) {
-        if (toollist.size() == 1) {
           for (auto i : shapes)
             i->create_toolpaths_vcarve(toolnr, depth);
-        } else {
-          if (!vcarve_scene) {
-            vprintf("Creating special vcarve_scene\n");
-            vcarve_scene = scene_from_vcarve(NULL, depth, toollist[0]);
-            vcarve_scene->push_tool(toollist[0]);
-            vcarve_scene->create_toolpaths(depth);
-          }
-        }
-        
     } else {
       vprintf("Tool %i goes from %5.2f mm to %5.2f mm\n", toolnr, start, end);
       while (currentdepth < 0) {
@@ -335,16 +317,6 @@ scene::scene(const char *filename)
        shape = NULL;
        filename = strdup(filename);
        parse_svg_file(this, filename);
-}
-
-class scene * scene::scene_from_vcarve(class scene *input, double depth, int toolnr)
-{
-  class scene *scene = input;
-//  printf("SCENE_FROM_VCARVE for depth %5.2f\n", depth);
-  for (auto i : shapes)
-    scene = i->scene_from_vcarve(scene, depth, toolnr);
-  scene->process_nesting();    
-  return scene;
 }
 
 double scene::distance_from_edge(double X, double Y)

@@ -204,8 +204,6 @@ public:
     void set_minY(double mY);
     double distance_from_edge(double X, double Y);
     
-    class scene * scene_from_vcarve(class scene *input, double depth, int toolnr);
-    
     class scene *parent;
 
 private:

@@ -27,7 +27,6 @@ public:
             _want_skeleton_paths = false;
             shape = NULL;
             filename = "unknown";            
-            vcarve_scene = NULL;
         }
         
         scene(const char *filename);
@@ -66,9 +65,6 @@ public:
         bool want_skeleton_paths(void);
         void set_filename(const char *f) { filename = strdup(f);};
         
-        class scene * scene_from_vcarve(class scene *input, double depth, int toolnr);
-
-
         double distance_from_edge(double X, double Y);
 
         
@@ -86,7 +82,6 @@ private:
         void consolidate_toolpaths(void);
         void flatten_nesting(void);
         
-        struct scene *vcarve_scene;
 };
 
 
