@@ -90,7 +90,9 @@ void toolpath::output_gcode_vcarve(void)
   double speed = 1.0;
     
   for (auto poly : polygons) {
-  
+    double d0, d1;
+    d0 = dist(gcode_current_X(), gcode_current_Y(), (*poly)[0].x(), (*poly)[0].y() - get_minY());
+    d1 = dist(gcode_current_X(), gcode_current_Y(), (*poly)[1].x(), (*poly)[1].y() - get_minY());
 //    printf("current X %5.4f   current Y %5.4f  \n", gcode_current_X(), gcode_current_Y());
 //    printf("poly[0]   %5.4f,            %5.4f  \n", (*poly)[0].x(), (*poly)[0].y());
 //    printf("poly[1]   %5.4f,            %5.4f  \n", (*poly)[1].x(), (*poly)[1].y());
@@ -114,9 +116,17 @@ void toolpath::output_gcode_vcarve(void)
       continue;
     }
     
+    if (d0 > d1) {
+      gcode_vconditional_travel_to((*poly)[1].x(), (*poly)[1].y() - get_minY(), depth2, speed);
+      gcode_vmill_to((*poly)[0].x(), (*poly)[0].y() - get_minY(), depth, speed);
+    
+      continue;
+    }    
+  
+    
 //    printf("fallback\n");
-    gcode_vconditional_travel_to((*poly)[1].x(), (*poly)[1].y() - get_minY(), depth2, speed);
-    gcode_vmill_to((*poly)[0].x(), (*poly)[0].y() - get_minY(), depth, speed);
+    gcode_vconditional_travel_to((*poly)[0].x(), (*poly)[0].y() - get_minY(), depth2, speed);
+    gcode_vmill_to((*poly)[1].x(), (*poly)[1].y() - get_minY(), depth, speed);
     speed = 1.0;
   }
 }

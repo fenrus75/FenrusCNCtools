@@ -36,7 +36,7 @@ static bool compare_path(class toolpath *A, class toolpath *B)
 void toollevel::output_gcode(void)
 {
     vector<class toolpath*> worklist;    
-    
+
     worklist = toolpaths;
     gcode_write_comment(name);
     sortX = gcode_current_X();
