@@ -31,6 +31,15 @@ static int mill_count;
 /* in mm */
 static double cX, cY, cZ, cS;
 
+static double dist(double X0, double Y0, double X1, double Y1)
+{
+  return sqrt((X1-X0)*(X1-X0) + (Y1-Y0)*(Y1-Y0));
+}
+static double dist3(double X0, double Y0, double Z0, double X1, double Y1, double Z1)
+{
+  return sqrt((X1-X0)*(X1-X0) + (Y1-Y0)*(Y1-Y0) + (Z1-Z0)*(Z1-Z0));
+}
+
 void set_tool_imperial(const char *name, int nr, double diameter_inch, double stepover_inch, double maxdepth_inch, double feedrate_ipm, double plungerate_ipm)
 {
     tool_name = strdup(name);
@@ -163,7 +172,9 @@ void gcode_vmill_to(double X, double Y, double Z, double speedratio)
 
 void gcode_travel_to(double X, double Y)
 {
-
+    char buffer[256];
+    sprintf(buffer,"Travel distance %5.4fmm", dist(X, Y, cX, cY));
+    gcode_write_comment(buffer);
     if (cZ < safe_retract_height)
         gcode_retract();
     fprintf(gcode, "G0");
@@ -176,11 +187,6 @@ void gcode_travel_to(double X, double Y)
     fprintf(gcode, "\n");
 }
 
-static double dist(double X0, double Y0, double X1, double Y1)
-{
-  return sqrt((X1-X0)*(X1-X0) + (Y1-Y0)*(Y1-Y0));
-}
-
 void gcode_conditional_travel_to(double X, double Y, double Z, double speed)
 {
     if (cX == X && cY == Y && cZ == Z)
@@ -191,7 +197,8 @@ void gcode_conditional_travel_to(double X, double Y, double Z, double speed)
         gcode_mill_to(X, Y, Z, speed);
         return;
     }
-    gcode_travel_to(X, Y);
+    if (cX !=X || cY != Y)
+     gcode_travel_to(X, Y);
     if (Z > 0)
         gcode_plunge_to(Z, speed);
         
@@ -203,12 +210,13 @@ void gcode_vconditional_travel_to(double X, double Y, double Z, double speed)
         return;
 
 //    printf("Travel to %5.4f %5.4f %5.4f\n", X, Y, Z);
-    if (cZ == Z && dist(X,Y,cX,cY) < 0.07) {
+    if (dist3(X,Y,Z,cX,cY,cZ) < 0.07) {
         gcode_mill_to(X, Y, Z, speed);
         return;
     }
         
-    gcode_travel_to(X, Y);
+    if (cX !=X || cY != Y)
+     gcode_travel_to(X, Y);
     if (Z < 0)
         gcode_plunge_to(Z, speed);
         
