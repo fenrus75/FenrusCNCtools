@@ -85,4 +85,6 @@ static inline double depth_to_radius(double d, double angle) { return fabs(d) * 
 
 extern int verbose;
 
+#define vprintf(...) do { if (verbose) printf(__VA_ARGS__); } while (0)
+
 #endif
