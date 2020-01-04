@@ -16,7 +16,7 @@
 
 
 static const char *tool_name = "T201";
-static int current_tool_nr = 0;
+static int current_tool_nr = -499;
 static double tool_diameter = 6;
 static double tool_stepover = 3;
 static double tool_maxdepth = 1;
@@ -33,7 +33,6 @@ static double cX, cY, cZ, cS;
 
 void set_tool_imperial(const char *name, int nr, double diameter_inch, double stepover_inch, double maxdepth_inch, double feedrate_ipm, double plungerate_ipm)
 {
-    current_tool_nr = nr;
     tool_name = strdup(name);
     tool_diameter = inch_to_mm(diameter_inch);
     tool_stepover = inch_to_mm(stepover_inch);
@@ -45,7 +44,6 @@ void set_tool_imperial(const char *name, int nr, double diameter_inch, double st
 void set_tool_metric(const char *name, int nr, double diameter_mm, double stepover_mm, double maxdepth_mm, double feedrate_metric, double plungerate_metric)
 {
     tool_name = strdup(name);
-    current_tool_nr = nr;
     tool_diameter = diameter_mm;
     tool_stepover = stepover_mm;
     tool_maxdepth = maxdepth_mm;
@@ -251,6 +249,7 @@ void gcode_tool_change(int toolnr)
   gcode_retract();
   fprintf(gcode, "M5\n");
  }
+ current_tool_nr = toolnr;
  activate_tool(toolnr); 
  fprintf(gcode, "M6 T%i\n", abs(toolnr));
  fprintf(gcode, "M3 S%i\n", (int)rippem);  
