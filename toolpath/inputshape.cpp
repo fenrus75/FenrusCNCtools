@@ -326,14 +326,18 @@ void inputshape::create_toolpaths_vcarve(int toolnr, double maxdepth)
             
             X2 = point_snap2(x->opposite()->vertex()->point().x());
             Y2 = point_snap2(x->opposite()->vertex()->point().y());
+#if 0
             if (x->is_inner_bisector()) {
+#else
+            if (x->is_bisector() || x->is_inner_bisector()) {
+#endif
                 d1 = radius_to_depth(parent->distance_from_edge(X1, Y1), angle);
                 d2 = radius_to_depth(parent->distance_from_edge(X2, Y2), angle);
                 
                 /* four cases to deal with */
 #if 1                
                 /* case 1: d1 and d2 are both ok wrt max depth */
-                if (d1 >= maxdepth && d2 >= maxdepth) {
+                if (d1 >= maxdepth && d2 >= maxdepth && x->is_inner_bisector()) {
 //                    printf(" CASE 1 \n");
                     if (X1 != X2 || Y1 != Y2) { 
                             Polygon_2 *p = new(Polygon_2);
@@ -345,6 +349,7 @@ void inputshape::create_toolpaths_vcarve(int toolnr, double maxdepth)
                     }
                 }
 #endif                
+#if 1
                 /* case 2: d1 and d2 are both not ok wrt max depth */
                 if (d1 < maxdepth && d2 < maxdepth) {
                   if (X1 != X2 || Y1 != Y2) { 
@@ -394,6 +399,7 @@ void inputshape::create_toolpaths_vcarve(int toolnr, double maxdepth)
 //                    printf(" CASE 2 \n");
                   }
                 }
+#endif
 #if 1
                 /* case 3: d1 is not ok but d2 is ok */
                 /* if we swap 1 and 2 we're at case 4 so swap and cheap out */
@@ -410,7 +416,10 @@ void inputshape::create_toolpaths_vcarve(int toolnr, double maxdepth)
 #if 1                
                 /* case 4: d1 is ok d2 is not ok */
                 if (d1 >= maxdepth && d2 < maxdepth) {
-                  if (X1 != X2 || Y1 != Y2) { 
+				  bool exclusioncase = false;
+				  if (d1 == 0 && !x->is_inner_bisector())
+						exclusioncase = true; 
+                  if ( (X1 != X2 || Y1 != Y2) && !exclusioncase) { 
                     double x1,y1,x2,y2,x3,y3,x4,y4;
                     int ret = 0;
 //                    printf(" CASE 4 \n");

@@ -184,7 +184,7 @@ void print_straight_skeleton( CGAL::Straight_skeleton_2<K> const& ss )
   
   Halfedge_const_handle null_halfedge ;
   Vertex_const_handle   null_vertex ;
-
+  if (verbose)
   std::cout << "Straight skeleton with " << ss.size_of_vertices() 
             << " vertices, " << ss.size_of_halfedges()
             << " halfedges and " << ss.size_of_faces()

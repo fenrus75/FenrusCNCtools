@@ -148,8 +148,8 @@ int lines_tangent_to_two_circles(double X1, double Y1, double R1, double X2, dou
      ox = -uy;
      oy = ux;
      
-//     printf("(ox, oy) is (%5.2f, %5.2f)\n", ox, oy);
-//     printf("(ux, uy) is (%5.2f, %5.2f)\n", ux, uy);
+//     vprintf("(ox, oy) is (%5.2f, %5.2f)\n", ox, oy);
+//     vprintf("(ux, uy) is (%5.2f, %5.2f)\n", ux, uy);
      
      
      /* most of the math below assumes the first circle is a point, we just offset the line by "dr" later to correct */
@@ -175,27 +175,27 @@ int lines_tangent_to_two_circles(double X1, double Y1, double R1, double X2, dou
          *pY2 = Y1;
          return 0;
       }
-      //printf("DC %5.6f   dr %5.6f   R1 %5.2f  R2 %5.2f\n", Dcenter, dr, R1, R2);
-      //printf("NAN  (%5.3f,%5.3f)@%5.3f -> (%5.3f,%5.3f)@%5.3f\n",X1,Y1,R1,X2,Y2,R2);
+//      vprintf("DC %5.6f   dr %5.6f   R1 %5.2f  R2 %5.2f\n", Dcenter, dr, R1, R2);
+      vprintf("NAN  (%5.3f,%5.3f)@%5.3f -> (%5.3f,%5.3f)@%5.3f\n",X1,Y1,R1,X2,Y2,R2);
       if (dump) fflush(dump);
       return -1;
      }
      length = sqrt(delta);
      
-//     printf("length is %5.2f\n", length);
+//     vprintf("length is %5.2f\n", length);
      
      /* phi is the angle at C1 */
      phi = asin(dr/Dcenter);
- //    printf("phi is %5.2f which is %5.2f degrees\n", phi, phi /2  / 3.1415 * 360.0);
+//     vprintf("phi is %5.2f which is %5.2f degrees\n", phi, phi /2  / 3.1415 * 360.0);
      
      /* so now we know the angle and "length" so we can compute the distance along u and how high on o the new point is */
      
-//     printf("cos phi is %5.2f   sin phi is %5.2f\n", cos(phi), sin(phi));
+//     vprintf("cos phi is %5.2f   sin phi is %5.2f\n", cos(phi), sin(phi));
      
      vx = ux * cos(phi) * length + select * sin(phi) * length * ox;
      vy = uy * cos(phi) * length + select * sin(phi) * length * oy;
      
-//     printf("(vx, vy) is (%5.2f, %5.2f)\n", vx, vy);
+//     vprintf("(vx, vy) is (%5.2f, %5.2f)\n", vx, vy);
  
           
      ovx = -vy;
@@ -211,11 +211,22 @@ int lines_tangent_to_two_circles(double X1, double Y1, double R1, double X2, dou
      *pX2 = X1 + vx + select * R1 * ovx;
      *pY2 = Y1 + vy + select * R1 * ovy;
 
-     if (dump) fprintf(dump, "<line x1=\"%5.3f\" y1=\"%5.3f\" x2=\"%5.3f\" y2=\"%5.3f\" stroke=\"black\" stroke-width=\"0.2\"/>\n", *pX1, *pY1, *pX2, *pY2);
+     if (dump) {
+			fprintf(dump, "<line x1=\"%5.3f\" y1=\"%5.3f\" x2=\"%5.3f\" y2=\"%5.3f\" stroke=\"black\" stroke-width=\"0.2\">\n", *pX1, *pY1, *pX2, *pY2);
+			fprintf(dump, "  <desc>\n");
+
+			fprintf(dump, "(ox, oy) is (%5.2f, %5.2f)\n", ox, oy);
+     		fprintf(dump, "(ux, uy) is (%5.2f, %5.2f)\n", ux, uy);
+     		fprintf(dump, "phi is %5.2f which is %5.2f degrees\n", phi, phi /2  / 3.1415 * 360.0);
+   			fprintf(dump, "cos phi is %5.2f   sin phi is %5.2f\n", cos(phi), sin(phi));
+	     	fprintf(dump, "(vx, vy) is (%5.2f, %5.2f)\n", vx, vy);
+			fprintf(dump, "  </desc>\n");
+			fprintf(dump, "</line>\n");
+	 }
      if (dump) fflush(dump);
      
   
-//     printf("----\n");    
+//     vprintf("----\n");    
      return 0;
 }
 
@@ -257,17 +268,18 @@ int vector_intersects_vector(double X1, double Y1, double X2, double Y2, double 
               k = (X1 + l * x2 - X3) / x4;
               *pX = X1 + l * x2;
               *pY = Y1 + l * y2;
-#if 0              
-              char buffer[256];
-              sprintf(buffer, "l is %5.5f k is %5.5f  l1 %5.5f  l2 %5.5f", l, k, l1, l2);
-              gcode_write_comment(buffer);
-              sprintf(buffer, "X1,Y1  %5.2f,%5.2f->%5.2f,%5.2f", X1, Y1, X2, Y2);
-              gcode_write_comment(buffer);
-              sprintf(buffer, "X3,Y3  %5.2f,%5.2f->%5.2f,%5.2f", X3, Y3, X4, Y4);
-              gcode_write_comment(buffer);
-              sprintf(buffer, "pX,pY  %5.2f,%5.2f", pX, pY);
-              gcode_write_comment(buffer);
-#endif           
+			  if (verbose) {
+					char buffer[256];
+					sprintf(buffer, "l is %5.5f k is %5.5f  l1 %5.5f  l2 %5.5f", l, k, l1, l2);
+					gcode_write_comment(buffer);
+					sprintf(buffer, "X1,Y1  %5.2f,%5.2f->%5.2f,%5.2f", X1, Y1, X2, Y2);
+					gcode_write_comment(buffer);
+					sprintf(buffer, "X3,Y3  %5.2f,%5.2f->%5.2f,%5.2f", X3, Y3, X4, Y4);
+					gcode_write_comment(buffer);
+					sprintf(buffer, "pX,pY  %5.2f,%5.2f", *pX, *pY);
+					gcode_write_comment(buffer);
+			  }
+
               if (l < 0 || l > 1)
                 return 0;
               if (k < 0 || k > 1)
