@@ -253,13 +253,15 @@ void scene::create_toolpaths(double depth)
             i->create_toolpaths_vcarve(toolnr, depth);
     } else {
       vprintf("Tool %i goes from %5.2f mm to %5.2f mm\n", toolnr, start, end);
+	  bool inbetween = want_inbetween_paths();
       while (currentdepth < 0) {
         for (auto i : shapes)
-          i->create_toolpaths(toolnr, currentdepth, finish, want_inbetween_paths(), start, end, _want_skeleton_paths);
+          i->create_toolpaths(toolnr, currentdepth, finish, inbetween, start, end, _want_skeleton_paths);
         currentdepth += depthstep;
         depthstep = get_tool_maxdepth();
         if (finish)
           finish = -1;
+		inbetween = false;
       }
     }
     
