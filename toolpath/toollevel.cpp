@@ -52,7 +52,7 @@ static class toolpath *clone_tp(class toolpath *tp1)
 	return newtp;
 }
 
-static class toolpath *can_merge(class toolpath *tp1, class toolpath *tp2, int verbose)
+static class toolpath *can_merge(class toolpath *tp1, class toolpath *tp2)
 {
 	double X1 = 0, Y1 = 0, X2 = 0, Y2 = 0;
 	double X3 = 0, Y3 = 0, X4 = 0, Y4 = 0;
@@ -80,16 +80,16 @@ static class toolpath *can_merge(class toolpath *tp1, class toolpath *tp2, int v
 		return NULL;
 
 	for (auto p : tp1->polygons) {
-			X1 = (*p)[0].x();
-			Y1 = (*p)[0].y();
-			X2 = (*p)[1].x();
-			Y2 = (*p)[1].y();
+			X1 = CGAL::to_double((*p)[0].x());
+			Y1 = CGAL::to_double((*p)[0].y());
+			X2 = CGAL::to_double((*p)[1].x());
+			Y2 = CGAL::to_double((*p)[1].y());
 	}
 	for (auto p : tp2->polygons) {
-			X3 = (*p)[0].x();
-			Y3 = (*p)[0].y();
-			X4 = (*p)[1].x();
-			Y4 = (*p)[1].y();
+			X3 = CGAL::to_double((*p)[0].x());
+			Y3 = CGAL::to_double((*p)[0].y());
+			X4 = CGAL::to_double((*p)[1].x());
+			Y4 = CGAL::to_double((*p)[1].y());
 	}
 
 	x2 = X2 - X1;
@@ -256,7 +256,7 @@ void toollevel::consolidate(void)
 	/* first, we do +1 and +2 as that's a common case */
 
 	for (i = 0; i < toolpaths.size() - 2; i++) {
-		tp = can_merge(toolpaths[i], toolpaths[i + 1], i);
+		tp = can_merge(toolpaths[i], toolpaths[i + 1]);
 		if (tp) {
 			toolpaths[i] = tp;
 			toolpaths.erase(toolpaths.begin() + i + 1);
@@ -265,7 +265,7 @@ void toollevel::consolidate(void)
 //			vprintf("Can merge %i, %i \n", i, i+1);
 			continue;
 		}
-		tp = can_merge(toolpaths[i], toolpaths[i + 2], i);
+		tp = can_merge(toolpaths[i], toolpaths[i + 2]);
 		if (tp) {
 			toolpaths[i] = tp;
 			toolpaths.erase(toolpaths.begin() + i + 2);
@@ -282,7 +282,7 @@ void toollevel::consolidate(void)
 	  for (j = 0; j < toolpaths.size(); j++) {
 		if (i == j)
 			continue;
-		tp = can_merge(toolpaths[i], toolpaths[j], i);
+		tp = can_merge(toolpaths[i], toolpaths[j]);
 		if (tp && i != j) {
 			toolpaths[i] = tp;
 			toolpaths.erase(toolpaths.begin() + j);
@@ -382,11 +382,11 @@ void toollevel::add_poly(Polygon_2 *poly, bool is_hole)
                 (*p2)[1].x() == (*poly)[0].x() && (*p2)[1].y() == (*poly)[0].y())
                     return;
 #if 1
-            if (dist((*p2)[0].x(), (*p2)[0].y(), (*poly)[0].x(), (*poly)[0].y()) < 0.15 &&
-                dist((*p2)[1].x(), (*p2)[1].y(), (*poly)[1].x(), (*poly)[1].y()) < 0.15)
+            if (dist(CGAL::to_double((*p2)[0].x()), CGAL::to_double((*p2)[0].y()), CGAL::to_double((*poly)[0].x()), CGAL::to_double((*poly)[0].y())) < 0.15 &&
+                dist(CGAL::to_double((*p2)[1].x()), CGAL::to_double((*p2)[1].y()), CGAL::to_double((*poly)[1].x()), CGAL::to_double((*poly)[1].y())) < 0.15)
                    return;
-            if (dist((*p2)[0].x(), (*p2)[0].y(), (*poly)[0].x(), (*poly)[0].y()) < 0.15 &&
-                dist((*p2)[0].x(), (*p2)[0].y(), (*poly)[1].x(), (*poly)[1].y()) < 0.15)
+            if (dist(CGAL::to_double((*p2)[0].x()), CGAL::to_double((*p2)[0].y()), CGAL::to_double((*poly)[0].x()), CGAL::to_double((*poly)[0].y())) < 0.15 &&
+                dist(CGAL::to_double((*p2)[0].x()), CGAL::to_double((*p2)[0].y()), CGAL::to_double((*poly)[1].x()), CGAL::to_double((*poly)[1].y())) < 0.15)
                    return;
 #endif            
         }

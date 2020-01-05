@@ -211,6 +211,13 @@ int lines_tangent_to_two_circles(double X1, double Y1, double R1, double X2, dou
      *pX2 = X1 + vx + select * R1 * ovx;
      *pY2 = Y1 + vy + select * R1 * ovy;
 
+	/* last minute check: if pX1/pY1 are inside R2 entirely then we need to maybe not emit them */
+#if 0
+	if (dist(*pX1, *pY1, X2, Y2) < R2) {
+		printf("SKIP INSIDE R2\n");
+		return -1;
+	}
+#endif
      if (dump) {
 			fprintf(dump, "<line x1=\"%5.3f\" y1=\"%5.3f\" x2=\"%5.3f\" y2=\"%5.3f\" stroke=\"black\" stroke-width=\"0.2\">\n", *pX1, *pY1, *pX2, *pY2);
 			fprintf(dump, "  <desc>\n");

@@ -50,7 +50,7 @@ void inputshape::wipe_children(void)
 
 void inputshape::update_stats(void)
 {
-    area = fabs(poly.area());
+    area = fabs(CGAL::to_double(poly.area()));
 }
 
 void inputshape::print_as_svg(void)
@@ -94,7 +94,7 @@ void inputshape::add_point(double X, double Y)
 {
     if (poly.size() > 0) {
       auto v1 = poly[0];
-      if (v1.x() == X && v1.y() == Y)
+      if (CGAL::to_double(v1.x()) == X && CGAL::to_double(v1.y()) == Y)
           return;
     }
     poly.push_back( Point(X, Y));
@@ -106,7 +106,7 @@ void inputshape::close_shape(void)
     if (poly.size() > 1 && !poly.is_simple()) {
       auto v1 = poly[0];
       auto v2 = poly[poly.size() - 1];
-      if (v1.x() == v2.x() && v1.y() == v2.y()) {
+      if (CGAL::to_double(v1.x()) == CGAL::to_double(v2.x()) && CGAL::to_double(v1.y()) == CGAL::to_double(v2.y())) {
           poly.erase(poly.vertices_end() - 1);
       }
     }
@@ -224,11 +224,11 @@ void inputshape::create_toolpaths(int toolnr, double depth, int finish_pass, int
         }
         
         if (level == 0 && want_skeleton_path) {
-
+			K k;
             for (auto ply : offset_polygons) {
                 SsPtr pp = CGAL::create_interior_straight_skeleton_2(ply->outer_boundary().vertices_begin(),
                     ply->outer_boundary().vertices_end(),
-                    ply->holes_begin(), ply->holes_end());            
+                    ply->holes_begin(), ply->holes_end(), k);            
                 skeleton.push_back(pp);                
             }
         }
@@ -277,10 +277,10 @@ void inputshape::create_toolpaths(int toolnr, double depth, int finish_pass, int
             for (auto x = ss->halfedges_begin(); x != ss->halfedges_end(); ++x) {
                     if (x->is_inner_bisector()) {
                         double X1, Y1, X2, Y2;
-                        X1 = point_snap(x->vertex()->point().x());
-                        Y1 = point_snap(x->vertex()->point().y());
-                        X2 = point_snap(x->opposite()->vertex()->point().x());
-                        Y2 = point_snap(x->opposite()->vertex()->point().y());
+                        X1 = point_snap(CGAL::to_double(x->vertex()->point().x()));
+                        Y1 = point_snap(CGAL::to_double(x->vertex()->point().y()));
+                        X2 = point_snap(CGAL::to_double(x->opposite()->vertex()->point().x()));
+                        Y2 = point_snap(CGAL::to_double(x->opposite()->vertex()->point().y()));
                         if (X1 != X2 || Y1 != Y2) {
                             Polygon_2 *p = new(Polygon_2);
                             p->push_back(Point(X1, Y1));
@@ -321,11 +321,11 @@ void inputshape::create_toolpaths_vcarve(int toolnr, double maxdepth)
     
     for (auto x = iss->halfedges_begin(); x != iss->halfedges_end(); ++x) {
             double X1, Y1, X2, Y2, d1, d2;
-            X1 = point_snap2(x->vertex()->point().x());
-            Y1 = point_snap2(x->vertex()->point().y());
+            X1 = point_snap2(CGAL::to_double(x->vertex()->point().x()));
+            Y1 = point_snap2(CGAL::to_double(x->vertex()->point().y()));
             
-            X2 = point_snap2(x->opposite()->vertex()->point().x());
-            Y2 = point_snap2(x->opposite()->vertex()->point().y());
+            X2 = point_snap2(CGAL::to_double(x->opposite()->vertex()->point().x()));
+            Y2 = point_snap2(CGAL::to_double(x->opposite()->vertex()->point().y()));
 #if 0
             if (x->is_inner_bisector()) {
 #else
@@ -605,7 +605,7 @@ double inputshape::distance_from_edge(double X, double Y)
         if (next >= poly.size())
             next = 0;
             
-        double d = distance_point_from_vector(poly[i].x(), poly[i].y(), poly[next].x(), poly[next].y(), X, Y);
+        double d = distance_point_from_vector(CGAL::to_double(poly[i].x()), CGAL::to_double(poly[i].y()), CGAL::to_double(poly[next].x()), CGAL::to_double(poly[next].y()), X, Y);
 //        if (d < 20) {
 //             printf("-----------\n");
 //            double d = distance_point_from_vector(poly[i].x(), poly[i].y(), poly[next].x(), poly[next].y(), X, Y);

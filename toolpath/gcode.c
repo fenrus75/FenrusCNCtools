@@ -245,7 +245,7 @@ void gcode_vconditional_travel_to(double X, double Y, double Z, double speed, do
     }  else
     /* we have cases where due to math precision, it's easier to go back a bit over the existing line  */
     if (Z == nextZ && prev_valid && vector_intersects_vector(prevX1, prevY1, prevX2, prevY2, X, Y, nextX, nextY, &pX, &pY)) {
-         if (dist(pX,pY, cX,cY) + dist(pX,pY, X,Y) < fabs(2 * Z)) {
+         if (dist(pX,pY, cX,cY) + dist(pX,pY, X,Y) < fabs(3 * Z)) {
             gcode_write_comment("Split X toolpath");
             gcode_vmill_to(pX,pY, Z, speed);
             gcode_vmill_to(X,Y, Z, speed);
@@ -284,13 +284,14 @@ int gcode_vconditional_would_retract(double X, double Y, double Z, double speed,
     }  else
     /* we have cases where due to math precision, it's easier to go back a bit over the existing line  */
     if (Z == nextZ && prev_valid && vector_intersects_vector(prevX1, prevY1, prevX2, prevY2, X, Y, nextX, nextY, &pX, &pY)) {
-         if (dist(pX,pY, cX,cY) + dist(pX,pY, X,Y) < fabs(2 * Z)) {
+         if (dist(pX,pY, cX,cY) + dist(pX,pY, X,Y) < fabs(3 * Z)) {
 			return 0;
          }
     }
         
     if (cX !=X || cY != Y)
      return 1;
+    return 0;
 }
 
 

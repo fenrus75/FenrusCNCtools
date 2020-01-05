@@ -11,7 +11,7 @@ extern const char * color;
 template<class K>
 void print_point ( CGAL::Point_2<K> const& p )
 {
-  std::cout << "(" << p.x() << "," << p.y() << ")" ;
+  std::cout << "(" << CGAL::to_double(p.x()) << "," << CGAL::to_double(p.y()) << ")" ;
 }
 
 template<class K, class C>
@@ -28,7 +28,7 @@ void print_polygon ( CGAL::Polygon_2<K,C> const& poly, const char * color )
     if (vi2 == poly.vertices_end())
       vi2 = poly.vertices_begin();
       
-    svg_line(vi->x(), vi->y(), vi2->x(), vi2->y(), color, 0.42);
+    svg_line(CGAL::to_double(vi->x()), CGAL::to_double(vi->y()), CGAL::to_double(vi2->x()), CGAL::to_double(vi2->y()), color, 0.42);
     
   }
 }
@@ -100,7 +100,7 @@ void print_polygon ( CGAL::Polygon_2<K,C> const * poly, const char * color, doub
     if (vi2 == poly->vertices_end())
       vi2 = poly->vertices_begin();
       
-    svg_line(vi->x(), vi->y(), vi2->x(), vi2->y(), color, width);
+    svg_line(CGAL::to_double(vi->x()), CGAL::to_double(vi->y()), CGAL::to_double(vi2->x()), CGAL::to_double(vi2->y()), color, width);
     
   }
 }
@@ -205,7 +205,7 @@ void print_straight_skeleton( CGAL::Straight_skeleton_2<K> const& ss )
 //    std::cout << " " << ( i->is_bisector() ? "bisector" : "contour" ) << color << std::endl;
     
     if (i->is_bisector())
-    svg_line(i->opposite()->vertex()->point().x(), i->opposite()->vertex()->point().y(), 
-       i->vertex()->point().x(), i->vertex()->point().y(), color, width);
+    svg_line(CGAL::to_double(i->opposite()->vertex()->point().x()), CGAL::to_double(i->opposite()->vertex()->point().y()), 
+       CGAL::to_double(i->vertex()->point().x()), CGAL::to_double(i->vertex()->point().y()), color, width);
   }
 }

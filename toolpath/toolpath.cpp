@@ -33,10 +33,10 @@ void toolpath::print_as_svg(const char *color)
     for (auto i : polygons) {
         print_polygon(i, color, width);
         for (unsigned int j = 0; j < i->size(); j++)
-          svg_circle((*i)[j].x(), (*i)[j].y(), width/2, color, 0);
+          svg_circle(CGAL::to_double((*i)[j].x()), CGAL::to_double((*i)[j].y()), width/2, color, 0);
 #if 0
         if (start_vertex < i->size() && i->size() > 2) {
-          svg_circle((*i)[start_vertex].x(), (*i)[start_vertex].y(), diameter/2, "red", 0.5);
+          svg_circle(CGAL::to_double((*i)[start_vertex].x()), CGAL::to_double((*i)[start_vertex].y()), diameter/2, "red", 0.5);
         }
 #endif
     }
@@ -73,13 +73,13 @@ void toolpath::output_gcode(void)
       auto vi = (*poly)[current];
       auto vi2 = (*poly)[next];
       
-      if (i == 0 && dist(lX,lY, vi.x(), vi.y()) < diameter * 0.75) {
-        gcode_mill_to(vi.x(), vi.y() - get_minY(), depth, speed * 0.5);
+      if (i == 0 && dist(lX,lY, CGAL::to_double(vi.x()), CGAL::to_double(vi.y())) < diameter * 0.75) {
+        gcode_mill_to(CGAL::to_double(vi.x()), CGAL::to_double(vi.y()) - get_minY(), depth, speed * 0.5);
       }
-      gcode_conditional_travel_to(vi.x(), vi.y() - get_minY(), depth, speed);
-      gcode_mill_to(vi2.x(), vi2.y() - get_minY(), depth, speed);
-      lX = vi2.x();
-      lY = vi2.y();
+      gcode_conditional_travel_to(CGAL::to_double(vi.x()), CGAL::to_double(vi.y()) - get_minY(), depth, speed);
+      gcode_mill_to(CGAL::to_double(vi2.x()), CGAL::to_double(vi2.y()) - get_minY(), depth, speed);
+      lX = CGAL::to_double(vi2.x());
+      lY = CGAL::to_double(vi2.y());
     }
     speed = 1.0;
   }
@@ -92,38 +92,38 @@ void toolpath::output_gcode_vcarve(void)
     
   for (auto poly : polygons) {
     double d0, d1;
-    d0 = dist(gcode_current_X(), gcode_current_Y(), (*poly)[0].x(), (*poly)[0].y() - get_minY());
-    d1 = dist(gcode_current_X(), gcode_current_Y(), (*poly)[1].x(), (*poly)[1].y() - get_minY());
+    d0 = dist(gcode_current_X(), gcode_current_Y(), CGAL::to_double((*poly)[0].x()), CGAL::to_double((*poly)[0].y()) - get_minY());
+    d1 = dist(gcode_current_X(), gcode_current_Y(), CGAL::to_double((*poly)[1].x()), CGAL::to_double((*poly)[1].y()) - get_minY());
 //    printf("current X %5.4f   current Y %5.4f  \n", gcode_current_X(), gcode_current_Y());
 //    printf("poly[0]   %5.4f,            %5.4f  \n", (*poly)[0].x(), (*poly)[0].y());
 //    printf("poly[1]   %5.4f,            %5.4f  \n", (*poly)[1].x(), (*poly)[1].y());
 //    printf("get_minY  %5.9f\n", get_minY());
-    if (dist(gcode_current_X(), gcode_current_Y(), (*poly)[0].x(), (*poly)[0].y() - get_minY()) < 0.001) {
-      gcode_vconditional_travel_to((*poly)[0].x(), (*poly)[0].y() - get_minY(), depth, speed, (*poly)[1].x(), (*poly)[1].y() - get_minY(), depth2);
-      gcode_vmill_to((*poly)[1].x(), (*poly)[1].y() - get_minY(), depth2, speed);
+    if (dist(gcode_current_X(), gcode_current_Y(), CGAL::to_double((*poly)[0].x()), CGAL::to_double((*poly)[0].y()) - get_minY()) < 0.001) {
+      gcode_vconditional_travel_to(CGAL::to_double((*poly)[0].x()), CGAL::to_double((*poly)[0].y()) - get_minY(), depth, speed, CGAL::to_double((*poly)[1].x()), CGAL::to_double((*poly)[1].y()) - get_minY(), depth2);
+      gcode_vmill_to(CGAL::to_double((*poly)[1].x()), CGAL::to_double((*poly)[1].y()) - get_minY(), depth2, speed);
       continue;
     }
-    if (dist(gcode_current_X(), gcode_current_Y(), (*poly)[1].x(), (*poly)[1].y() - get_minY()) < 0.001) {
-      gcode_vconditional_travel_to((*poly)[1].x(), (*poly)[1].y() - get_minY(), depth2, speed, (*poly)[0].x(), (*poly)[0].y() - get_minY(), depth);
-      gcode_vmill_to((*poly)[0].x(), (*poly)[0].y() - get_minY(), depth, speed);
+    if (dist(gcode_current_X(), gcode_current_Y(), CGAL::to_double((*poly)[1].x()), CGAL::to_double((*poly)[1].y()) - get_minY()) < 0.001) {
+      gcode_vconditional_travel_to(CGAL::to_double((*poly)[1].x()), CGAL::to_double((*poly)[1].y()) - get_minY(), depth2, speed, CGAL::to_double((*poly)[0].x()), CGAL::to_double((*poly)[0].y()) - get_minY(), depth);
+      gcode_vmill_to(CGAL::to_double((*poly)[0].x()), CGAL::to_double((*poly)[0].y()) - get_minY(), depth, speed);
       continue;
     }
     if (depth > depth2) {
-      gcode_vconditional_travel_to((*poly)[0].x(), (*poly)[0].y() - get_minY(), depth, speed, (*poly)[1].x(), (*poly)[1].y() - get_minY(), depth2);
-      gcode_vmill_to((*poly)[1].x(), (*poly)[1].y() - get_minY(), depth2, speed);
+      gcode_vconditional_travel_to(CGAL::to_double((*poly)[0].x()), CGAL::to_double((*poly)[0].y()) - get_minY(), depth, speed, CGAL::to_double((*poly)[1].x()), CGAL::to_double((*poly)[1].y()) - get_minY(), depth2);
+      gcode_vmill_to(CGAL::to_double((*poly)[1].x()), CGAL::to_double((*poly)[1].y()) - get_minY(), depth2, speed);
       continue;
     }
     
     if (d0 > d1) {
-      gcode_vconditional_travel_to((*poly)[1].x(), (*poly)[1].y() - get_minY(), depth2, speed, (*poly)[0].x(), (*poly)[0].y() - get_minY(), depth);
-      gcode_vmill_to((*poly)[0].x(), (*poly)[0].y() - get_minY(), depth, speed);
+      gcode_vconditional_travel_to(CGAL::to_double((*poly)[1].x()), CGAL::to_double((*poly)[1].y()) - get_minY(), depth2, speed, CGAL::to_double((*poly)[0].x()), CGAL::to_double((*poly)[0].y()) - get_minY(), depth);
+      gcode_vmill_to(CGAL::to_double((*poly)[0].x()), CGAL::to_double((*poly)[0].y()) - get_minY(), depth, speed);
       continue;
     }    
   
     
 //    printf("fallback\n");
-    gcode_vconditional_travel_to((*poly)[0].x(), (*poly)[0].y() - get_minY(), depth, speed, (*poly)[1].x(), (*poly)[1].y() - get_minY(), depth2);
-    gcode_vmill_to((*poly)[1].x(), (*poly)[1].y() - get_minY(), depth2, speed);
+    gcode_vconditional_travel_to(CGAL::to_double((*poly)[0].x()), CGAL::to_double((*poly)[0].y()) - get_minY(), depth, speed, CGAL::to_double((*poly)[1].x()), CGAL::to_double((*poly)[1].y()) - get_minY(), depth2);
+    gcode_vmill_to(CGAL::to_double((*poly)[1].x()), CGAL::to_double((*poly)[1].y()) - get_minY(), depth2, speed);
     speed = 1.0;
   }
 }
@@ -137,23 +137,23 @@ int toolpath::output_gcode_vcarve_would_retract(void)
     
   for (auto poly : polygons) {
     double d0, d1;
-    d0 = dist(gcode_current_X(), gcode_current_Y(), (*poly)[0].x(), (*poly)[0].y() - get_minY());
-    d1 = dist(gcode_current_X(), gcode_current_Y(), (*poly)[1].x(), (*poly)[1].y() - get_minY());
+    d0 = dist(gcode_current_X(), gcode_current_Y(), CGAL::to_double((*poly)[0].x()), CGAL::to_double((*poly)[0].y()) - get_minY());
+    d1 = dist(gcode_current_X(), gcode_current_Y(), CGAL::to_double((*poly)[1].x()), CGAL::to_double((*poly)[1].y()) - get_minY());
 
-    if (dist(gcode_current_X(), gcode_current_Y(), (*poly)[0].x(), (*poly)[0].y() - get_minY()) < 0.001) {
-      return gcode_vconditional_would_retract((*poly)[0].x(), (*poly)[0].y() - get_minY(), depth, speed, (*poly)[1].x(), (*poly)[1].y() - get_minY(), depth2);
+    if (dist(gcode_current_X(), gcode_current_Y(), CGAL::to_double((*poly)[0].x()), CGAL::to_double((*poly)[0].y()) - get_minY()) < 0.001) {
+      return gcode_vconditional_would_retract(CGAL::to_double((*poly)[0].x()), CGAL::to_double((*poly)[0].y()) - get_minY(), depth, speed, CGAL::to_double((*poly)[1].x()), CGAL::to_double((*poly)[1].y()) - get_minY(), depth2);
     }
-    if (dist(gcode_current_X(), gcode_current_Y(), (*poly)[1].x(), (*poly)[1].y() - get_minY()) < 0.001) {
-      return gcode_vconditional_would_retract((*poly)[1].x(), (*poly)[1].y() - get_minY(), depth2, speed, (*poly)[0].x(), (*poly)[0].y() - get_minY(), depth);
+    if (dist(gcode_current_X(), gcode_current_Y(), CGAL::to_double((*poly)[1].x()), CGAL::to_double((*poly)[1].y()) - get_minY()) < 0.001) {
+      return gcode_vconditional_would_retract(CGAL::to_double((*poly)[1].x()), CGAL::to_double((*poly)[1].y()) - get_minY(), depth2, speed, CGAL::to_double((*poly)[0].x()), CGAL::to_double((*poly)[0].y()) - get_minY(), depth);
     }
     if (depth > depth2) {
-      return gcode_vconditional_would_retract((*poly)[0].x(), (*poly)[0].y() - get_minY(), depth, speed, (*poly)[1].x(), (*poly)[1].y() - get_minY(), depth2);
+      return gcode_vconditional_would_retract(CGAL::to_double((*poly)[0].x()), CGAL::to_double((*poly)[0].y()) - get_minY(), depth, speed, CGAL::to_double((*poly)[1].x()), CGAL::to_double((*poly)[1].y()) - get_minY(), depth2);
     }
     
     if (d0 > d1) {
-      return gcode_vconditional_would_retract((*poly)[1].x(), (*poly)[1].y() - get_minY(), depth2, speed, (*poly)[0].x(), (*poly)[0].y() - get_minY(), depth);
+      return gcode_vconditional_would_retract(CGAL::to_double((*poly)[1].x()), CGAL::to_double((*poly)[1].y()) - get_minY(), depth2, speed, CGAL::to_double((*poly)[0].x()), CGAL::to_double((*poly)[0].y()) - get_minY(), depth);
     }    
-    return gcode_vconditional_would_retract((*poly)[0].x(), (*poly)[0].y() - get_minY(), depth, speed, (*poly)[1].x(), (*poly)[1].y() - get_minY(), depth2);
+    return gcode_vconditional_would_retract(CGAL::to_double((*poly)[0].x()), CGAL::to_double((*poly)[0].y()) - get_minY(), depth, speed, CGAL::to_double((*poly)[1].x()), CGAL::to_double((*poly)[1].y()) - get_minY(), depth2);
   }
   return 0;
 }
@@ -179,13 +179,13 @@ void toolpath::output_gcode_reverse(void)
       auto vi = (*poly)[current];
       auto vi2 = (*poly)[next];
       
-      if (i == 0 && dist(lX,lY, vi.x(), vi.y()) < diameter * 0.75) {
-        gcode_mill_to(vi.x(), vi.y() - get_minY(), depth, speed * 0.5);
+      if (i == 0 && dist(lX,lY, CGAL::to_double(vi.x()), CGAL::to_double(vi.y())) < diameter * 0.75) {
+        gcode_mill_to(CGAL::to_double(vi.x()), CGAL::to_double(vi.y()) - get_minY(), depth, speed * 0.5);
       }
-      gcode_conditional_travel_to(vi.x(), vi.y() - get_minY(), depth, speed);
-      gcode_mill_to(vi2.x(), vi2.y() - get_minY(), depth, speed);
-      lX = vi2.x();
-      lY = vi2.y();
+      gcode_conditional_travel_to(CGAL::to_double(vi.x()), CGAL::to_double(vi.y()) - get_minY(), depth, speed);
+      gcode_mill_to(CGAL::to_double(vi2.x()), CGAL::to_double(vi2.y()) - get_minY(), depth, speed);
+      lX = CGAL::to_double(vi2.x());
+      lY = CGAL::to_double(vi2.y());
     }
     speed = 1.0;
   }
@@ -198,15 +198,15 @@ void toolpath::output_gcode_slotting(void)
   for (auto poly : polygons) {
     if (poly->size() == 2) {
       double distance1, distance2;
-      distance1 = dist(gcode_current_X(), gcode_current_Y(), (*poly)[0].x(), (*poly)[0].y() - get_minY());
-      distance2 = dist(gcode_current_X(), gcode_current_Y(), (*poly)[1].x(), (*poly)[1].y() - get_minY());
+      distance1 = dist(gcode_current_X(), gcode_current_Y(), CGAL::to_double((*poly)[0].x()), CGAL::to_double((*poly)[0].y()) - get_minY());
+      distance2 = dist(gcode_current_X(), gcode_current_Y(), CGAL::to_double((*poly)[1].x()), CGAL::to_double((*poly)[1].y()) - get_minY());
       
       if (distance1 < distance2) {
-         gcode_conditional_travel_to((*poly)[0].x(), (*poly)[0].y() - get_minY(), depth, speed);
-         gcode_mill_to((*poly)[1].x(), (*poly)[1].y() - get_minY(), depth, speed);
+         gcode_conditional_travel_to(CGAL::to_double((*poly)[0].x()), CGAL::to_double((*poly)[0].y()) - get_minY(), depth, speed);
+         gcode_mill_to(CGAL::to_double((*poly)[1].x()), CGAL::to_double((*poly)[1].y()) - get_minY(), depth, speed);
       } else {
-         gcode_conditional_travel_to((*poly)[1].x(), (*poly)[1].y() - get_minY(), depth, speed);
-         gcode_mill_to((*poly)[0].x(), (*poly)[0].y() - get_minY(), depth, speed);
+         gcode_conditional_travel_to(CGAL::to_double((*poly)[1].x()), CGAL::to_double((*poly)[1].y()) - get_minY(), depth, speed);
+         gcode_mill_to(CGAL::to_double((*poly)[0].x()), CGAL::to_double((*poly)[0].y()) - get_minY(), depth, speed);
       }
       return;
     }
@@ -215,8 +215,8 @@ void toolpath::output_gcode_slotting(void)
       if (vi2 == poly->vertices_end())
         vi2 = poly->vertices_begin();
         
-      gcode_conditional_travel_to(vi->x(), vi->y() - get_minY(), depth, speed);
-      gcode_mill_to(vi2->x(), vi2->y() - get_minY(), depth, speed);
+      gcode_conditional_travel_to(CGAL::to_double(vi->x()), CGAL::to_double(vi->y()) - get_minY(), depth, speed);
+      gcode_mill_to(CGAL::to_double(vi2->x()), CGAL::to_double(vi2->y()) - get_minY(), depth, speed);
     }
   }
 }
@@ -229,7 +229,7 @@ double toolpath::distance_from(double X, double Y)
     for (auto poly : polygons) {
       for (auto vi = poly->vertices_begin() ; vi != poly->vertices_end() ; ++ vi ) {
           double di;
-          di = dist(X, Y, vi->x(), vi->y());
+          di = dist(X, Y, CGAL::to_double(vi->x()), CGAL::to_double(vi->y()));
           d = fmin(d, di);
       }
     }
@@ -237,7 +237,7 @@ double toolpath::distance_from(double X, double Y)
     for (auto poly : polygons) {
       auto vi = (*poly)[start_vertex];
       double di;
-      di = dist(X, Y, vi.x(), vi.y());
+      di = dist(X, Y, CGAL::to_double(vi.x()), CGAL::to_double(CGAL::to_double(vi.y())));
       d = fmin(d, di);
     }
   }
@@ -284,7 +284,7 @@ void toolpath::recalculate()
       unsigned int next = i + 1;
       if (next >= polygons[0]->size())
         next = 0;
-      length = length + dist( (*polygons[0])[i].x(), (*polygons[0])[i].y(), (*polygons[0])[next].x(), (*polygons[0])[next].y());
+      length = length + dist( CGAL::to_double((*polygons[0])[i].x()), CGAL::to_double((*polygons[0])[i].y()), CGAL::to_double((*polygons[0])[next].x()), CGAL::to_double((*polygons[0])[next].y()));
     }
     
     for (i = 0; i < polygons[0]->size(); i++) {
@@ -300,11 +300,11 @@ void toolpath::recalculate()
         if (c >= polygons[0]->size())
           c = 0;
           
-        BA_x = (*polygons[0])[a].x() - (*polygons[0])[b].x();
-        BA_y = (*polygons[0])[a].y() - (*polygons[0])[b].y();
+        BA_x = CGAL::to_double((*polygons[0])[a].x()) - CGAL::to_double((*polygons[0])[b].x());
+        BA_y = CGAL::to_double((*polygons[0])[a].y()) - CGAL::to_double((*polygons[0])[b].y());
 
-        BC_x = (*polygons[0])[c].x() - (*polygons[0])[b].x();
-        BC_y = (*polygons[0])[c].y() - (*polygons[0])[b].y();
+        BC_x = CGAL::to_double((*polygons[0])[c].x()) - CGAL::to_double((*polygons[0])[b].x());
+        BC_y = CGAL::to_double((*polygons[0])[c].y()) - CGAL::to_double((*polygons[0])[b].y());
         
         BA_l = sqrt(BA_x * BA_x + BA_y * BA_y);
         BC_l = sqrt(BC_x * BC_x + BC_y * BC_y);
