@@ -268,6 +268,33 @@ void gcode_vconditional_travel_to(double X, double Y, double Z, double speed, do
         
 }
 
+
+int gcode_vconditional_would_retract(double X, double Y, double Z, double speed, double nextX, double nextY, double nextZ)
+{
+    double pX, pY;
+    if (cX == X && cY == Y && cZ == Z)
+        return 0;
+
+    if (dist3(X,Y,Z,cX,cY,cZ) < 0.07) {
+        return 0;
+    }
+    /* can we just go back */
+    if (Z == nextZ && prev_valid && dist(prevX1, prevY1, X,Y) < 0.005) {
+		 return 0;
+    }  else
+    /* we have cases where due to math precision, it's easier to go back a bit over the existing line  */
+    if (Z == nextZ && prev_valid && vector_intersects_vector(prevX1, prevY1, prevX2, prevY2, X, Y, nextX, nextY, &pX, &pY)) {
+         if (dist(pX,pY, cX,cY) + dist(pX,pY, X,Y) < fabs(2 * Z)) {
+			return 0;
+         }
+    }
+        
+    if (cX !=X || cY != Y)
+     return 1;
+}
+
+
+
 void gcode_write_comment(const char *comment)
 {
     fprintf(gcode, "(%s)\n", comment);

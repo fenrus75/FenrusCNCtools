@@ -74,6 +74,7 @@ public:
     void add_polygon(Polygon_2 *poly);
     bool fits_inside(class toolpath *shape);
     double distance_from(double X, double Y);
+	int output_gcode_vcarve_would_retract(void);
 
 
     void print_as_svg(const char *color);

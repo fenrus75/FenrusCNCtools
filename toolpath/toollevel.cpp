@@ -331,10 +331,15 @@ void toollevel::output_gcode(void)
     sort(worklist.begin(), worklist.end(), compare_path);
     
     while (worklist.size() > 0) {
-        worklist[0]->output_gcode();
-        worklist.erase(worklist.begin());
-        sortX = gcode_current_X();
-        sortY = gcode_current_Y() + get_minY();
+		if (worklist.size() > 1 && worklist[0]->output_gcode_vcarve_would_retract() && !worklist[1]->output_gcode_vcarve_would_retract()) {
+			worklist[1]->output_gcode();
+	        worklist.erase(worklist.begin() + 1);
+		} else {
+			worklist[0]->output_gcode();
+	        worklist.erase(worklist.begin());
+		}
+	        sortX = gcode_current_X();
+	        sortY = gcode_current_Y() + get_minY();
         
         sort(worklist.begin(), worklist.end(), compare_path);
     }

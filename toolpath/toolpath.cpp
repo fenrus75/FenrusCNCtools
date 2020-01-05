@@ -85,6 +85,7 @@ void toolpath::output_gcode(void)
   }
 }
 
+
 void toolpath::output_gcode_vcarve(void)
 {
   double speed = 1.0;
@@ -125,6 +126,33 @@ void toolpath::output_gcode_vcarve(void)
     gcode_vmill_to((*poly)[1].x(), (*poly)[1].y() - get_minY(), depth2, speed);
     speed = 1.0;
   }
+}
+
+int toolpath::output_gcode_vcarve_would_retract(void)
+{
+  double speed = 1.0;
+    
+  for (auto poly : polygons) {
+    double d0, d1;
+    d0 = dist(gcode_current_X(), gcode_current_Y(), (*poly)[0].x(), (*poly)[0].y() - get_minY());
+    d1 = dist(gcode_current_X(), gcode_current_Y(), (*poly)[1].x(), (*poly)[1].y() - get_minY());
+
+    if (dist(gcode_current_X(), gcode_current_Y(), (*poly)[0].x(), (*poly)[0].y() - get_minY()) < 0.001) {
+      return gcode_vconditional_would_retract((*poly)[0].x(), (*poly)[0].y() - get_minY(), depth, speed, (*poly)[1].x(), (*poly)[1].y() - get_minY(), depth2);
+    }
+    if (dist(gcode_current_X(), gcode_current_Y(), (*poly)[1].x(), (*poly)[1].y() - get_minY()) < 0.001) {
+      return gcode_vconditional_would_retract((*poly)[1].x(), (*poly)[1].y() - get_minY(), depth2, speed, (*poly)[0].x(), (*poly)[0].y() - get_minY(), depth);
+    }
+    if (depth > depth2) {
+      return gcode_vconditional_would_retract((*poly)[0].x(), (*poly)[0].y() - get_minY(), depth, speed, (*poly)[1].x(), (*poly)[1].y() - get_minY(), depth2);
+    }
+    
+    if (d0 > d1) {
+      return gcode_vconditional_would_retract((*poly)[1].x(), (*poly)[1].y() - get_minY(), depth2, speed, (*poly)[0].x(), (*poly)[0].y() - get_minY(), depth);
+    }    
+    return gcode_vconditional_would_retract((*poly)[0].x(), (*poly)[0].y() - get_minY(), depth, speed, (*poly)[1].x(), (*poly)[1].y() - get_minY(), depth2);
+  }
+  return 0;
 }
 
 void toolpath::output_gcode_reverse(void)

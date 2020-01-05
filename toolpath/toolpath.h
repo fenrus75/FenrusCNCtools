@@ -68,6 +68,7 @@ extern double get_tool_stepover(int toolnr);
 extern void gcode_tool_change(int toolnr);
 extern double get_tool_angle(int toolnr);
 extern int tool_is_vcarve(int toolnr);
+extern int gcode_vconditional_would_retract(double X, double Y, double Z, double speed, double nextX, double nextY, double nextZ);
 extern double distance_point_from_vector(double X1, double Y1, double X2, double Y2, double pX, double pY);
 extern int lines_tangent_to_two_circles(double X1, double Y1, double R1, double X2, double Y2, double R2, int select, double *pX1, double *pY1, double *pX2, double *pY2);
 extern int vector_intersects_vector(double X1, double Y1, double X2, double Y2, double X3, double Y3, double X4, double Y4, double *pX, double *pY);
