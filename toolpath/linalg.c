@@ -321,5 +321,85 @@ int vector_intersects_vector(double X1, double Y1, double X2, double Y2, double 
      
    /* here we just give up since this is advisory stuff anyway .. may need to get back to this */
    return 0;
+}
+
+
+int vector_intersects_vector_l(double X1, double Y1, double X2, double Y2, double X3, double Y3, double X4, double Y4, double *out_l)
+{
+     double x2,y2,x4,y4;
+     double k, l, l1, l2;
+     x2 = X2 - X1;
+     y2 = Y2 - Y1;
+     x4 = X4 - X3;
+     y4 = Y4 - Y3;
+	 *out_l = 0;
      
+     /*
+     now we have the equations 
+     X1 + l * x2 = X3 + k * x4;
+     Y1 + l * y2 = Y3 + k * y4;
+     
+     so
+     
+     k = (X1 + l * x2 - X3) / x4;
+     and/or
+     l = (X3 + k * x4 - X1) / x2;
+     
+     l * y2 = Y3+ (X1 + l * x2 - X3) / x4 * y4 - Y1;
+     l * (y2 - (x2/x4) * y4) = Y3 + (X1 -X3) / x4 * y4 - Y1;
+     */
+     
+     if (x4 != 0) {
+         l1 = y2 - (x2/x4) * y4;
+         l2 = Y3 + (X1-X3)/x4*y4 - Y1;
+         if (l1 != 0) {
+              l = l2/l1;
+              k = (X1 + l * x2 - X3) / x4;
+			  *out_l = l;
+
+              if (l < 0 || l > 1)
+                return 0;
+              if (k < 0 || k > 1)
+                return 0;
+              return 1;
+         }
+     }
+     
+     /* 
+     if x4 is 0 then we need to do something else
+     
+     Y1 + ((X3 + k * x4 - X1) / x2) * y2 = Y3 + k * y4
+     Y1 + X3 * y2 / x2 - X1 * y2 / x2 - Y3 = (y4 - x4 * y2/x2) * k
+     */
+     if (x2 != 0) {
+      double k1, k2;
+      k1 = y4 - x4 * y2 / x2;
+      k2 = Y1 + X3 * y2/x2 - X1 * y2 / x2;
+      if (k1 != 0) {
+       k = k2 / k1;
+       l = (X3 + k * x4 - X1) / x2;
+       if (k < 0 || k > 1)
+         return 0;
+       if (l < 0 || l > 1)
+         return 0;
+       *out_l = l;
+       return 1;
+     }
+   }
+     
+     
+   /* here we just give up since this is advisory stuff anyway .. may need to get back to this */
+   return 0;
+}
+
+void vector_apply_l(double *X1, double *Y1, double *X2, double *Y2, double l1,double l2)
+{
+     double x2,y2;
+     x2 = *X2 - *X1;
+     y2 = *Y2 - *Y1;
+
+	 *X2 = *X1 + l2 * x2;
+	 *Y2 = *Y1 + l2 * y2;
+	 *X1 = *X1 + l1 * x2;
+     *Y1 = *Y1 + l1 * y2;
 }
