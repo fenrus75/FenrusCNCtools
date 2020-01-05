@@ -131,6 +131,9 @@ void toolpath::output_gcode_vcarve(void)
 int toolpath::output_gcode_vcarve_would_retract(void)
 {
   double speed = 1.0;
+
+  if (!is_vcarve)
+		return 0;
     
   for (auto poly : polygons) {
     double d0, d1;
