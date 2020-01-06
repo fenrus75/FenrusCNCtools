@@ -72,7 +72,8 @@ extern int gcode_vconditional_would_retract(double X, double Y, double Z, double
 extern double distance_point_from_vector(double X1, double Y1, double X2, double Y2, double pX, double pY);
 extern int lines_tangent_to_two_circles(double X1, double Y1, double R1, double X2, double Y2, double R2, int select, double *pX1, double *pY1, double *pX2, double *pY2);
 extern int vector_intersects_vector(double X1, double Y1, double X2, double Y2, double X3, double Y3, double X4, double Y4, double *pX, double *pY);
-
+extern int vector_intersects_vector_l(double X1, double Y1, double X2, double Y2, double X3, double Y3, double X4, double Y4, double *out_l);
+extern void vector_apply_l(double *X1, double *Y1, double *X2, double *Y2, double l1,double l2);
 
 static inline double px_to_inch(double px) { return px / 96.0; };
 static inline double px_to_mm(double px) { return 25.4 * px / 96.0; };
@@ -86,9 +87,9 @@ static inline double depth_to_radius(double d, double angle) { return fabs(d) * 
 
 extern int verbose;
 
-static inline int approx3(double A, double B) { if (fabs(A-B) < 0.001) return 1; return 0; }
-static inline int approx4(double A, double B) { if (fabs(A-B) < 0.0001) return 1; return 0; }
-static inline int approx5(double A, double B) { if (fabs(A-B) < 0.00001) return 1; return 0; }
+static inline int approx3(double A, double B) { if (fabs(A-B) < 0.002) return 1; return 0; }
+static inline int approx4(double A, double B) { if (fabs(A-B) < 0.0002) return 1; return 0; }
+static inline int approx5(double A, double B) { if (fabs(A-B) < 0.00002) return 1; return 0; }
 
 #define vprintf(...) do { if (verbose) printf(__VA_ARGS__); } while (0)
 

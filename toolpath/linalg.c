@@ -357,9 +357,9 @@ int vector_intersects_vector_l(double X1, double Y1, double X2, double Y2, doubl
               k = (X1 + l * x2 - X3) / x4;
 			  *out_l = l;
 
-              if (l < 0 || l > 1)
+              if (l < -0.0001 || l > 1.0001)
                 return 0;
-              if (k < 0 || k > 1)
+              if (k < -0.0001 || k > 1.0001)
                 return 0;
               return 1;
          }
@@ -378,9 +378,9 @@ int vector_intersects_vector_l(double X1, double Y1, double X2, double Y2, doubl
       if (k1 != 0) {
        k = k2 / k1;
        l = (X3 + k * x4 - X1) / x2;
-       if (k < 0 || k > 1)
+       if (k < -0.0001 || k > 1.0001)
          return 0;
-       if (l < 0 || l > 1)
+       if (l < -0.0001 || l > 1.0001)
          return 0;
        *out_l = l;
        return 1;

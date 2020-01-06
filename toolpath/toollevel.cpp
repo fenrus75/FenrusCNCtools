@@ -52,7 +52,7 @@ static class toolpath *clone_tp(class toolpath *tp1)
 	return newtp;
 }
 
-static class toolpath *can_merge(class toolpath *tp1, class toolpath *tp2)
+static class toolpath *can_merge(class toolpath *tp1, class toolpath *tp2, int I, int J)
 {
 	double X1 = 0, Y1 = 0, X2 = 0, Y2 = 0;
 	double X3 = 0, Y3 = 0, X4 = 0, Y4 = 0;
@@ -174,7 +174,6 @@ static class toolpath *can_merge(class toolpath *tp1, class toolpath *tp2)
 		}
 	}
 
-
 	if (approx3(ox2, -ox4) && approx3(oy2, -oy4)) {
 		if (approx4(X1,X3) && approx4(Y1,Y3)) {
 			class toolpath *newtp = clone_tp(tp1);
@@ -223,7 +222,7 @@ static class toolpath *can_merge(class toolpath *tp1, class toolpath *tp2)
 			return newtp;
 		}
 
-
+#if 1
 		/* if X4,Y4 is a point on the first vector and same unit vector ... */
 		if (distance_point_from_vector(X1,Y1,X2,Y2,X4,Y4) < 0.0000001) {
 			class toolpath *newtp = clone_tp(tp1);
@@ -238,6 +237,7 @@ static class toolpath *can_merge(class toolpath *tp1, class toolpath *tp2)
 			newtp->add_polygon(p);
 			return newtp;			
 		}
+#endif
 	}
 
 
@@ -256,7 +256,7 @@ void toollevel::consolidate(void)
 	/* first, we do +1 and +2 as that's a common case */
 
 	for (i = 0; i < toolpaths.size() - 2; i++) {
-		tp = can_merge(toolpaths[i], toolpaths[i + 1]);
+		tp = can_merge(toolpaths[i], toolpaths[i + 1], i, i + 1);
 		if (tp) {
 			toolpaths[i] = tp;
 			toolpaths.erase(toolpaths.begin() + i + 1);
@@ -265,7 +265,7 @@ void toollevel::consolidate(void)
 //			vprintf("Can merge %i, %i \n", i, i+1);
 			continue;
 		}
-		tp = can_merge(toolpaths[i], toolpaths[i + 2]);
+		tp = can_merge(toolpaths[i], toolpaths[i + 2], i, i+2);
 		if (tp) {
 			toolpaths[i] = tp;
 			toolpaths.erase(toolpaths.begin() + i + 2);
@@ -282,16 +282,74 @@ void toollevel::consolidate(void)
 	  for (j = 0; j < toolpaths.size(); j++) {
 		if (i == j)
 			continue;
-		tp = can_merge(toolpaths[i], toolpaths[j]);
+		tp = can_merge(toolpaths[i], toolpaths[j], i, j);
 		if (tp && i != j) {
 			toolpaths[i] = tp;
 			toolpaths.erase(toolpaths.begin() + j);
 //			vprintf("Can merge square %i, %i \n", i, j);
 			if (i >= 2)
 				i -= 2;	
+			if (j >= 2)
+				j -= 2;	
 			continue;
 		}
       }
+	}
+}
+
+
+void toollevel::trim_intersects(void)
+{
+	unsigned int i, j;
+
+	if (toolpaths.size() < 2)
+		return; /* nothing to intersect */
+
+	if (!toolpaths[0]->is_vcarve)
+		return;
+
+	for (i = 0; i < toolpaths.size(); i++) {
+		int count = 0;
+		double min_l = 1.0;
+		double max_l = 0;
+
+		double X1, Y1, X2, Y2;
+
+		for (auto p : toolpaths[i]->polygons) {
+				X1 = CGAL::to_double((*p)[0].x());
+				Y1 = CGAL::to_double((*p)[0].y());
+				X2 = CGAL::to_double((*p)[1].x());
+				Y2 = CGAL::to_double((*p)[1].y());
+		}
+		for (j = 0; j < toolpaths.size(); j++) {
+			double this_l;
+			double X3,Y3,X4,Y4;
+			if (i == j)
+				continue;
+
+			for (auto p : toolpaths[j]->polygons) {
+				X3 = CGAL::to_double((*p)[0].x());
+				Y3 = CGAL::to_double((*p)[0].y());
+				X4 = CGAL::to_double((*p)[1].x());
+				Y4 = CGAL::to_double((*p)[1].y());
+			}
+			if (vector_intersects_vector_l(X1,Y1,X2,Y2,X3,Y3,X4,Y4, &this_l)) {
+				count++;
+				min_l = fmin(min_l, this_l);
+				max_l = fmax(max_l, this_l);
+//				printf("Intersect %i with l %5.3f  (%5.4f - %5.4f)\n", count, this_l, min_l, max_l);
+			}
+		}
+		if (count >= 2 && max_l >= 0.90 && min_l < 0.10) {
+			class toolpath *newtp = clone_tp(toolpaths[i]);
+			Polygon_2 *p = new(Polygon_2);
+			vector_apply_l(&X1,&Y1, &X2, &Y2, min_l, max_l);
+			p->push_back(Point(X1, Y1));
+		    p->push_back(Point(X2, Y2));
+			newtp->add_polygon(p);
+			toolpaths[i] = newtp;
+//			printf("Reducing toolpath %i due to %i intersects   (%5.2f - %5.2f)\n", i, count, min_l, max_l);
+		}
 	}
 }
 
@@ -302,25 +360,29 @@ void toollevel::output_gcode(void)
 
 	vprintf("Work size before consolidate  %i\n", (int)toolpaths.size());
 	consolidate();
-	vprintf("Work size after consolidate  %i\n", (int)toolpaths.size());
+	vprintf("Work size before trim_intersect  %i\n", (int)toolpaths.size());
+	trim_intersects();
+	consolidate();
+	consolidate();
+	vprintf("Work size after trim_intersect  %i\n", (int)toolpaths.size());
     worklist = toolpaths;
 
-#if 0	
+#if 0
 	for (unsigned int i = 0; i < worklist.size(); i++) {
 		class toolpath *tp = worklist[i];
 		for (auto p : tp->polygons) {
 			double x1,y1,x2,y2;
 			double ox, oy, len;
-			x1 = (*p)[0].x();
-			y1 = (*p)[0].y();
-			x2 = (*p)[1].x();
-			y2 = (*p)[1].y();
+			x1 = CGAL::to_double((*p)[0].x());
+			y1 = CGAL::to_double((*p)[0].y());
+			x2 = CGAL::to_double((*p)[1].x());
+			y2 = CGAL::to_double((*p)[1].y());
 			ox = x2-x1;
 			oy = y2-y1;
 			len = sqrt(ox*ox + oy*oy);
 			ox = ox / len;
 			oy = oy / len;
-			printf("%4i: %5.4f,%5.4f --> %5.4f, %5.4f     uv %5.8f,%5.8f\n", i, x1, y1, x2, y2, ox, oy);
+//			printf("%4i: %5.4f,%5.4f --> %5.4f, %5.4f     uv %5.8f,%5.8f  length %5.4f\n", i, x1, y1, x2, y2, ox, oy, len);
 		}
     }
 #endif
@@ -401,7 +463,6 @@ void toollevel::add_poly_vcarve(Polygon_2 *poly, double depth1, double depth2)
 #if 1
     for (auto tp : toolpaths) {
             if (tp->polygons.size() > 1) {
-                printf("GOT HERE\n");
                 continue;
             }
             Polygon_2 *p2;
