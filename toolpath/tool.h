@@ -185,6 +185,7 @@ public:
         iss = NULL;
         name = "unknown";
         minY = 0;
+		is_cutout = false;
     }
     void set_level(int _level);
     void add_child(class inputshape *child);
@@ -213,6 +214,8 @@ public:
     double distance_from_edge(double X, double Y);
     
     class scene *parent;
+
+	bool is_cutout;
 
 private:
     const char *name;

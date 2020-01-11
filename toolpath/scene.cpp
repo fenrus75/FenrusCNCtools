@@ -189,6 +189,7 @@ void scene::process_nesting(void)
 	  i = shapes.size() - 1;
 	  cutout = shapes[i];
 	  shapes.erase(shapes.begin() + i);
+	  cutout->is_cutout = true;
   }
 
   vprintf("Scene has %i objects\n", (int)shapes.size());
