@@ -26,6 +26,7 @@ public:
             _want_inbetween_paths = false;
             _want_skeleton_paths = false;
             shape = NULL;
+			cutout = NULL;
             filename = "unknown";            
         }
         
@@ -71,6 +72,7 @@ public:
 private:
         vector<int> toollist;
         vector<class inputshape *> shapes;
+		class inputshape * cutout;
 
         class inputshape *shape;
         double minX, minY, maxX, maxY;

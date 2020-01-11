@@ -20,8 +20,11 @@
 
 
 using namespace std;
-
+#if 1
+typedef CGAL::Exact_predicates_inexact_constructions_kernel K ;
+#else
 typedef CGAL::Exact_predicates_exact_constructions_kernel K ;
+#endif
 typedef K::Point_2                   Point ;
 typedef CGAL::Polygon_2<K>           Polygon_2 ;
 typedef CGAL::Straight_skeleton_2<K> Ss ;

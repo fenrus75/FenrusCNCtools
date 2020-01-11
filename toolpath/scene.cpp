@@ -184,6 +184,16 @@ void scene::process_nesting(void)
   /* in order of nesting */
   sort(shapes.begin(), shapes.end(), compare_shape);
 
+  /* if we are doing a cutout we need to remove the biggest shape, that's the cutout */
+  if (cutout_depth != 0) {
+	  i = shapes.size() - 1;
+	  cutout = shapes[i];
+	  shapes.erase(shapes.begin() + i);
+  }
+
+  vprintf("Scene has %i objects\n", (int)shapes.size());
+
+
   for (i = 0; i < shapes.size(); i++) {
     unsigned int j;
     for (j = i + 1; j < shapes.size(); j++) {

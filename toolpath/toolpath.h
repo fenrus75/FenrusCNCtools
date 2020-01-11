@@ -86,6 +86,7 @@ static inline double radius_to_depth(double r, double angle) { return -r / tan(a
 static inline double depth_to_radius(double d, double angle) { return fabs(d) * tan(angle/360.0 * M_PI); }
 
 extern int verbose;
+extern double cutout_depth;
 
 static inline int approx3(double A, double B) { if (fabs(A-B) < 0.002) return 1; return 0; }
 static inline int approx4(double A, double B) { if (fabs(A-B) < 0.0002) return 1; return 0; }

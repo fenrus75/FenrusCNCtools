@@ -18,6 +18,8 @@ extern "C" {
 
 int verbose = 0;
 
+double cutout_depth = 0;
+
 static double depth;
 
 void usage(void)
@@ -31,6 +33,7 @@ void usage(void)
 	printf("\t--tool <number>   (-t)	use tool number <number> \n");
 	printf("\t--depth <inch>    (-d)    set cutting depth in inches\n");
 	printf("\t--Depth <mm>      (-D)    set cutting depth in mm\n");
+	printf("\t--cutout <inch>   (-c)    cut out the outer geometry to depth <inch>\n");
 	exit(EXIT_SUCCESS);
 }
 
@@ -43,6 +46,7 @@ static struct option long_options[] =
           {"inbetween", no_argument,       0, 'i'},
           {"library",    required_argument, 0, 'l'},
           {"tool",    required_argument, 0, 't'},
+          {"cutout",  required_argument, 0, 'c'},
           {"depth",    required_argument, 0, 'd'},
           {"Depth",    required_argument, 0, 'D'},
 		  {"help",	no_argument, 0, 'h'},
@@ -90,6 +94,10 @@ int main(int argc, char **argv)
 				break;
 			case 'D': /* metric mm*/
 				depth = strtod(optarg, NULL);
+				break;
+			case 'c': /* inch */
+				cutout_depth = inch_to_mm(strtod(optarg, NULL));
+				printf("Enabling cutout to depth %5.2fmm\n", cutout_depth);
 				break;
 			case 't':
 				int arg;

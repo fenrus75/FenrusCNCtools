@@ -52,7 +52,7 @@ static class toolpath *clone_tp(class toolpath *tp1)
 	return newtp;
 }
 
-static class toolpath *can_merge(class toolpath *tp1, class toolpath *tp2, int I, int J)
+static class toolpath *can_merge(class toolpath *tp1, class toolpath *tp2)
 {
 	double X1 = 0, Y1 = 0, X2 = 0, Y2 = 0;
 	double X3 = 0, Y3 = 0, X4 = 0, Y4 = 0;
@@ -256,7 +256,7 @@ void toollevel::consolidate(void)
 	/* first, we do +1 and +2 as that's a common case */
 
 	for (i = 0; i < toolpaths.size() - 2; i++) {
-		tp = can_merge(toolpaths[i], toolpaths[i + 1], i, i + 1);
+		tp = can_merge(toolpaths[i], toolpaths[i + 1]);
 		if (tp) {
 			toolpaths[i] = tp;
 			toolpaths.erase(toolpaths.begin() + i + 1);
@@ -265,7 +265,7 @@ void toollevel::consolidate(void)
 //			vprintf("Can merge %i, %i \n", i, i+1);
 			continue;
 		}
-		tp = can_merge(toolpaths[i], toolpaths[i + 2], i, i+2);
+		tp = can_merge(toolpaths[i], toolpaths[i + 2]);
 		if (tp) {
 			toolpaths[i] = tp;
 			toolpaths.erase(toolpaths.begin() + i + 2);
@@ -282,7 +282,7 @@ void toollevel::consolidate(void)
 	  for (j = 0; j < toolpaths.size(); j++) {
 		if (i == j)
 			continue;
-		tp = can_merge(toolpaths[i], toolpaths[j], i, j);
+		tp = can_merge(toolpaths[i], toolpaths[j]);
 		if (tp && i != j) {
 			toolpaths[i] = tp;
 			toolpaths.erase(toolpaths.begin() + j);
