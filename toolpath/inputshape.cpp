@@ -293,6 +293,18 @@ void inputshape::create_toolpaths(int toolnr, double depth, int finish_pass, int
     }
 }
 
+void inputshape::create_toolpaths_cutout(int toolnr, double depth)
+{
+	/* Step 1: Create an outside bounding box */
+	/* Step 2: Create a polyhole with the coutout box as holes */
+	/* Step 3: Create an ISS */
+	/* Step 4: Inset the ISS by tool radius */
+	/* Step 5: The hole perimiter is now our path for the tool */
+	/*     walk this first at max depth, one toolpath per segment */
+	/*	   calculate gradient of dZ/mm */
+	/*     walk the gradient up until we break the surface */
+}
+
 
 void inputshape::create_toolpaths_vcarve(int toolnr, double maxdepth)
 {

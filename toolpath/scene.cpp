@@ -132,6 +132,8 @@ void scene::write_naked_gcode()
     for (auto i : shapes) {
       i->output_gcode(toollist[j]);
     }
+	if (cutout)
+		cutout->output_gcode(toollist[j]);
     if (j < toollist.size() - 1) {
           gcode_tool_change(toollist[j + 1]);
     }
@@ -227,6 +229,14 @@ void scene::create_toolpaths(double depth)
   int tool;
   
   vprintf("create_toolpaths with depth %5.2f\n", depth);
+
+  /* cutout toolpath first */
+	if (cutout) {
+		int toolnr = 0;
+		if (tool_is_vcarve(toollist[0]) && toollist.size() > 1)
+			toolnr = 1;
+		cutout->create_toolpaths_cutout(toolnr, - fabs(cutout_depth));
+	}  
   
   tool = toollist.size() -1;
   while (tool >= 0) {
