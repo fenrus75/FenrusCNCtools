@@ -8,6 +8,7 @@
 #include <unistd.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <getopt.h>
 
 #include "scene.h"
 
@@ -21,15 +22,38 @@ static double depth;
 
 void usage(void)
 {
-	printf("Usage:\n\ttoolpath [-f] [-s] [-l <toollibrary.csv>] [-t <nr] <file.svg>\n");
+	printf("Usage:\n\ttoolpath [options] <file.svg>\n");
+	printf("\t--verbose         (-v)    verbose output\n");
+	printf("\t--finish-pass     (-f)	add a finishing pass\n");
+	printf("\t--skeleton        (-s)    reduce slotting\n");
+    printf("\t--inbetween       (-i)    ensure no ridges left over\n");
+	printf("\t--library <file>  (-l)	load CC .csv tool file\n");
+	printf("\t--tool <number>   (-t)	use tool number <number> \n");
+	printf("\t--depth <inch>    (-d)    set cutting depth in inches\n");
+	printf("\t--Depth <mm>      (-D)    set cutting depth in mm\n");
 	exit(EXIT_SUCCESS);
 }
 
+static struct option long_options[] =
+        {
+          /* These options set a flag. */
+          {"verbose", no_argument,       0, 'v'},
+          {"finish-pass", no_argument,       0, 'f'},
+          {"skeleton", no_argument,       0, 's'},
+          {"inbetween", no_argument,       0, 'i'},
+          {"library",    required_argument, 0, 'l'},
+          {"tool",    required_argument, 0, 't'},
+          {"depth",    required_argument, 0, 'd'},
+          {"Depth",    required_argument, 0, 'D'},
+		  {"help",	no_argument, 0, 'h'},
+          {0, 0, 0, 0}
+        };
 
 int main(int argc, char **argv)
 {
     int opt;
     int tool = 102;
+	int option_index;
     
     class scene *scene;
     
@@ -39,9 +63,9 @@ int main(int argc, char **argv)
     
     depth = inch_to_mm(0.044);
 
-    while ((opt = getopt(argc, argv, "vfsil:t:d:D:")) != -1) {
+    while ((opt = getopt_long(argc, argv, "vfsil:t:d:D:", long_options, &option_index)) != -1) {
         switch (opt)
-	{
+		{
 			case 'v':
 				verbose = 1;
 				break;
@@ -79,9 +103,10 @@ int main(int argc, char **argv)
 				}
 				break;
 			
+			case 'h':
 			default:
 				usage();
-	}
+		}
     }
 	
     if (optind == argc) {
