@@ -358,13 +358,13 @@ void toollevel::output_gcode(void)
     vector<class toolpath*> worklist;    
 
 
-	vprintf("Work size before consolidate  %i\n", (int)toolpaths.size());
+//	vprintf("Work size before consolidate  %i\n", (int)toolpaths.size());
 	consolidate();
-	vprintf("Work size before trim_intersect  %i\n", (int)toolpaths.size());
-	trim_intersects();
+//	vprintf("Work size before trim_intersect  %i\n", (int)toolpaths.size());
+	trim_intersects(); /* This is unproven correct so far */
 	consolidate();
 	consolidate();
-	vprintf("Work size after trim_intersect  %i\n", (int)toolpaths.size());
+//	vprintf("Work size after trim_intersect  %i\n", (int)toolpaths.size());
     worklist = toolpaths;
 
 #if 0

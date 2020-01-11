@@ -120,6 +120,16 @@ const char * tool_svgcolor(int toolnr)
     return "black";
 }
 
+double tool_diam(int toolnr)
+{
+    toolnr = abs(toolnr);
+    for (auto tool : tools)
+        if (tool->number == toolnr)
+            return inch_to_mm(tool->diameter_inch);
+    return 0;
+}
+
+
 double get_tool_stepover(int toolnr)
 {
     toolnr = abs(toolnr);

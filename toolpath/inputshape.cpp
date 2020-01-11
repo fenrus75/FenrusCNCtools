@@ -296,11 +296,76 @@ void inputshape::create_toolpaths(int toolnr, double depth, int finish_pass, int
 void inputshape::create_toolpaths_cutout(int toolnr, double depth)
 {
 	/* Step 1: Create an outside bounding box */
+
+	vprintf("cutout step 1\n");
+	double outset = 0;
+	auto bbox = poly.bbox();
+    Polygon_2 *boxpoly = new(Polygon_2);
+
+	auto out = compute_outer_frame_margin(poly.vertices_begin(), poly.vertices_end(), 0.1);
+	if (out) {
+		outset += *out;
+	}
+	outset += 4 * tool_diam(toolnr);
+	outset += 40;
+
+	vprintf("Outset is %5.2f mm\n", outset);
+
+	boxpoly->push_back(Point(bbox.xmin() - outset, bbox.ymin() - outset));
+	boxpoly->push_back(Point(bbox.xmin() - outset, bbox.ymax() + outset));
+	boxpoly->push_back(Point(bbox.xmax() + outset, bbox.ymax() + outset));
+	boxpoly->push_back(Point(bbox.xmax() + outset, bbox.ymin() - outset));
+
+	boxpoly->reverse_orientation();
+	
 	/* Step 2: Create a polyhole with the coutout box as holes */
+	vprintf("cutout step 2\n");
+    auto ph = new PolygonWithHoles(*boxpoly);
+	poly.reverse_orientation();
+	ph->add_hole(poly);
+
 	/* Step 3: Create an ISS */
+	vprintf("cutout step 3\n");
+	auto ciss = CGAL::create_interior_straight_skeleton_2(*ph);
+
 	/* Step 4: Inset the ISS by tool radius */
+	vprintf("cutout step 4 with toolnr %i\n", toolnr);
+	PolygonWithHolesPtrVector  offset_polygons;
+	offset_polygons = arrange_offset_polygons_2(CGAL::create_offset_polygons_2<Polygon_2>(get_tool_diameter()/2, *ciss) );
+
+    class tooldepth * td = new(class tooldepth);
+
+    tooldepths.push_back(td);
+    td->depth = depth;
+    td->toolnr = toolnr;
+    td->diameter = get_tool_diameter();
+
+	class toollevel *tool = new(class toollevel);
+        
+	tool->level = 0;
+    tool->offset = get_tool_diameter();
+    tool->diameter = get_tool_diameter();
+    tool->depth = depth;
+    tool->toolnr = toolnr;
+    tool->minY = minY;
+    tool->name = "Cutout";
+	td->toollevels.push_back(tool);
+
 	/* Step 5: The hole perimiter is now our path for the tool */
-	/*     walk this first at max depth, one toolpath per segment */
+
+	printf("cutout step 5 with depth %5.2f\n", depth);
+	for (auto ply : offset_polygons) {        
+		vprintf("PLY\n");
+		/*     walk this first at max depth, one toolpath per segment */
+		for(auto hi = ply->holes_begin() ; hi != ply->holes_end() ; ++ hi ) {
+			vprintf("Add one\n");
+        	Polygon_2 *p;
+            p = new(Polygon_2);
+            *p = *hi;
+            p->reverse_orientation();
+            tool->add_poly(p, true);
+        }
+	}
 	/*	   calculate gradient of dZ/mm */
 	/*     walk the gradient up until we break the surface */
 }

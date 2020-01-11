@@ -235,7 +235,7 @@ void scene::create_toolpaths(double depth)
 		int toolnr = 0;
 		if (tool_is_vcarve(toollist[0]) && toollist.size() > 1)
 			toolnr = 1;
-		cutout->create_toolpaths_cutout(toolnr, - fabs(cutout_depth));
+		cutout->create_toolpaths_cutout(toollist[toolnr], - fabs(cutout_depth));
 	}  
   
   tool = toollist.size() -1;
