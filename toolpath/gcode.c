@@ -174,7 +174,7 @@ void gcode_vmill_to(double X, double Y, double Z, double speedratio)
         fprintf(gcode,"X%5.4f", X);
 	    cX = X;
 	}
-    if (!approx4(cX,Y)) {
+    if (!approx4(cY,Y)) {
         fprintf(gcode,"Y%5.4f", Y);
 	    cY = Y;
 	}
@@ -214,7 +214,7 @@ void gcode_conditional_travel_to(double X, double Y, double Z, double speed)
         return;
         
     /* rounding error handling: if we're within 0.01 mm just mill to it */
-    if (cZ == Z && dist(X,Y,cX,cY) < 0.07) {
+    if (approx4(cZ, Z) && dist(X,Y,cX,cY) < 0.07) {
         gcode_vmill_to(X, Y, Z, speed);
         return;
     }
@@ -228,7 +228,7 @@ void gcode_conditional_travel_to(double X, double Y, double Z, double speed)
 void gcode_vconditional_travel_to(double X, double Y, double Z, double speed, double nextX, double nextY, double nextZ)
 {
     double pX, pY;
-    if (cX == X && cY == Y && cZ == Z)
+    if (approx4(cX, X) && approx4(cY, Y) && approx4(cZ,Z))
         return;
 
 //    printf("Travel to %5.4f %5.4f %5.4f\n", X, Y, Z);
