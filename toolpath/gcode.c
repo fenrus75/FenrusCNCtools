@@ -30,6 +30,7 @@ static int retract_count;
 static int mill_count;
 /* in mm */
 static double cX, cY, cZ, cS;
+static int has_current = 0;
 
 /* for vcarving */
 
@@ -153,6 +154,7 @@ void gcode_mill_to(double X, double Y, double Z, double speedratio)
     cX = X;
     cY = Y;
     cZ = Z;
+	has_current = 1;
     cS = speedratio * tool_feedrate;
     fprintf(gcode, "\n");
     mill_count++;
@@ -184,6 +186,7 @@ void gcode_vmill_to(double X, double Y, double Z, double speedratio)
         fprintf(gcode, "F%i", (int)(speedratio * tool_feedrate));
         
     prev_valid = 1;
+	has_current = 1;
     cZ = Z;
     cS = speedratio * tool_feedrate;
     fprintf(gcode, "\n");
@@ -206,6 +209,7 @@ void gcode_travel_to(double X, double Y)
     cY = Y;
     fprintf(gcode, "\n");
     prev_valid = 0;
+	has_current = 0;
 }
 
 void gcode_conditional_travel_to(double X, double Y, double Z, double speed)
@@ -337,4 +341,14 @@ void gcode_tool_change(int toolnr)
  fprintf(gcode, "M3 S%i\n", (int)rippem);  
  first_time = 0;
     prev_valid = 0;
+}
+
+int gcode_has_current(void)
+{
+	return has_current;
+}
+
+void gcode_reset_current(void)
+{
+	has_current = 0;
 }

@@ -296,10 +296,10 @@ void inputshape::create_toolpaths(int toolnr, double depth, int finish_pass, int
 void inputshape::create_toolpaths_cutout(int toolnr, double depth)
 {
 	/* Step 1: Create an outside bounding box */
+	double currentdepth = -fabs(depth);
 	int rampnr = 0;
 	double gradient = 0;
 	double circumfence = 0;
-	vprintf("cutout step 1\n");
 	double outset = 0;
 	auto bbox = poly.bbox();
     Polygon_2 *boxpoly = new(Polygon_2);
@@ -314,7 +314,7 @@ void inputshape::create_toolpaths_cutout(int toolnr, double depth)
 	outset += 4 * tool_diam(toolnr);
 	outset += 40;
 
-	vprintf("Outset is %5.2f mm\n", outset);
+	vprintf("Cutout Outset is %5.2f mm\n", outset);
 
 	boxpoly->push_back(Point(bbox.xmin() - outset, bbox.ymin() - outset));
 	boxpoly->push_back(Point(bbox.xmin() - outset, bbox.ymax() + outset));
@@ -324,51 +324,64 @@ void inputshape::create_toolpaths_cutout(int toolnr, double depth)
 	boxpoly->reverse_orientation();
 	
 	/* Step 2: Create a polyhole with the coutout box as holes */
-	vprintf("cutout step 2\n");
     auto ph = new PolygonWithHoles(*boxpoly);
 	poly.reverse_orientation();
 	ph->add_hole(poly);
 
 	/* Step 3: Create an ISS */
-	vprintf("cutout step 3\n");
 	auto ciss = CGAL::create_interior_straight_skeleton_2(*ph);
 
 	/* Step 4: Inset the ISS by tool radius */
-	vprintf("cutout step 4 with toolnr %i\n", toolnr);
 	PolygonWithHolesPtrVector  offset_polygons;
 	offset_polygons = arrange_offset_polygons_2(CGAL::create_offset_polygons_2<Polygon_2>(get_tool_diameter()/2, *ciss) );
 
 
 	/* Step 5: The hole perimiter is now our path for the tool */
 
-	printf("cutout step 5 with depth %5.2f\n", depth);
-	for (auto ply : offset_polygons) {        
-		vprintf("PLY\n");
-		/*     walk this first at max depth, one toolpath per segment */
-	    class tooldepth * td = new(class tooldepth);
-	    tooldepths.push_back(td);
-	    td->depth = depth;
-	    td->toolnr = toolnr;
-	    td->diameter = get_tool_diameter();
+		for (auto ply : offset_polygons) {        
+			for(auto hi = ply->holes_begin() ; hi != ply->holes_end() ; ++ hi ) {
+    	    	Polygon_2 *p;
 
-		class toollevel *tool = new(class toollevel);
-        
-		tool->level = 0;
-	    tool->offset = get_tool_diameter();
-	    tool->diameter = get_tool_diameter();
-	    tool->depth = depth;
-	    tool->toolnr = toolnr;
-	    tool->minY = minY;
-	    tool->name = "Cutout bottom";
-		td->toollevels.push_back(tool);
-		for(auto hi = ply->holes_begin() ; hi != ply->holes_end() ; ++ hi ) {
-        	Polygon_2 *p;
-            p = new(Polygon_2);
-            *p = *hi;
-            p->reverse_orientation();
-            tool->add_poly(p, true);
-        }
-	}
+				if (currentdepth > 0)
+					break;
+				p = new(Polygon_2);
+            	*p = *hi;
+				for (unsigned int i = 0; i < p->size(); i++) {
+					unsigned int next = i + 1;
+					if (next >= p->size())
+						next = 0;
+
+					class tooldepth * td = new(class tooldepth);
+					tooldepths.push_back(td);
+					td->depth = currentdepth;
+					td->toolnr = toolnr;
+					td->diameter = get_tool_diameter();
+					class toollevel *tool = new(class toollevel);
+					tool->level = 0;
+					tool->offset = get_tool_diameter();
+					tool->diameter = get_tool_diameter();
+					tool->depth = currentdepth;
+					tool->toolnr = toolnr;
+					tool->minY = minY;
+					tool->name = "Cutout bottom";
+					td->toollevels.push_back(tool);
+
+	    	    	Polygon_2 *p2;
+					p2 = new(Polygon_2);
+					double d1 = currentdepth;
+					double d2 = gradient * dist(	CGAL::to_double((*p)[i].x()), 
+														CGAL::to_double((*p)[i].y()), 
+														CGAL::to_double((*p)[next].x()), 
+														CGAL::to_double((*p)[next].y()));
+					p2->push_back(Point(CGAL::to_double((*p)[i].x()), CGAL::to_double((*p)[i].y())));
+					p2->push_back(Point(CGAL::to_double((*p)[next].x()), CGAL::to_double((*p)[next].y())));
+					tool->add_poly_vcarve(p2, d1, d1 + d2);
+					
+				}
+	        }
+		}
+
+
 	/*	   calculate gradient of dZ/mm */
 
 	for (auto ply : offset_polygons) {        
@@ -393,23 +406,21 @@ void inputshape::create_toolpaths_cutout(int toolnr, double depth)
 		return;
 	gradient = fabs(get_tool_maxdepth()) / circumfence;
 	/*     walk the gradient up until we break the surface */
-	double currentdepth = -fabs(depth);
 	while (currentdepth < 0) {
 		for (auto ply : offset_polygons) {        
 			for(auto hi = ply->holes_begin() ; hi != ply->holes_end() ; ++ hi ) {
     	    	Polygon_2 *p;
 
-				if (currentdepth > 0)
+				if (currentdepth > 0.1)
 					break;
 				p = new(Polygon_2);
             	*p = *hi;
 				for (unsigned int i = 0; i < p->size(); i++) {
-					char name[128];
 					unsigned int next = i + 1;
 					if (next >= p->size())
 						next = 0;
 
-					if (currentdepth > 0)
+					if (currentdepth > 0.1)
 						break;
 
 					class tooldepth * td = new(class tooldepth);
@@ -424,8 +435,7 @@ void inputshape::create_toolpaths_cutout(int toolnr, double depth)
 					tool->depth = currentdepth;
 					tool->toolnr = toolnr;
 					tool->minY = minY;
-					sprintf(name, "Cutout ramp %i", ++rampnr);
-					tool->name = strdup(name);
+					tool->name = "Cutout ramp";
 					td->toollevels.push_back(tool);
 
 	    	    	Polygon_2 *p2;
@@ -438,12 +448,6 @@ void inputshape::create_toolpaths_cutout(int toolnr, double depth)
 					p2->push_back(Point(CGAL::to_double((*p)[i].x()), CGAL::to_double((*p)[i].y())));
 					p2->push_back(Point(CGAL::to_double((*p)[next].x()), CGAL::to_double((*p)[next].y())));
 					tool->add_poly_vcarve(p2, d1, d1 + d2);
-					printf(" %5.4f, %5.4f  --> %5.4f, %5.4f \n",	CGAL::to_double((*p)[i].x()), 
-														CGAL::to_double((*p)[i].y()), 
-														CGAL::to_double((*p)[next].x()), 
-														CGAL::to_double((*p)[next].y()));
-			
-					printf("Current depth is %5.4f   d2 is %5.5f   ramp %i   i %i  next %i\n", currentdepth, d2, rampnr, i, next);
 					currentdepth += d2;
 					
 				}

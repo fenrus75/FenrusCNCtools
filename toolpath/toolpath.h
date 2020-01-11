@@ -75,6 +75,8 @@ extern int vector_intersects_vector(double X1, double Y1, double X2, double Y2, 
 extern int vector_intersects_vector_l(double X1, double Y1, double X2, double Y2, double X3, double Y3, double X4, double Y4, double *out_l);
 extern void vector_apply_l(double *X1, double *Y1, double *X2, double *Y2, double l1,double l2);
 extern double tool_diam(int toolnr);
+extern int gcode_has_current(void);
+extern void gcode_reset_current(void);
 
 static inline double px_to_inch(double px) { return px / 96.0; };
 static inline double px_to_mm(double px) { return 25.4 * px / 96.0; };

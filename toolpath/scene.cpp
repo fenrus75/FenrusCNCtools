@@ -132,8 +132,10 @@ void scene::write_naked_gcode()
     for (auto i : shapes) {
       i->output_gcode(toollist[j]);
     }
-	if (cutout)
+	if (cutout) {
+		gcode_reset_current();
 		cutout->output_gcode(toollist[j]);
+	}
     if (j < toollist.size() - 1) {
           gcode_tool_change(toollist[j + 1]);
     }
