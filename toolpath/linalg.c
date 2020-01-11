@@ -117,6 +117,15 @@ int lines_tangent_to_two_circles(double X1, double Y1, double R1, double X2, dou
 //        printf("FLIP\n");
         return lines_tangent_to_two_circles(X2,Y2,R2,X1,Y1,R1, select, pX1, pY1, pX2, pY2);
      }
+
+	 if (approx5(X1,X2) && approx5(Y1,Y2)) {
+		*pX1 = X1;
+		*pX2 = X2;
+	    *pY1 = Y1;
+		*pY2 = Y2;
+		return 0;
+	 }
+
      *pX1 = 0;
      *pX2 = 0;
      *pY1 = 0;

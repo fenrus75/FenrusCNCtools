@@ -21,7 +21,7 @@ void toolpath::print_as_svg(const char *color)
 //          width = 4;
           color = "purple";
           width = 0.5;
-      }
+      } else return;
 
 //    if (is_hole)
 //        color = "red";

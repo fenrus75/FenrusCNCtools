@@ -297,7 +297,6 @@ void inputshape::create_toolpaths_cutout(int toolnr, double depth)
 {
 	/* Step 1: Create an outside bounding box */
 	double currentdepth = -fabs(depth);
-	int rampnr = 0;
 	double gradient = 0;
 	double circumfence = 0;
 	double outset = 0;
@@ -581,7 +580,7 @@ void inputshape::create_toolpaths_vcarve(int toolnr, double maxdepth)
                 /* case 4: d1 is ok d2 is not ok */
                 if (d1 >= maxdepth && d2 < maxdepth) {
 				  bool exclusioncase = false;
-				  if (d1 == 0 && !x->is_inner_bisector())
+				  if (d1 == 0 && !x->is_bisector())
 						exclusioncase = true; 
                   if ( (X1 != X2 || Y1 != Y2) && !exclusioncase) { 
                     double x1,y1,x2,y2,x3,y3,x4,y4;
@@ -599,6 +598,7 @@ void inputshape::create_toolpaths_vcarve(int toolnr, double maxdepth)
 //                    printf("Point 1 (%5.2f,%5.2f) at %5.2f\n", X1, Y1, d1);
 //                    printf("Point 2 (%5.2f,%5.2f) at %5.2f\n", X2, Y2, d2);
 //                    printf("Point M (%5.2f,%5.2f) at %5.2f\n", Xm, Ym, d1 + ratio * (d2-d1));
+					if (x->is_inner_bisector()) {
 
                     /* From X1 to Xm is business as usual */
                     Polygon_2 *p = new(Polygon_2);
@@ -607,6 +607,8 @@ void inputshape::create_toolpaths_vcarve(int toolnr, double maxdepth)
                     tool->diameter = fmax(tool->diameter, -d1 * 2);
                     tool->diameter = fmax(tool->diameter, -fabs(maxdepth) * 2);
                     tool->add_poly_vcarve(p, d1, maxdepth);
+					}
+					if (x->is_inner_bisector() || 1) {
                     
                     /* and from Xm to X2 is like case 2 */
                     ret += lines_tangent_to_two_circles(Xm, Ym, 0, 
@@ -641,7 +643,7 @@ void inputshape::create_toolpaths_vcarve(int toolnr, double maxdepth)
                     if (ret == 0)
                         tool->add_poly_vcarve(p2, maxdepth, maxdepth);
                 
-                    
+                    }
                     
                     
                   }        
