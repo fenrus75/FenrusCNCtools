@@ -487,7 +487,7 @@ bool should_vcarve(class inputshape *shape, double X1, double Y1, double X2, dou
         phi = acos( (BA_x * BC_x + BA_y * BC_y) / (BA_l * BC_l));
 		phi = 360 / 2 / M_PI * phi;
 
-		printf("Angle is %5.2f\n", phi);
+//		printf("Angle is %5.2f\n", phi);
 		if (approx4((shape->poly)[b].x(),X1) && approx4(shape->poly[b].y(), Y1) && phi < 120)
 			return true;
 		if (approx4((shape->poly)[b].x(),X2) && approx4(shape->poly[b].y(), Y2) && phi < 120)

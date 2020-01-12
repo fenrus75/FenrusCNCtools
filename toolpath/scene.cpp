@@ -279,8 +279,10 @@ void scene::create_toolpaths(double depth)
     end = 60000000;
     
     /* we want courser tools to not get within the stepover of the finer tool */
+	/* but actually that's a mess, we'll leave 0.1mm stock to leave and that's it */
     if (tool < (int)toollist.size() -1)
-      start = get_tool_stepover(toollist[tool+1]);
+//      start = get_tool_stepover(toollist[tool+1]);
+		start = 0.1;
     
     /* if tool 0 is a vcarve bit, tool 1 needs to start at radius at depth of cut */
     /* and all others need an offset */
@@ -292,7 +294,7 @@ void scene::create_toolpaths(double depth)
     }
       
     if (tool > 0)
-      end = 2 * get_tool_stepover(toollist[tool-1]) + 2 * get_tool_stepover(toollist[tool]);
+      end = tool_diam(toollist[tool-1])/2 + 0.2;
       
     if (tool == 1 && tool_is_vcarve(toollist[0]))
       end = 600000000;
