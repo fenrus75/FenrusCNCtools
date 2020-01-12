@@ -190,7 +190,7 @@ void scene::process_nesting(void)
   sort(shapes.begin(), shapes.end(), compare_shape);
 
   /* if we are doing a cutout we need to remove the biggest shape, that's the cutout */
-  if (cutout_depth != 0) {
+  if (cutout_depth != 0 && cutout == NULL) {
 	  i = shapes.size() - 1;
 	  cutout = shapes[i];
 	  shapes.erase(shapes.begin() + i);
@@ -414,9 +414,18 @@ class scene * scene::clone_scene(class scene *input, int mirror, double Xadd)
   scene->add_point_to_poly(bbox.xmax() + outset, bbox.ymin() - outset);
   scene->end_poly();
 
+  outset = 7;
+  scene->new_poly(bbox.xmin() - outset, bbox.ymin() - outset);
+  scene->add_point_to_poly(bbox.xmin() - outset, bbox.ymax() + outset);
+  scene->add_point_to_poly(bbox.xmax() + outset, bbox.ymax() + outset);
+  scene->add_point_to_poly(bbox.xmax() + outset, bbox.ymin() - outset);
+  scene->end_poly();
+
   if (cutout_depth) {
-	  scene->cutout = scene->shapes[scene->shapes.size() - 1];
+	  scene->cutout = scene->shapes[scene->shapes.size() - 2];
 	  scene->set_cutout_depth(cutout_depth);
+	  scene->shapes.erase(scene->shapes.begin() + scene->shapes.size() - 2);
+	  scene->cutout->is_cutout = true;
   }
 
   if (scene->toollist.size() == 0)
