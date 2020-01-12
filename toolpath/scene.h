@@ -68,6 +68,9 @@ public:
         
         double distance_from_edge(double X, double Y);
 
+		class scene * clone_scene(class scene *input, int mirror, double Xadd);
+
+
         
 private:
         vector<int> toollist;
@@ -75,6 +78,9 @@ private:
 		class inputshape * cutout;
 
         class inputshape *shape;
+
+
+		class scene *inlay_plug;
         double minX, minY, maxX, maxY;
         bool _want_finishing_pass;
         bool _want_inbetween_paths;

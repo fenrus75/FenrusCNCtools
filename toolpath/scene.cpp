@@ -381,3 +381,14 @@ double scene::distance_from_edge(double X, double Y)
   }
   return d;
 }
+
+
+class scene * scene::clone_scene(class scene *input, int mirror, double Xadd)
+{
+  class scene *scene = input;
+//  printf("SCENE_FROM_VCARVE for depth %5.2f\n", depth);
+  for (auto i : shapes)
+    scene = i->clone_scene(scene, mirror, Xadd);
+  scene->process_nesting();    
+  return scene;
+}

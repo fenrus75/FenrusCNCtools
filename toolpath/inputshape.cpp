@@ -807,3 +807,32 @@ void inputshape::set_minY(double mY)
 }
 
 
+
+class scene * inputshape::clone_scene(class scene *input, int mirror, double Xadd)
+{
+    class scene *scene;
+    
+    if (input)
+        scene = input;
+    else
+        scene = new(class scene);
+
+    scene->declare_minY(minY);
+    scene->set_filename("from clone_scene");    
+    
+    /* step 1: clone our poly into the new scene */
+    for(auto vi = poly.vertices_begin() ; vi != poly.vertices_end() ; ++ vi ) {
+		if (mirror)
+	        scene->add_point_to_poly(Xadd - CGAL::to_double(vi->x()), CGAL::to_double(vi->y()));
+		else
+    	    scene->add_point_to_poly(CGAL::to_double(vi->x()), CGAL::to_double(vi->y()));
+    }
+    scene->end_poly();
+    
+    /* step 2: and clone all our children as well, but instruct them not to inset by setting toolnr to 0 */
+    for (auto i : children)
+        scene = i->clone_scene(scene, mirror, Xadd);
+
+    return scene;
+}
+

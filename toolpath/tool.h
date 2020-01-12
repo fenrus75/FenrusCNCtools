@@ -20,7 +20,7 @@
 
 
 using namespace std;
-#if 1
+#if 0
 typedef CGAL::Exact_predicates_inexact_constructions_kernel K ;
 #else
 typedef CGAL::Exact_predicates_exact_constructions_kernel K ;
@@ -215,6 +215,9 @@ public:
     double distance_from_edge(double X, double Y);
     
     class scene *parent;
+
+	class scene * clone_scene(class scene *input, int mirror, double Xadd);
+
 
 	bool is_cutout;
 
