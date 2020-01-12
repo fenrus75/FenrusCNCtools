@@ -25,8 +25,10 @@ public:
             _want_finishing_pass = false;
             _want_inbetween_paths = false;
             _want_skeleton_paths = false;
+			_want_inlay = false;
             shape = NULL;
 			cutout = NULL;
+			inlay_plug = NULL;
             filename = "unknown";            
         }
         
@@ -62,6 +64,9 @@ public:
         void enable_inbetween_paths(void);
         bool want_inbetween_paths(void);
 
+        void enable_inlay(void) { _want_inlay = true; };
+        bool want_inlay(void) { return _want_inlay; };
+
         void enable_skeleton_paths(void);
         bool want_skeleton_paths(void);
         void set_filename(const char *f) { filename = strdup(f);};
@@ -70,6 +75,7 @@ public:
 
 		class scene * clone_scene(class scene *input, int mirror, double Xadd);
 
+		class scene *inlay_plug;
 
         
 private:
@@ -80,11 +86,11 @@ private:
         class inputshape *shape;
 
 
-		class scene *inlay_plug;
         double minX, minY, maxX, maxY;
         bool _want_finishing_pass;
         bool _want_inbetween_paths;
         bool _want_skeleton_paths;
+		bool _want_inlay;
         const char *filename;
         
         void consolidate_toolpaths(void);

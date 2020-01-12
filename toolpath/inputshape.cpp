@@ -654,6 +654,11 @@ void inputshape::create_toolpaths_vcarve(int toolnr, double maxdepth)
     }
 }
 
+void inputshape::create_toolpaths_inlayplug(int toolnr, double maxdepth)
+{
+}
+
+
 
 void inputshape::consolidate_toolpaths(bool want_inbetween_paths)
 {

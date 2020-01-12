@@ -29,6 +29,7 @@ void usage(void)
 	printf("\t--finish-pass     (-f)	add a finishing pass\n");
 	printf("\t--skeleton        (-s)    reduce slotting\n");
     printf("\t--inbetween       (-i)    ensure no ridges left over\n");
+	printf("\t--inlay			(-n)    create an inlay/plug design\n");
 	printf("\t--library <file>  (-l)	load CC .csv tool file\n");
 	printf("\t--tool <number>   (-t)	use tool number <number> \n");
 	printf("\t--depth <inch>    (-d)    set cutting depth in inches\n");
@@ -44,6 +45,7 @@ static struct option long_options[] =
           {"finish-pass", no_argument,       0, 'f'},
           {"skeleton", no_argument,       0, 's'},
           {"inbetween", no_argument,       0, 'i'},
+          {"inlay", no_argument,       0, 'n'},
           {"library",    required_argument, 0, 'l'},
           {"tool",    required_argument, 0, 't'},
           {"cutout",  required_argument, 0, 'c'},
@@ -84,6 +86,10 @@ int main(int argc, char **argv)
 			case 'i':
 				scene->enable_inbetween_paths();
 				printf("Inbetween paths enabled\n");
+				break;
+			case 'n':
+				scene->enable_inlay();
+				printf("Creating inlay plug\n");
 				break;
 			case 'l':
 				read_tool_lib(optarg);
@@ -135,6 +141,8 @@ int main(int argc, char **argv)
 		
 		scene->write_svg("output.svg");
 		scene->write_gcode("output.nc");
+		if (scene->inlay_plug)
+			scene->inlay_plug->write_svg("inlay.svg");
     }
     
     return EXIT_SUCCESS;

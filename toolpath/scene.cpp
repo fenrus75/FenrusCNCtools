@@ -229,6 +229,10 @@ void scene::create_toolpaths(double depth)
   int finish = 0;
   int toolnr;
   int tool;
+
+  if (want_inlay()) {
+		inlay_plug = clone_scene(NULL, 1, maxX);
+  }
   
   vprintf("create_toolpaths with depth %5.2f\n", depth);
 

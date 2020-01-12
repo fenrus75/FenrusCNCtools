@@ -20,7 +20,7 @@
 
 
 using namespace std;
-#if 0
+#if 1
 typedef CGAL::Exact_predicates_inexact_constructions_kernel K ;
 #else
 typedef CGAL::Exact_predicates_exact_constructions_kernel K ;
@@ -204,6 +204,7 @@ public:
     void create_toolpaths(int toolnr, double depth, int finish_pass, int is_optional, double start_inset, double end_inset, bool _want_skeleton_path);
     void create_toolpaths_vcarve(int toolnr, double maxdepth);
     void create_toolpaths_cutout(int toolnr, double depth);
+    void create_toolpaths_inlayplug(int toolnr, double maxdepth);
     void consolidate_toolpaths(bool _want_inbetween_paths);
 
     double area;
