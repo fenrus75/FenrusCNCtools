@@ -123,7 +123,7 @@ int lines_tangent_to_two_circles(double X1, double Y1, double R1, double X2, dou
 		*pX2 = X2;
 	    *pY1 = Y1;
 		*pY2 = Y2;
-		return 0;
+		return -1;
 	 }
 
      *pX1 = 0;
@@ -176,7 +176,6 @@ int lines_tangent_to_two_circles(double X1, double Y1, double R1, double X2, dou
       
      
      if (delta <= 0) {
-      printf("Delta is %5.4f\n", delta);     
       if (R1 == 0) {
          *pX1 = X1;
          *pX2 = X1;
@@ -184,6 +183,7 @@ int lines_tangent_to_two_circles(double X1, double Y1, double R1, double X2, dou
          *pY2 = Y1;
          return 0;
       }
+      printf("Delta is %5.4f\n", delta);     
 //      vprintf("DC %5.6f   dr %5.6f   R1 %5.2f  R2 %5.2f\n", Dcenter, dr, R1, R2);
       vprintf("NAN  (%5.3f,%5.3f)@%5.3f -> (%5.3f,%5.3f)@%5.3f\n",X1,Y1,R1,X2,Y2,R2);
       if (dump) fflush(dump);

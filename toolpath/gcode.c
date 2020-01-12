@@ -55,6 +55,7 @@ void set_tool_imperial(const char *name, int nr, double diameter_inch, double st
     tool_feedrate = ipm_to_metric(feedrate_ipm);
     tool_plungerate = ipm_to_metric(plungerate_ipm);
     prev_valid = 0;
+	has_current = 0;
 }
 
 void set_tool_metric(const char *name, int nr, double diameter_mm, double stepover_mm, double maxdepth_mm, double feedrate_metric, double plungerate_metric)
@@ -66,6 +67,7 @@ void set_tool_metric(const char *name, int nr, double diameter_mm, double stepov
     tool_feedrate = feedrate_metric;
     tool_plungerate = plungerate_metric;
     prev_valid = 0;
+	has_current = 0;
 }
 
 double get_tool_diameter(void)
@@ -122,6 +124,7 @@ void gcode_plunge_to(double Z, double speedratio)
     cZ = Z;
     cS = speedratio * tool_plungerate;
     prev_valid = 0;
+	has_current = 1;
     fprintf(gcode, "\n");
 }
 
@@ -135,6 +138,7 @@ void gcode_retract(void)
     fprintf(gcode, "\n");
     retract_count++;
     prev_valid = 0;
+	has_current = 1;
 }
 
 void gcode_mill_to(double X, double Y, double Z, double speedratio)
@@ -172,11 +176,11 @@ void gcode_vmill_to(double X, double Y, double Z, double speedratio)
     prevY2 = Y;
 
 
-    if (!approx4(cX,X)) {
+    if (cX != X) {
         fprintf(gcode,"X%5.4f", X);
 	    cX = X;
 	}
-    if (!approx4(cY,Y)) {
+    if (cY != Y) {
         fprintf(gcode,"Y%5.4f", Y);
 	    cY = Y;
 	}
@@ -209,7 +213,6 @@ void gcode_travel_to(double X, double Y)
     cY = Y;
     fprintf(gcode, "\n");
     prev_valid = 0;
-	has_current = 0;
 }
 
 void gcode_conditional_travel_to(double X, double Y, double Z, double speed)
@@ -218,7 +221,7 @@ void gcode_conditional_travel_to(double X, double Y, double Z, double speed)
         return;
         
     /* rounding error handling: if we're within 0.01 mm just mill to it */
-    if (approx4(cZ, Z) && dist(X,Y,cX,cY) < 0.07) {
+    if (cZ == Z && dist(X,Y,cX,cY) < 0.07) {
         gcode_vmill_to(X, Y, Z, speed);
         return;
     }
@@ -341,6 +344,7 @@ void gcode_tool_change(int toolnr)
  fprintf(gcode, "M3 S%i\n", (int)rippem);  
  first_time = 0;
     prev_valid = 0;
+	has_current = 0;
 }
 
 int gcode_has_current(void)

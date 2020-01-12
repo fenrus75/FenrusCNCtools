@@ -608,8 +608,9 @@ void inputshape::create_toolpaths_vcarve(int toolnr, double maxdepth)
                     tool->diameter = fmax(tool->diameter, -fabs(maxdepth) * 2);
                     tool->add_poly_vcarve(p, d1, maxdepth);
 					}
+
+
 					if (x->is_inner_bisector() || 1) {
-                    
                     /* and from Xm to X2 is like case 2 */
                     ret += lines_tangent_to_two_circles(Xm, Ym, 0, 
                                 X2, Y2, depth_to_radius(fabs(maxdepth) - fabs(d2), angle),

@@ -105,8 +105,7 @@ static class toolpath *can_merge(class toolpath *tp1, class toolpath *tp2)
 	ox4 = x4 / len;
 	oy4 = y4 / len;
 
-
-	if (approx3(ox2, ox4) && approx3(oy2, oy4)) {
+	if ((approx3(ox2, ox4) && approx3(oy2, oy4)) || (len <= 0.00001)) {
 		/* same start point same unit vector -> pick the longest*/
 		if (approx4(X1,X3) && approx4(Y1,Y3)) {
 			class toolpath *newtp = clone_tp(tp1);
@@ -174,7 +173,7 @@ static class toolpath *can_merge(class toolpath *tp1, class toolpath *tp2)
 		}
 	}
 
-	if (approx3(ox2, -ox4) && approx3(oy2, -oy4)) {
+	if ( (approx3(ox2, -ox4) && approx3(oy2, -oy4)) || (len <= 0.0001)) {
 		if (approx4(X1,X3) && approx4(Y1,Y3)) {
 			class toolpath *newtp = clone_tp(tp1);
 			Polygon_2 *p = new(Polygon_2);
@@ -361,7 +360,7 @@ void toollevel::output_gcode(void)
 //	vprintf("Work size before consolidate  %i\n", (int)toolpaths.size());
 	consolidate();
 //	vprintf("Work size before trim_intersect  %i\n", (int)toolpaths.size());
-#if 0
+#if 1
 	trim_intersects(); /* This is unproven correct so far */
 	consolidate();
 	consolidate();
@@ -384,7 +383,7 @@ void toollevel::output_gcode(void)
 			len = sqrt(ox*ox + oy*oy);
 			ox = ox / len;
 			oy = oy / len;
-//			printf("%4i: %5.4f,%5.4f --> %5.4f, %5.4f     uv %5.8f,%5.8f  length %5.4f\n", i, x1, y1, x2, y2, ox, oy, len);
+			printf("%4i: %5.4f,%5.4f --> %5.4f, %5.4f     uv %5.8f,%5.8f  length %5.4f\n", i, x1, y1, x2, y2, ox, oy, len);
 		}
     }
 #endif
