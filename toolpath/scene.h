@@ -30,6 +30,7 @@ public:
 			cutout = NULL;
 			inlay_plug = NULL;
             filename = "unknown";            
+			cutout_depth = 0;
         }
         
         scene(const char *filename);
@@ -67,15 +68,19 @@ public:
         void enable_inlay(void) { _want_inlay = true; };
         bool want_inlay(void) { return _want_inlay; };
 
+		void set_cutout_depth(double d) { cutout_depth = d; };
+		double get_cutout_depth(void) { return cutout_depth; };
+
         void enable_skeleton_paths(void);
         bool want_skeleton_paths(void);
         void set_filename(const char *f) { filename = strdup(f);};
         
-        double distance_from_edge(double X, double Y);
+        double distance_from_edge(double X, double Y, bool exclude_zero);
 
 		class scene * clone_scene(class scene *input, int mirror, double Xadd);
 
 		class scene *inlay_plug;
+
 
         
 private:
@@ -92,6 +97,7 @@ private:
         bool _want_skeleton_paths;
 		bool _want_inlay;
         const char *filename;
+		double cutout_depth;
         
         void consolidate_toolpaths(void);
         void flatten_nesting(void);

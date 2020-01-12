@@ -18,8 +18,6 @@ extern "C" {
 
 int verbose = 0;
 
-double cutout_depth = 0;
-
 static double depth;
 
 void usage(void)
@@ -102,8 +100,8 @@ int main(int argc, char **argv)
 				depth = strtod(optarg, NULL);
 				break;
 			case 'c': /* inch */
-				cutout_depth = inch_to_mm(strtod(optarg, NULL));
-				printf("Enabling cutout to depth %5.2fmm\n", cutout_depth);
+				scene->set_cutout_depth(inch_to_mm(strtod(optarg, NULL)));
+				printf("Enabling cutout to depth %5.2fmm\n", scene->get_cutout_depth());
 				break;
 			case 't':
 				int arg;
@@ -141,8 +139,10 @@ int main(int argc, char **argv)
 		
 		scene->write_svg("output.svg");
 		scene->write_gcode("output.nc");
-		if (scene->inlay_plug)
+		if (scene->inlay_plug) {
 			scene->inlay_plug->write_svg("inlay.svg");
+			scene->inlay_plug->write_gcode("plug.nc");
+		}
     }
     
     return EXIT_SUCCESS;

@@ -153,6 +153,7 @@ void scene::write_naked_gcode()
 
 void scene::write_gcode(const char *filename)
 {
+  gcode_reset_current();
   activate_tool(toollist[0]);
   write_gcode_header(filename);
 
@@ -227,11 +228,19 @@ void scene::create_toolpaths(double depth)
   double depthstep;
   double surplus;
   int finish = 0;
-  int toolnr;
+  int toolnr = 0;
   int tool;
 
   if (want_inlay()) {
 		inlay_plug = clone_scene(NULL, 1, maxX);
+		for (auto i : inlay_plug->shapes)
+			i->create_toolpaths_inlayplug(toollist[0], -fabs(depth));
+		if (toollist.size() > 1) {
+			inlay_plug->toollist.erase(inlay_plug->toollist.begin());
+			inlay_plug->create_toolpaths(depth);
+			inlay_plug->push_tool(toollist[0]);
+		}
+ 
   }
   
   vprintf("create_toolpaths with depth %5.2f\n", depth);
@@ -377,11 +386,11 @@ scene::scene(const char *filename)
        parse_svg_file(this, filename);
 }
 
-double scene::distance_from_edge(double X, double Y)
+double scene::distance_from_edge(double X, double Y, bool exclude_zero)
 {
   double d = 1000000000;
   for (auto i : shapes) {
-       d = fmin(d, i->distance_from_edge(X, Y));
+       d = fmin(d, i->distance_from_edge(X, Y, exclude_zero));
   }
   return d;
 }
@@ -393,6 +402,26 @@ class scene * scene::clone_scene(class scene *input, int mirror, double Xadd)
 //  printf("SCENE_FROM_VCARVE for depth %5.2f\n", depth);
   for (auto i : shapes)
     scene = i->clone_scene(scene, mirror, Xadd);
+
+  sort(scene->shapes.begin(), scene->shapes.end(), compare_shape);
+  auto bbox = scene->shapes[scene->shapes.size() - 1]->get_bbox();
+  double outset = 10;
+
+
+  scene->new_poly(bbox.xmin() - outset, bbox.ymin() - outset);
+  scene->add_point_to_poly(bbox.xmin() - outset, bbox.ymax() + outset);
+  scene->add_point_to_poly(bbox.xmax() + outset, bbox.ymax() + outset);
+  scene->add_point_to_poly(bbox.xmax() + outset, bbox.ymin() - outset);
+  scene->end_poly();
+
+  if (cutout_depth) {
+	  scene->cutout = scene->shapes[scene->shapes.size() - 1];
+	  scene->set_cutout_depth(cutout_depth);
+  }
+
+  if (scene->toollist.size() == 0)
+		scene->toollist = toollist;
+
   scene->process_nesting();    
   return scene;
 }

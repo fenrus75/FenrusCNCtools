@@ -355,4 +355,8 @@ int gcode_has_current(void)
 void gcode_reset_current(void)
 {
 	has_current = 0;
+	cS = 0;
+	cX = 0;
+	cY = 0;
+	cZ = 0;	
 }
