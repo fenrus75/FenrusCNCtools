@@ -223,6 +223,8 @@ public:
 
 	bool is_cutout;
 
+    Polygon_2 poly;    
+
 private:
     const char *name;
 
@@ -234,10 +236,8 @@ private:
     
     double bbX1, bbY1, bbX2, bbY2;
     double minY;
-
-    
-    Polygon_2 poly;    
 };
+    
 
 
 #include "scene.h"

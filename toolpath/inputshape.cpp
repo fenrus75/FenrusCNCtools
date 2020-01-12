@@ -456,6 +456,46 @@ void inputshape::create_toolpaths_cutout(int toolnr, double depth)
 }
 
 
+bool should_vcarve(class inputshape *shape, double X1, double Y1, double X2, double Y2, double is_inner, double is_bisect) 
+{
+	if (is_inner)
+		return true;
+
+    for (unsigned int i = 0; i < shape->poly.size(); i++) {
+        double BC_x, BC_y, BA_x, BA_y;
+        double BC_l, BA_l;
+        double phi;
+		unsigned int a, b, c;
+        if (i == 0)
+          a = shape->poly.size() - 1;
+        else
+          a = i - 1;
+        b = i;
+        c = i + 1;
+        if (c >= shape->poly.size())
+          c = 0;
+          
+        BA_x = CGAL::to_double((shape->poly)[a].x()) - CGAL::to_double((shape->poly)[b].x());
+        BA_y = CGAL::to_double((shape->poly)[a].y()) - CGAL::to_double((shape->poly)[b].y());
+
+        BC_x = CGAL::to_double((shape->poly)[c].x()) - CGAL::to_double((shape->poly)[b].x());
+        BC_y = CGAL::to_double((shape->poly)[c].y()) - CGAL::to_double((shape->poly)[b].y());
+        
+        BA_l = sqrt(BA_x * BA_x + BA_y * BA_y);
+        BC_l = sqrt(BC_x * BC_x + BC_y * BC_y);
+        
+        phi = acos( (BA_x * BC_x + BA_y * BC_y) / (BA_l * BC_l));
+		phi = 360 / 2 / M_PI * phi;
+
+		printf("Angle is %5.2f\n", phi);
+		if (approx4((shape->poly)[b].x(),X1) && approx4(shape->poly[b].y(), Y1) && phi < 120)
+			return true;
+		if (approx4((shape->poly)[b].x(),X2) && approx4(shape->poly[b].y(), Y2) && phi < 120)
+			return true;
+    }
+	return false;
+}
+
 void inputshape::create_toolpaths_vcarve(int toolnr, double maxdepth)
 {
     double angle = get_tool_angle(toolnr);
@@ -499,7 +539,7 @@ void inputshape::create_toolpaths_vcarve(int toolnr, double maxdepth)
                 /* four cases to deal with */
 #if 1                
                 /* case 1: d1 and d2 are both ok wrt max depth */
-                if (d1 >= maxdepth && d2 >= maxdepth && x->is_inner_bisector()) {
+                if (d1 >= maxdepth && d2 >= maxdepth && should_vcarve(this, X1, Y1, X2, Y2, x->is_inner_bisector(), x->is_bisector())) {
 //                    printf(" CASE 1 \n");
                     if (X1 != X2 || Y1 != Y2) { 
                             Polygon_2 *p = new(Polygon_2);
@@ -513,7 +553,7 @@ void inputshape::create_toolpaths_vcarve(int toolnr, double maxdepth)
 #endif                
 #if 1
                 /* case 2: d1 and d2 are both not ok wrt max depth */
-                if (d1 < maxdepth && d2 < maxdepth) {
+                if (d1 < maxdepth && d2 < maxdepth && should_vcarve(this, X1, Y1, X2, Y2, x->is_inner_bisector(), x->is_bisector())) {
                   if (X1 != X2 || Y1 != Y2) { 
                     double x1,y1,x2,y2,x3,y3,x4,y4;
                     double r1, r2;
@@ -580,7 +620,7 @@ void inputshape::create_toolpaths_vcarve(int toolnr, double maxdepth)
                 /* case 4: d1 is ok d2 is not ok */
                 if (d1 >= maxdepth && d2 < maxdepth) {
 				  bool exclusioncase = false;
-				  if (d1 == 0 && !x->is_bisector())
+				  if (d1 == 0 && !should_vcarve(this, X1, Y1, X2, Y2, x->is_inner_bisector(), x->is_bisector()))
 						exclusioncase = true; 
                   if ( (X1 != X2 || Y1 != Y2) && !exclusioncase) { 
                     double x1,y1,x2,y2,x3,y3,x4,y4;
@@ -598,7 +638,6 @@ void inputshape::create_toolpaths_vcarve(int toolnr, double maxdepth)
 //                    printf("Point 1 (%5.2f,%5.2f) at %5.2f\n", X1, Y1, d1);
 //                    printf("Point 2 (%5.2f,%5.2f) at %5.2f\n", X2, Y2, d2);
 //                    printf("Point M (%5.2f,%5.2f) at %5.2f\n", Xm, Ym, d1 + ratio * (d2-d1));
-					if (x->is_inner_bisector()) {
 
                     /* From X1 to Xm is business as usual */
                     Polygon_2 *p = new(Polygon_2);
@@ -607,10 +646,8 @@ void inputshape::create_toolpaths_vcarve(int toolnr, double maxdepth)
                     tool->diameter = fmax(tool->diameter, -d1 * 2);
                     tool->diameter = fmax(tool->diameter, -fabs(maxdepth) * 2);
                     tool->add_poly_vcarve(p, d1, maxdepth);
-					}
 
 
-					if (x->is_inner_bisector() || 1) {
                     /* and from Xm to X2 is like case 2 */
                     ret += lines_tangent_to_two_circles(Xm, Ym, 0, 
                                 X2, Y2, depth_to_radius(fabs(maxdepth) - fabs(d2), angle),
@@ -647,7 +684,6 @@ void inputshape::create_toolpaths_vcarve(int toolnr, double maxdepth)
                     }
                     
                     
-                  }        
                 }
 #endif
             }

@@ -113,7 +113,7 @@ void toolpath::output_gcode_vcarve(void)
       gcode_vmill_to(CGAL::to_double((*poly)[1].x()), CGAL::to_double((*poly)[1].y()) - get_minY(), depth2, speed);
       continue;
     }
-#if 0
+#if 1
     if (depth < depth2) {
       gcode_vconditional_travel_to(CGAL::to_double((*poly)[1].x()), CGAL::to_double((*poly)[1].y()) - get_minY(), depth2, speed, CGAL::to_double((*poly)[0].x()), CGAL::to_double((*poly)[0].y()) - get_minY(), depth);
       gcode_vmill_to(CGAL::to_double((*poly)[0].x()), CGAL::to_double((*poly)[0].y()) - get_minY(), depth, speed);
