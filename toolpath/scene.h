@@ -31,6 +31,7 @@ public:
 			inlay_plug = NULL;
             filename = "unknown";            
 			cutout_depth = 0;
+			depth = 0;
         }
         
         scene(const char *filename);
@@ -57,7 +58,7 @@ public:
         void write_naked_gcode(void);
 
         void process_nesting(void);
-        void create_toolpaths(double depth);
+        void create_toolpaths(void);
         
         void enable_finishing_pass(void);
         bool want_finishing_pass(void);
@@ -73,6 +74,9 @@ public:
 
 		void set_cutout_depth(double d) { cutout_depth = d; };
 		double get_cutout_depth(void) { return cutout_depth; };
+
+		void set_depth(double d) { depth = d; };
+		double get_depth(void) { return depth; };
 
         void enable_skeleton_paths(void);
         bool want_skeleton_paths(void);
@@ -102,6 +106,7 @@ private:
 		bool _want_inlay;
         const char *filename;
 		double cutout_depth;
+		double depth;
         
         void consolidate_toolpaths(void);
         void flatten_nesting(void);

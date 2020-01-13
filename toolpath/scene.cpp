@@ -226,7 +226,7 @@ void scene::process_nesting(void)
   }
 }
 
-void scene::create_toolpaths(double depth)
+void scene::create_toolpaths(void)
 {
   double currentdepth;
   double depthstep;
@@ -235,9 +235,14 @@ void scene::create_toolpaths(double depth)
   int toolnr = 0;
   int tool;
 
+  depth = -fabs(depth);
+
+  printf("Creating toolpath for depth %5.2f with offset %5.2f\n", depth, z_offset);
+
   if (want_inlay()) {
 		inlay_plug = clone_scene(NULL, 1, maxX);
-		inlay_plug->create_toolpaths(depth); 
+	    inlay_plug->set_depth(depth / 1.25);
+		inlay_plug->create_toolpaths(); 
   }
   
   vprintf("create_toolpaths with depth %5.2f\n", depth);

@@ -1,7 +1,7 @@
 number,vendor,model,URL,name,type,diameter,cornerradius,flutelength,shaftdiameter,angle,numflutes,stickout,coating,metric,notes,machine,material,plungerate,feedrate,rpm,depth,cutpower,finishallowance,3dstepover,3dfeedrate,3drpm
 18,Carbide 3D,18,https://shop.carbide3d.com/products/201-25-end-mill-cutter-qty-2,Typical 2mm cutter,end,0.078,0,0.75,0,0,3,0.125,,0,,,,15,20,18000,0.045,,0.02,20,20,18000
-301,Carbide 3D,301,https://shop.carbide3d.com/products/301-0-50-v-bit-cutter-60-qty-2,90 degree V bit,vee,0.5,0,0.25,0,90,2,0.125,,0,,,,12,45,18000,0.1,,0,20,100,18000
-302,Carbide 3D,302,https://shop.carbide3d.com/products/302-0-50-v-bit-cutter-60-qty-2,60 degree V bit,vee,0.5,0,0.25,0,60,2,0.125,,0,,,,12,45,18000,0.1,,0,20,100,18000
+301,Carbide 3D,301,https://shop.carbide3d.com/products/301-0-50-v-bit-cutter-60-qty-2,90 degree V bit,vee,0.5,0,0.25,0,90,2,0.125,,0,,,,12,35,18000,0.1,,0,20,100,18000
+302,Carbide 3D,302,https://shop.carbide3d.com/products/302-0-50-v-bit-cutter-60-qty-2,60 degree V bit,vee,0.5,0,0.25,0,60,2,0.125,,0,,,,12,35,18000,0.1,,0,20,100,18000
 201,Whiteside,201,https://shop.carbide3d.com/products/201-25-end-mill-cutter-qty-2,Whiteside 1/4"""" downcut,end,0.25,0,0.75,0,0,3,0.125,,0,,,,15,60,18000,0.05,,0.02,20,60,18000
 102,HQMaster,102,https://shop.carbide3d.com/products/102-125-flat-cutter-qty-3,HQMaster 1/8"""" downcut,end,0.125,0,0.75,0,0,2,0.125,,0,,,,18,45,18000,0.045,,0.02,20,45,18000
 19,HQMaster,19,https://shop.carbide3d.com/products/201-25-end-mill-cutter-qty-2,HQMaster 1.5mm cutter,end,0.059,0,0.75,0,0,3,0.125,,0,,,,15,16,18000,0.031,,0.02,20,16,18000

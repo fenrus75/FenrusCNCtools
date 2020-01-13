@@ -499,7 +499,7 @@ static bool should_vcarve(class inputshape *shape, double X1, double Y1, double 
 		while (phi < 0)
 			phi  += 360;
 
-		printf("Angle is %5.2f\n", phi);
+//		printf("Angle is %5.2f\n", phi);
 		if (approx4(CGAL::to_double(shape->poly[b].x()),X1) && approx4(CGAL::to_double(shape->poly[b].y()), Y1) && phi < 160)
 			return true;
 		if (approx4(CGAL::to_double(shape->poly[b].x()),X2) && approx4(CGAL::to_double(shape->poly[b].y()), Y2) && phi < 160)

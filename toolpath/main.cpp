@@ -18,8 +18,6 @@ extern "C" {
 
 int verbose = 0;
 
-static double depth;
-
 void usage(void)
 {
 	printf("Usage:\n\ttoolpath [options] <file.svg>\n");
@@ -65,7 +63,7 @@ int main(int argc, char **argv)
     
     read_tool_lib("toollib.csv");
     
-    depth = inch_to_mm(0.044);
+    scene->set_depth(inch_to_mm(0.044));
 
     while ((opt = getopt_long(argc, argv, "vfsil:t:d:D:", long_options, &option_index)) != -1) {
         switch (opt)
@@ -93,11 +91,12 @@ int main(int argc, char **argv)
 				read_tool_lib(optarg);
 				break;	
 			case 'd': /* inch */
-				depth = inch_to_mm(strtod(optarg, NULL));
-				printf("Depth set to %5.2fmm\n", depth);
+				scene->set_depth(inch_to_mm(strtod(optarg, NULL)));
+				printf("Depth set to %5.2fmm\n", scene->get_depth());
 				break;
 			case 'D': /* metric mm*/
-				depth = strtod(optarg, NULL);
+				scene->set_depth(strtod(optarg, NULL));
+				printf("Depth set to %5.2fmm\n", scene->get_depth());
 				break;
 			case 'c': /* inch */
 				scene->set_cutout_depth(inch_to_mm(strtod(optarg, NULL)));
@@ -135,7 +134,7 @@ int main(int argc, char **argv)
 		
 		scene->process_nesting();
 		
-		scene->create_toolpaths(-depth);
+		scene->create_toolpaths();
 		
 		scene->write_svg("output.svg");
 		scene->write_gcode("output.nc", "main design");
