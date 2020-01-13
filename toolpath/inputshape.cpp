@@ -188,7 +188,7 @@ void inputshape::create_toolpaths(int toolnr, double depth, int finish_pass, int
         
     class tooldepth * td = new(class tooldepth);
     tooldepths.push_back(td);
-    td->depth = depth;
+    td->depth = depth + z_offset;
     td->toolnr = toolnr;
     td->diameter = diameter;
     td->run_reverse = reverse;
@@ -201,7 +201,7 @@ void inputshape::create_toolpaths(int toolnr, double depth, int finish_pass, int
         tool->level = level;
         tool->offset = inset;
         tool->diameter = diameter;
-        tool->depth = depth;
+        tool->depth = depth + z_offset;
         tool->toolnr = toolnr;
         tool->run_reverse = reverse;
         tool->minY = minY;
@@ -270,7 +270,7 @@ void inputshape::create_toolpaths(int toolnr, double depth, int finish_pass, int
         tool->is_slotting = true;
         tool->name = "Bisector Slotting";
         tool->diameter = diameter;
-        tool->depth = depth;
+        tool->depth = depth + z_offset;
         tool->minY = minY;
         td->toollevels.push_back(tool);
         for (auto ss : skeleton) {
@@ -460,6 +460,8 @@ bool should_vcarve(class inputshape *shape, double X1, double Y1, double X2, dou
 {
 	if (is_inner)
 		return true;
+	if (!is_inner && !is_bisect)
+		return false;
 
     for (unsigned int i = 0; i < shape->poly.size(); i++) {
         double BC_x, BC_y, BA_x, BA_y;
@@ -488,9 +490,9 @@ bool should_vcarve(class inputshape *shape, double X1, double Y1, double X2, dou
 		phi = 360 / 2 / M_PI * phi;
 
 //		printf("Angle is %5.2f\n", phi);
-		if (approx4((shape->poly)[b].x(),X1) && approx4(shape->poly[b].y(), Y1) && phi < 120)
+		if (approx4(CGAL::to_double(shape->poly[b].x()),X1) && approx4(CGAL::to_double(shape->poly[b].y()), Y1) && phi < 120)
 			return true;
-		if (approx4((shape->poly)[b].x(),X2) && approx4(shape->poly[b].y(), Y2) && phi < 120)
+		if (approx4(CGAL::to_double(shape->poly[b].x()),X2) && approx4(CGAL::to_double(shape->poly[b].y()), Y2) && phi < 120)
 			return true;
     }
 	return false;
@@ -547,7 +549,7 @@ void inputshape::create_toolpaths_vcarve(int toolnr, double maxdepth)
                             p->push_back(Point(X2, Y2));
                             tool->diameter = fmax(tool->diameter, -d1 * 2);
                             tool->diameter = fmax(tool->diameter, -d2 * 2);
-                            tool->add_poly_vcarve(p, d1, d2);
+                            tool->add_poly_vcarve(p, d1 + z_offset, d2 + z_offset);
                     }
                 }
 #endif                
@@ -590,13 +592,13 @@ void inputshape::create_toolpaths_vcarve(int toolnr, double maxdepth)
 					  p->push_back(Point(x1, y1));
     	              p->push_back(Point(x2, y2));
                       tool->diameter = depth_to_radius(maxdepth, angle) * 2;
-                      tool->add_poly_vcarve(p, maxdepth, maxdepth);
+                      tool->add_poly_vcarve(p, maxdepth + z_offset, maxdepth + z_offset);
                     
                       Polygon_2 *p2 = new(Polygon_2);
 					  p2->push_back(Point(x3, y3));
         	          p2->push_back(Point(x4, y4));
                       tool->diameter = depth_to_radius(maxdepth, angle) * 2;
-                      tool->add_poly_vcarve(p2, maxdepth, maxdepth);
+                      tool->add_poly_vcarve(p2, maxdepth + z_offset, maxdepth + z_offset);
                     }
                 
 //                    printf(" CASE 2 \n");
@@ -645,7 +647,7 @@ void inputshape::create_toolpaths_vcarve(int toolnr, double maxdepth)
                     p->push_back(Point(Xm, Ym));
                     tool->diameter = fmax(tool->diameter, -d1 * 2);
                     tool->diameter = fmax(tool->diameter, -fabs(maxdepth) * 2);
-                    tool->add_poly_vcarve(p, d1, maxdepth);
+                    tool->add_poly_vcarve(p, d1 + z_offset, maxdepth + z_offset);
 
 
                     /* and from Xm to X2 is like case 2 */
@@ -672,14 +674,14 @@ void inputshape::create_toolpaths_vcarve(int toolnr, double maxdepth)
                     p3->push_back(Point(x2, y2));
                     tool->diameter = depth_to_radius(maxdepth, angle) * 2;
                     if (ret == 0)
-                        tool->add_poly_vcarve(p3, maxdepth, maxdepth);
+                        tool->add_poly_vcarve(p3, maxdepth + z_offset, maxdepth + z_offset);
                     
                     Polygon_2 *p2 = new(Polygon_2);
                     p2->push_back(Point(x3, y3));
                     p2->push_back(Point(x4, y4));
                     tool->diameter = depth_to_radius(maxdepth, angle) * 2;
                     if (ret == 0)
-                        tool->add_poly_vcarve(p2, maxdepth, maxdepth);
+                        tool->add_poly_vcarve(p2, maxdepth + z_offset, maxdepth + z_offset);
                 
                     }
                     

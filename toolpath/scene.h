@@ -23,7 +23,7 @@ public:
             maxX = 0;
             maxY = 0;
             _want_finishing_pass = false;
-            _want_inbetween_paths = false;
+            _want_inbetween_paths = true;
             _want_skeleton_paths = false;
 			_want_inlay = false;
             shape = NULL;
@@ -53,7 +53,7 @@ public:
         
         void write_naked_svg(void);
         void write_svg(const char *filename);
-        void write_gcode(const char *filename);
+        void write_gcode(const char *filename, const char *description);
         void write_naked_gcode(void);
 
         void process_nesting(void);
@@ -67,6 +67,9 @@ public:
 
         void enable_inlay(void) { _want_inlay = true; };
         bool want_inlay(void) { return _want_inlay; };
+
+		void set_z_offset(double d) { z_offset = d; };
+		double get_z_offset(void) { return z_offset; };
 
 		void set_cutout_depth(double d) { cutout_depth = d; };
 		double get_cutout_depth(void) { return cutout_depth; };
@@ -92,6 +95,7 @@ private:
 
 
         double minX, minY, maxX, maxY;
+		double z_offset;
         bool _want_finishing_pass;
         bool _want_inbetween_paths;
         bool _want_skeleton_paths;

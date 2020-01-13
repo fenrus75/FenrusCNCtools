@@ -43,6 +43,7 @@ void scene::new_poly(double X, double Y)
 
   shape = new(class inputshape);
   shape->parent = this;
+  shape->set_z_offset(z_offset);
   
   add_point_to_poly(X, Y);
 }
@@ -52,6 +53,7 @@ void scene::set_poly_name(const char *n)
   if (!shape) {
     shape = new(class inputshape);
     shape->parent = this;
+	shape->set_z_offset(z_offset);
   }
   shape->set_name(n);
 }
@@ -61,6 +63,7 @@ void scene::add_point_to_poly(double X, double Y)
   if (!shape) { 
     shape = new(class inputshape);
     shape->parent = this;
+	shape->set_z_offset(z_offset);
   }
     
   shape->add_point(X, Y);
@@ -103,7 +106,7 @@ void scene::write_naked_svg()
 void scene::write_svg(const char *filename)
 {
 
-  printf("Work size: %5.2f x %5.2f inch\n", mm_to_inch(maxX), mm_to_inch(maxY-minY));
+  vprintf("Work size: %5.2f x %5.2f inch\n", mm_to_inch(maxX), mm_to_inch(maxY-minY));
 // printf("%5.2f,%5.2f  x %5.2f, %5.2f\n", minX,minY, maxX,maxY);
   set_svg_bounding_box(minX, minY, maxX, maxY);
   write_svg_header(filename, 1.0);
@@ -151,8 +154,9 @@ void scene::write_naked_gcode()
 }
 
 
-void scene::write_gcode(const char *filename)
+void scene::write_gcode(const char *filename, const char *description)
 {
+  printf("Writing gcode for %s to %s\n", description, filename);
   gcode_reset_current();
   activate_tool(toollist[0]);
   write_gcode_header(filename);

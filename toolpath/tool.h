@@ -20,7 +20,7 @@
 
 
 using namespace std;
-#if 1
+#if 0
 typedef CGAL::Exact_predicates_inexact_constructions_kernel K ;
 #else
 typedef CGAL::Exact_predicates_exact_constructions_kernel K ;
@@ -186,6 +186,7 @@ public:
         name = "unknown";
         minY = 0;
 		is_cutout = false;
+		z_offset = 0.0;
     }
     void set_level(int _level);
     void add_child(class inputshape *child);
@@ -206,6 +207,9 @@ public:
     void create_toolpaths_cutout(int toolnr, double depth);
     void create_toolpaths_inlayplug(int toolnr, double maxdepth);
     void consolidate_toolpaths(bool _want_inbetween_paths);
+
+	void set_z_offset(double d) { z_offset = d; };
+	double get_z_offset(void) { return z_offset; };
 
     double area;
     int level;
@@ -236,6 +240,7 @@ private:
     
     double bbX1, bbY1, bbX2, bbY2;
     double minY;
+	double z_offset;
 };
     
 

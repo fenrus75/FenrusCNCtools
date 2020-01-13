@@ -25,6 +25,7 @@ struct tool {
     double plungerate_ipm;
     double angle;
     bool is_vcarve;
+	bool printed;
 };
 
 static vector<struct tool *> tools;
@@ -86,11 +87,14 @@ static void push_word(char *word, int level)
 
 static void print_tool(struct tool *current)
 {
-    printf("Tool %i (%s)\n", current->number, current->name);
-    printf("\tDiameter     : %5.3f\"  (%5.1f mm)\n", current->diameter_inch, inch_to_mm(current->diameter_inch));
-    printf("\tDepth of cut : %5.3f\"  (%5.1f mm)\n", current->depth_inch, inch_to_mm(current->depth_inch));
-    printf("\tFeedrate     : %5.0f ipm (%5.0f mmpm)\n", current->feedrate_ipm, ipm_to_metric(current->feedrate_ipm));
-    printf("\tPlungerate   : %5.0f ipm (%5.0f mmpm)\n", current->plungerate_ipm, ipm_to_metric(current->plungerate_ipm));
+	if (!current->printed || verbose) {
+	    printf("Tool %i (%s)\n", current->number, current->name);
+	    printf("\tDiameter     : %5.3f\"  (%5.1f mm)\n", current->diameter_inch, inch_to_mm(current->diameter_inch));
+	    printf("\tDepth of cut : %5.3f\"  (%5.1f mm)\n", current->depth_inch, inch_to_mm(current->depth_inch));
+	    printf("\tFeedrate     : %5.0f ipm (%5.0f mmpm)\n", current->feedrate_ipm, ipm_to_metric(current->feedrate_ipm));
+	    printf("\tPlungerate   : %5.0f ipm (%5.0f mmpm)\n", current->plungerate_ipm, ipm_to_metric(current->plungerate_ipm));
+	}
+	current->printed = true;
 }
 
 void print_tools(void)

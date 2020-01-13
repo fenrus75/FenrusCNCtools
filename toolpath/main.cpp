@@ -138,10 +138,10 @@ int main(int argc, char **argv)
 		scene->create_toolpaths(-depth);
 		
 		scene->write_svg("output.svg");
-		scene->write_gcode("output.nc");
+		scene->write_gcode("output.nc", "main design");
 		if (scene->inlay_plug) {
 			scene->inlay_plug->write_svg("inlay.svg");
-			scene->inlay_plug->write_gcode("plug.nc");
+			scene->inlay_plug->write_gcode("plug.nc", "inlay plug");
 		}
     }
     

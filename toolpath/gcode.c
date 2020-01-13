@@ -316,7 +316,7 @@ void write_gcode_footer(void)
     fprintf(gcode, "(END)\n");
     fprintf(gcode, "%%\n");
     fclose(gcode);
-    printf("There were %i retracts in the file and %i milling toolpaths\n", retract_count, mill_count);
+    vprintf("There were %i retracts in the file and %i milling toolpaths\n", retract_count, mill_count);
 }
 
 double gcode_current_X(void)
