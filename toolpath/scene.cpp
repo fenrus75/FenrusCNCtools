@@ -237,14 +237,7 @@ void scene::create_toolpaths(double depth)
 
   if (want_inlay()) {
 		inlay_plug = clone_scene(NULL, 1, maxX);
-		for (auto i : inlay_plug->shapes)
-			i->create_toolpaths_inlayplug(toollist[0], -fabs(depth));
-		if (toollist.size() > 1) {
-			inlay_plug->toollist.erase(inlay_plug->toollist.begin());
-			inlay_plug->create_toolpaths(depth);
-			inlay_plug->push_tool(toollist[0]);
-		}
- 
+		inlay_plug->create_toolpaths(depth); 
   }
   
   vprintf("create_toolpaths with depth %5.2f\n", depth);
@@ -310,7 +303,7 @@ void scene::create_toolpaths(double depth)
     } else {
       vprintf("Tool %i goes from %5.2f mm to %5.2f mm\n", toolnr, start, end);
 	  bool inbetween = want_inbetween_paths();
-      while (currentdepth < 0) {
+      while (currentdepth < - z_offset) {
 	    
 	    	/* we want courser tools to not get within the stepover of the finer tool */
 		    if (tool < (int)toollist.size() -1)
@@ -406,6 +399,11 @@ class scene * scene::clone_scene(class scene *input, int mirror, double Xadd)
 {
   class scene *scene = input;
 //  printf("SCENE_FROM_VCARVE for depth %5.2f\n", depth);
+
+  if (!scene) {
+	scene = new(class scene);
+	scene->set_z_offset(-inch_to_mm(0.1));
+  }
   for (auto i : shapes)
     scene = i->clone_scene(scene, mirror, Xadd);
 
@@ -420,14 +418,14 @@ class scene * scene::clone_scene(class scene *input, int mirror, double Xadd)
   scene->add_point_to_poly(bbox.xmax() + outset, bbox.ymin() - outset);
   scene->end_poly();
 
-  outset = 7;
-  scene->new_poly(bbox.xmin() - outset, bbox.ymin() - outset);
-  scene->add_point_to_poly(bbox.xmin() - outset, bbox.ymax() + outset);
-  scene->add_point_to_poly(bbox.xmax() + outset, bbox.ymax() + outset);
-  scene->add_point_to_poly(bbox.xmax() + outset, bbox.ymin() - outset);
-  scene->end_poly();
-
   if (cutout_depth) {
+	  outset = 7;
+	  scene->new_poly(bbox.xmin() - outset, bbox.ymin() - outset);
+	  scene->add_point_to_poly(bbox.xmin() - outset, bbox.ymax() + outset);
+	  scene->add_point_to_poly(bbox.xmax() + outset, bbox.ymax() + outset);
+	  scene->add_point_to_poly(bbox.xmax() + outset, bbox.ymin() - outset);
+	  scene->end_poly();
+
 	  scene->cutout = scene->shapes[scene->shapes.size() - 2];
 	  scene->set_cutout_depth(cutout_depth);
 	  scene->shapes.erase(scene->shapes.begin() + scene->shapes.size() - 2);
