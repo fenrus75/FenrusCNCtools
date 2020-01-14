@@ -514,50 +514,17 @@ static bool should_vcarve(class inputshape *shape, double X1, double Y1, double 
 	return false;
 }
 
-void inputshape::create_toolpaths_vcarve(int toolnr, double maxdepth)
+static void process_vcarve(class toollevel *tool, double X1, double Y1, double X2, double Y2, bool is_inner_bisector, bool is_bisector, double angle, class scene *parent, double maxdepth, class inputshape *shape, double z_offset)
 {
-    double angle = get_tool_angle(toolnr);
-    if (!polyhole) {
-        polyhole = new PolygonWithHoles(poly);
-        for (auto i : children)
-          polyhole->add_hole(i->poly);
-    }
-    
-//    printf("VCarve toolpath\n");
-    
-    if (!iss) {
-        iss =  CGAL::create_interior_straight_skeleton_2(*polyhole);
-    }
-    
-    class tooldepth * td = new(class tooldepth);
-    tooldepths.push_back(td);
-    td->toolnr = toolnr;
-    
-    class toollevel *tool = new(class toollevel);       
-    tool->name = "VCarve path";
-    tool->toolnr = toolnr;
-    tool->minY = minY;
-    td->toollevels.push_back(tool);
-    
-    for (auto x = iss->halfedges_begin(); x != iss->halfedges_end(); ++x) {
-            double X1, Y1, X2, Y2, d1, d2;
-            X1 = point_snap2(CGAL::to_double(x->vertex()->point().x()));
-            Y1 = point_snap2(CGAL::to_double(x->vertex()->point().y()));
-            
-            X2 = point_snap2(CGAL::to_double(x->opposite()->vertex()->point().x()));
-            Y2 = point_snap2(CGAL::to_double(x->opposite()->vertex()->point().y()));
-#if 0
-            if (x->is_inner_bisector()) {
-#else
-            if (x->is_bisector() || x->is_inner_bisector()) {
-#endif
+	double d1, d2;
+	if (is_bisector || is_inner_bisector) {
                 d1 = radius_to_depth(parent->distance_from_edge(X1, Y1, false), angle);
                 d2 = radius_to_depth(parent->distance_from_edge(X2, Y2, false), angle);
                 
                 /* four cases to deal with */
 #if 1                
                 /* case 1: d1 and d2 are both ok wrt max depth */
-                if (d1 >= maxdepth && d2 >= maxdepth && should_vcarve(this, X1, Y1, X2, Y2, x->is_inner_bisector(), x->is_bisector(), false)) {
+                if (d1 >= maxdepth && d2 >= maxdepth && should_vcarve(shape, X1, Y1, X2, Y2, is_inner_bisector, is_bisector, false)) {
 //                    printf(" CASE 1 \n");
                     if (X1 != X2 || Y1 != Y2) { 
                             Polygon_2 *p = new(Polygon_2);
@@ -571,7 +538,7 @@ void inputshape::create_toolpaths_vcarve(int toolnr, double maxdepth)
 #endif                
 #if 1
                 /* case 2: d1 and d2 are both not ok wrt max depth */
-                if (d1 < maxdepth && d2 < maxdepth && should_vcarve(this, X1, Y1, X2, Y2, x->is_inner_bisector(), x->is_bisector(), false)) {
+                if (d1 < maxdepth && d2 < maxdepth && should_vcarve(shape, X1, Y1, X2, Y2, is_inner_bisector, is_bisector, false)) {
                   if (X1 != X2 || Y1 != Y2) { 
                     double x1,y1,x2,y2,x3,y3,x4,y4;
                     double r1, r2;
@@ -638,7 +605,7 @@ void inputshape::create_toolpaths_vcarve(int toolnr, double maxdepth)
                 /* case 4: d1 is ok d2 is not ok */
                 if (d1 >= maxdepth && d2 < maxdepth) {
 				  bool exclusioncase = false;
-				  if (d1 == 0 && !should_vcarve(this, X1, Y1, X2, Y2, x->is_inner_bisector(), x->is_bisector(), false))
+				  if (d1 == 0 && !should_vcarve(shape, X1, Y1, X2, Y2, is_inner_bisector, is_bisector, false))
 						exclusioncase = true; 
                   if ( (X1 != X2 || Y1 != Y2) && !exclusioncase) { 
                     double x1,y1,x2,y2,x3,y3,x4,y4;
@@ -704,7 +671,43 @@ void inputshape::create_toolpaths_vcarve(int toolnr, double maxdepth)
                     
                 }
 #endif
-            }
+	}
+}
+
+void inputshape::create_toolpaths_vcarve(int toolnr, double maxdepth)
+{
+    double angle = get_tool_angle(toolnr);
+    if (!polyhole) {
+        polyhole = new PolygonWithHoles(poly);
+        for (auto i : children)
+          polyhole->add_hole(i->poly);
+    }
+    
+//    printf("VCarve toolpath\n");
+    
+    if (!iss) {
+        iss =  CGAL::create_interior_straight_skeleton_2(*polyhole);
+    }
+    
+    class tooldepth * td = new(class tooldepth);
+    tooldepths.push_back(td);
+    td->toolnr = toolnr;
+    
+    class toollevel *tool = new(class toollevel);       
+    tool->name = "VCarve path";
+    tool->toolnr = toolnr;
+    tool->minY = minY;
+    td->toollevels.push_back(tool);
+    
+    for (auto x = iss->halfedges_begin(); x != iss->halfedges_end(); ++x) {
+            double X1, Y1, X2, Y2, d1, d2;
+            X1 = point_snap2(CGAL::to_double(x->vertex()->point().x()));
+            Y1 = point_snap2(CGAL::to_double(x->vertex()->point().y()));
+            
+            X2 = point_snap2(CGAL::to_double(x->opposite()->vertex()->point().x()));
+            Y2 = point_snap2(CGAL::to_double(x->opposite()->vertex()->point().y()));
+            
+			process_vcarve(tool, X1, Y1, X2, Y2, x->is_inner_bisector(), x->is_bisector(), angle, parent, maxdepth, this, z_offset);
     }
 }
 
