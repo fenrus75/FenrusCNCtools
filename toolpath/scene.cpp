@@ -307,8 +307,7 @@ void scene::create_toolpaths(void)
 		while (currentdepth <= -z_offset) {
           	for (auto i : shapes)
             	i->create_toolpaths_vcarve(toolnr, currentdepth, stock_to_leave);
-			currentdepth += depthstep;
-        	depthstep = get_tool_maxdepth();
+			currentdepth += get_tool_maxdepth();
 			if (want_finishing_pass())
 				stock_to_leave = 0.1;
         }
