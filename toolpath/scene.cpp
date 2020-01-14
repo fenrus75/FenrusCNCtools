@@ -303,8 +303,15 @@ void scene::create_toolpaths(void)
       
       
     if (tool_is_vcarve(toolnr) && tool == 0) {
-          for (auto i : shapes)
-            i->create_toolpaths_vcarve(toolnr, depth);
+		double stock_to_leave = 0;
+		while (currentdepth <= -z_offset) {
+          	for (auto i : shapes)
+            	i->create_toolpaths_vcarve(toolnr, currentdepth, stock_to_leave);
+			currentdepth += depthstep;
+        	depthstep = get_tool_maxdepth();
+			if (want_finishing_pass())
+				stock_to_leave = 0.1;
+        }
     } else {
       vprintf("Tool %i goes from %5.2f mm to %5.2f mm\n", toolnr, start, end);
 	  bool inbetween = want_inbetween_paths();

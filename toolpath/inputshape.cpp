@@ -681,7 +681,7 @@ static void process_vcarve(class toollevel *tool, double X1, double Y1, double X
 	}
 }
 
-void inputshape::create_toolpaths_vcarve(int toolnr, double maxdepth)
+void inputshape::create_toolpaths_vcarve(int toolnr, double maxdepth, double stock_to_leave)
 {
     double angle = get_tool_angle(toolnr);
     if (!polyhole) {
@@ -707,14 +707,14 @@ void inputshape::create_toolpaths_vcarve(int toolnr, double maxdepth)
     td->toollevels.push_back(tool);
     
     for (auto x = iss->halfedges_begin(); x != iss->halfedges_end(); ++x) {
-            double X1, Y1, X2, Y2, d1, d2;
+            double X1, Y1, X2, Y2;
             X1 = point_snap2(CGAL::to_double(x->vertex()->point().x()));
             Y1 = point_snap2(CGAL::to_double(x->vertex()->point().y()));
             
             X2 = point_snap2(CGAL::to_double(x->opposite()->vertex()->point().x()));
             Y2 = point_snap2(CGAL::to_double(x->opposite()->vertex()->point().y()));
             
-			process_vcarve(tool, X1, Y1, X2, Y2, x->is_inner_bisector(), x->is_bisector(), angle, parent, maxdepth, this, z_offset);
+			process_vcarve(tool, X1, Y1, X2, Y2, x->is_inner_bisector(), x->is_bisector(), angle, parent, maxdepth, this, z_offset + stock_to_leave);
     }
 }
 
