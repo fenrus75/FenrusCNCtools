@@ -362,7 +362,7 @@ void inputshape::create_toolpaths_cutout(int toolnr, double depth)
 					tool->depth = currentdepth;
 					tool->toolnr = toolnr;
 					tool->minY = minY;
-					tool->name = "Cutout bottom";
+					tool->name = NULL;
 					td->toollevels.push_back(tool);
 
 	    	    	Polygon_2 *p2;

@@ -387,7 +387,8 @@ void toollevel::output_gcode(void)
 		}
     }
 #endif
-    gcode_write_comment(name);
+	if (name)
+	    gcode_write_comment(name);
     sortX = gcode_current_X();
     sortY = gcode_current_Y() + get_minY();
         

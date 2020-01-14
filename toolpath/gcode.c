@@ -342,9 +342,14 @@ void gcode_tool_change(int toolnr)
  activate_tool(toolnr); 
  fprintf(gcode, "M6 T%i\n", abs(toolnr));
  fprintf(gcode, "M3 S%i\n", (int)rippem);  
+ fprintf(gcode, "G0 X0Y0\n");
  first_time = 0;
     prev_valid = 0;
 	has_current = 0;
+
+	cX = 0;
+	cY = 0;
+	cZ = 500000;	
 }
 
 int gcode_has_current(void)
@@ -356,7 +361,7 @@ void gcode_reset_current(void)
 {
 	has_current = 0;
 	cS = 0;
-	cX = 0;
-	cY = 0;
-	cZ = 0;	
+	cX = -500000;
+	cY = -500000;
+	cZ = -500000;	
 }
