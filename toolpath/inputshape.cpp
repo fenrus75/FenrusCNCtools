@@ -524,9 +524,16 @@ static void process_vcarve(class toollevel *tool, double X1, double Y1, double X
 		return;
     }
 
+	d1 = radius_to_depth(parent->distance_from_edge(X1, Y1, false), angle);
+    d2 = radius_to_depth(parent->distance_from_edge(X2, Y2, false), angle);
+
+	if (fabs(d2-d1) > 0.4 && is_inner_bisector) {
+		process_vcarve(tool, X1, Y1, (X1 + X2)/2, (Y1 + Y2)/2, is_inner_bisector, is_bisector, angle, parent, maxdepth, shape,  z_offset);
+		process_vcarve(tool, (X1 + X2)/2, (Y1 + Y2)/2, X2, Y2, is_inner_bisector, is_bisector, angle, parent, maxdepth, shape,  z_offset);
+		return;
+	}
+
 	if (is_bisector || is_inner_bisector) {
-                d1 = radius_to_depth(parent->distance_from_edge(X1, Y1, false), angle);
-                d2 = radius_to_depth(parent->distance_from_edge(X2, Y2, false), angle);
                 
                 /* four cases to deal with */
 #if 1                
