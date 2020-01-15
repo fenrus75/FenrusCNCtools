@@ -271,7 +271,7 @@ void scene::create_toolpaths(void)
     depthstep = depthstep - surplus / 2;
 
 
-    if (want_finishing_pass()) {
+    if (want_finishing_pass() && !tool_is_vcarve(toollist[tool])) {
       /* finishing rules: deepest cut is small */
       depthstep = fmin(depthstep, 0.25);
       finish  = 1;
@@ -307,7 +307,8 @@ void scene::create_toolpaths(void)
 		while (currentdepth <= -z_offset) {
           	for (auto i : shapes)
             	i->create_toolpaths_vcarve(toolnr, currentdepth, stock_to_leave);
-			currentdepth += get_tool_maxdepth();
+			currentdepth += depthstep;
+			depthstep = get_tool_maxdepth();
 			if (want_finishing_pass())
 				stock_to_leave = 0.1;
         }
