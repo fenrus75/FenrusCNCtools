@@ -295,7 +295,7 @@ void scene::create_toolpaths(void)
       double angle = get_tool_angle(toollist[0]);
       if (tool == 1)
         start = 0;
-      start += depth_to_radius(depth, angle) + stock_to_leave; /* small stock to leave */
+      start += depth_to_radius(depth, angle); 
     }
       
     if (tool > 0)
