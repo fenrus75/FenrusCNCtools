@@ -61,9 +61,31 @@ void toolpath::output_gcode(void)
     output_gcode_reverse();
     return;
   }
+  bool first = true;
     
   for (auto poly : polygons) {
     unsigned int i;
+	double cX, cY;
+	double distance = 500000;
+	double X1, Y1;;
+	
+	cX = gcode_current_X();
+	cY = gcode_current_Y();
+	X1 = CGAL::to_double((*poly)[start_vertex].x());
+	Y1 = CGAL::to_double((*poly)[start_vertex].y());
+	distance = dist(X1,Y1,cX,cY);
+	if (first) {
+	    for (i = 0; i < poly->size(); i++) {
+			X1 = CGAL::to_double((*poly)[i].x());
+			Y1 = CGAL::to_double((*poly)[i].y());
+			if (dist(X1,Y1,cX,cY) + 4 < distance) {
+				start_vertex = i;
+				distance = dist(X1,Y1,cX,cY);
+			}
+		}
+	} else {
+		first = false;
+	}
     for (i = 0; i < poly->size(); i++) {
       int current;
       int next;
