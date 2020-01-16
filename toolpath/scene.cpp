@@ -44,6 +44,7 @@ void scene::new_poly(double X, double Y)
   shape = new(class inputshape);
   shape->parent = this;
   shape->set_z_offset(z_offset);
+  shape->set_stock_to_leave(stock_to_leave);
   
   add_point_to_poly(X, Y);
 }
@@ -54,6 +55,7 @@ void scene::set_poly_name(const char *n)
     shape = new(class inputshape);
     shape->parent = this;
 	shape->set_z_offset(z_offset);
+	shape->set_stock_to_leave(stock_to_leave);
   }
   shape->set_name(n);
 }
@@ -64,6 +66,7 @@ void scene::add_point_to_poly(double X, double Y)
     shape = new(class inputshape);
     shape->parent = this;
 	shape->set_z_offset(z_offset);
+	shape->set_stock_to_leave(stock_to_leave);
   }
     
   shape->add_point(X, Y);
@@ -272,8 +275,8 @@ void scene::create_toolpaths(void)
 
 
     if (want_finishing_pass() && !tool_is_vcarve(toollist[tool])) {
-      /* finishing rules: deepest cut is small */
-      depthstep = fmin(depthstep, 0.25);
+      /* finishing rules: deepest cut is small, 2x stock_to_leave */
+      depthstep = fmin(depthstep, stock_to_leave * 2);
       finish  = 1;
     }
     
@@ -292,7 +295,7 @@ void scene::create_toolpaths(void)
       double angle = get_tool_angle(toollist[0]);
       if (tool == 1)
         start = 0;
-      start += depth_to_radius(depth, angle) + 0.1; /* small stock to leave */
+      start += depth_to_radius(depth, angle) + stock_to_leave; /* small stock to leave */
     }
       
     if (tool > 0)
@@ -415,6 +418,7 @@ class scene * scene::clone_scene(class scene *input, int mirror, double Xadd)
   if (!scene) {
 	scene = new(class scene);
 	scene->set_z_offset(-inch_to_mm(0.1));
+	scene->set_stock_to_leave(stock_to_leave);
   }
   for (auto i : shapes)
     scene = i->clone_scene(scene, mirror, Xadd);

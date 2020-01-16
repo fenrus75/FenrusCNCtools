@@ -21,16 +21,17 @@ int verbose = 0;
 void usage(void)
 {
 	printf("Usage:\n\ttoolpath [options] <file.svg>\n");
-	printf("\t--verbose         (-v)    verbose output\n");
-	printf("\t--finish-pass     (-f)	add a finishing pass\n");
-	printf("\t--skeleton        (-s)    reduce slotting\n");
-    printf("\t--inbetween       (-i)    ensure no ridges left over\n");
-	printf("\t--inlay			(-n)    create an inlay/plug design\n");
-	printf("\t--library <file>  (-l)	load CC .csv tool file\n");
-	printf("\t--tool <number>   (-t)	use tool number <number> \n");
-	printf("\t--depth <inch>    (-d)    set cutting depth in inches\n");
-	printf("\t--Depth <mm>      (-D)    set cutting depth in mm\n");
-	printf("\t--cutout <inch>   (-c)    cut out the outer geometry to depth <inch>\n");
+	printf("\t--verbose         	(-v)    verbose output\n");
+	printf("\t--finish-pass     	(-f)	add a finishing pass\n");
+	printf("\t--skeleton        	(-s)    reduce slotting\n");
+    printf("\t--inbetween       	(-i)    ensure no ridges left over\n");
+	printf("\t--inlay				(-n)    create an inlay/plug design\n");
+	printf("\t--library <file>  	(-l)	load CC .csv tool file\n");
+	printf("\t--tool <number>   	(-t)	use tool number <number> \n");
+	printf("\t--depth <inch>    	(-d)    set cutting depth in inches\n");
+	printf("\t--Depth <mm>      	(-D)    set cutting depth in mm\n");
+	printf("\t--cutout <inch>   	(-c)    cut out the outer geometry to depth <inch>\n");
+	printf("\t--stock-to-leave <mm> (-o)    how much stock to leave between roughing and finishing pass\n");
 	exit(EXIT_SUCCESS);
 }
 
@@ -45,6 +46,7 @@ static struct option long_options[] =
           {"library",    required_argument, 0, 'l'},
           {"tool",    required_argument, 0, 't'},
           {"cutout",  required_argument, 0, 'c'},
+          {"stock-to-leave",    required_argument, 0, 'o'},
           {"depth",    required_argument, 0, 'd'},
           {"Depth",    required_argument, 0, 'D'},
 		  {"help",	no_argument, 0, 'h'},
@@ -101,6 +103,10 @@ int main(int argc, char **argv)
 			case 'c': /* inch */
 				scene->set_cutout_depth(inch_to_mm(strtod(optarg, NULL)));
 				printf("Enabling cutout to depth %5.2fmm\n", scene->get_cutout_depth());
+				break;
+			case 'o': /* mm */
+				scene->set_stock_to_leave(strtod(optarg, NULL));
+				printf("Setting stock to leave to  %5.2fmm\n", scene->get_stock_to_leave());
 				break;
 			case 't':
 				int arg;

@@ -187,6 +187,7 @@ public:
         minY = 0;
 		is_cutout = false;
 		z_offset = 0.0;
+		stock_to_leave = 0.1;
     }
     void set_level(int _level);
     void add_child(class inputshape *child);
@@ -210,6 +211,10 @@ public:
 
 	void set_z_offset(double d) { z_offset = d; };
 	double get_z_offset(void) { return z_offset; };
+
+	void set_stock_to_leave(double d) { stock_to_leave = d; };
+	double get_stock_to_leave(void) { return stock_to_leave; };
+
 
     double area;
     int level;
@@ -241,6 +246,7 @@ private:
     double bbX1, bbY1, bbX2, bbY2;
     double minY;
 	double z_offset;
+	double stock_to_leave;
 };
     
 

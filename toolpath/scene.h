@@ -75,6 +75,9 @@ public:
 		void set_cutout_depth(double d) { cutout_depth = d; };
 		double get_cutout_depth(void) { return cutout_depth; };
 
+		void set_stock_to_leave(double d) { stock_to_leave = d; };
+		double get_stock_to_leave(void) { return stock_to_leave; };
+
 		void set_depth(double d) { depth = d; };
 		double get_depth(void) { return depth; };
 
@@ -100,6 +103,7 @@ private:
 
         double minX, minY, maxX, maxY;
 		double z_offset;
+		double stock_to_leave;
         bool _want_finishing_pass;
         bool _want_inbetween_paths;
         bool _want_skeleton_paths;

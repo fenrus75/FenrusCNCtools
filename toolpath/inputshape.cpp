@@ -179,7 +179,7 @@ void inputshape::create_toolpaths(int toolnr, double depth, int finish_pass, int
     
     /* finish_pass is -1 for all layers above the bottom layer IF finishing is enabled */
     if (finish_pass == -1)
-        inset = inset + 0.1;
+        inset = inset + stock_to_leave;
         
     
     /* less stepover during the bottom finish pass (1) */
@@ -410,7 +410,7 @@ void inputshape::create_toolpaths_cutout(int toolnr, double depth)
 			for(auto hi = ply->holes_begin() ; hi != ply->holes_end() ; ++ hi ) {
     	    	Polygon_2 *p;
 
-				if (currentdepth > 0.1)
+				if (currentdepth > stock_to_leave)
 					break;
 				p = new(Polygon_2);
             	*p = *hi;
@@ -419,7 +419,7 @@ void inputshape::create_toolpaths_cutout(int toolnr, double depth)
 					if (next >= p->size())
 						next = 0;
 
-					if (currentdepth > 0.1)
+					if (currentdepth > stock_to_leave)
 						break;
 
 					class tooldepth * td = new(class tooldepth);
