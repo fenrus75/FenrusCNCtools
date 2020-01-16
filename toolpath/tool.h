@@ -20,7 +20,7 @@
 
 
 using namespace std;
-#if 0
+#if 1
 typedef CGAL::Exact_predicates_inexact_constructions_kernel K ;
 #else
 typedef CGAL::Exact_predicates_exact_constructions_kernel K ;

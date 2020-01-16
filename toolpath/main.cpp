@@ -137,9 +137,9 @@ int main(int argc, char **argv)
     for(; optind < argc; optind++) {      
 		parse_svg_file(scene, argv[optind]);
 		scene->set_filename(argv[optind]);
-		
+
 		scene->process_nesting();
-		
+
 		scene->create_toolpaths();
 		
 		scene->write_svg("output.svg");

@@ -63,19 +63,22 @@ static void cubic_bezier(class scene *scene,
 
     if (dist(x0,y0,x3,y3) < 0.5)
             delta = 1.0;
-    
+
+	/* bad stuff happens if we end up and an exect multiple of 1 */
+	delta += 0.00001;
     t = 0;
     while (t < 1.0) {
         double nX, nY;
         nX = (1-t)*(1-t)*(1-t)*x0 + 3*(1-t)*(1-t)*t*x1 + 3 * (1-t)*t*t*x2 + t*t*t*x3;
         nY = (1-t)*(1-t)*(1-t)*y0 + 3*(1-t)*(1-t)*t*y1 + 3 * (1-t)*t*t*y2 + t*t*t*y3;
-        if (distance(lX,lY, nX,nY) > 1) {
+        if (distance(lX,lY, nX,nY) > 0.1) {
             scene->add_point_to_poly(px_to_mm(nX), px_to_mm(svgheight + nY));
             lX = nX;
             lY = nY;
         }
         t = t + delta;
     }
+
     scene->add_point_to_poly(px_to_mm(x3),px_to_mm(svgheight + y3));
 }                    
 
