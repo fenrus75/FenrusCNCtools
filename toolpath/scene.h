@@ -31,7 +31,8 @@ public:
 			inlay_plug = NULL;
             filename = "unknown";            
 			cutout_depth = 0;
-			depth = 0;
+			depth = 0;	
+			stock_to_leave = 0.1;
         }
         
         scene(const char *filename);

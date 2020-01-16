@@ -293,7 +293,7 @@ void inputshape::create_toolpaths(int toolnr, double depth, int finish_pass, int
     }
 }
 
-void inputshape::create_toolpaths_cutout(int toolnr, double depth)
+void inputshape::create_toolpaths_cutout(int toolnr, double depth, bool finish_pass)
 {
 	/* Step 1: Create an outside bounding box */
 	double currentdepth = -fabs(depth);
@@ -332,6 +332,7 @@ void inputshape::create_toolpaths_cutout(int toolnr, double depth)
 
 	/* Step 4: Inset the ISS by tool radius */
 	PolygonWithHolesPtrVector  offset_polygons;
+
 	offset_polygons = arrange_offset_polygons_2(CGAL::create_offset_polygons_2<Polygon_2>(get_tool_diameter()/2, *ciss) );
 
 
@@ -379,6 +380,10 @@ void inputshape::create_toolpaths_cutout(int toolnr, double depth)
 				}
 	        }
 		}
+
+	if (finish_pass) {
+		offset_polygons = arrange_offset_polygons_2(CGAL::create_offset_polygons_2<Polygon_2>(get_tool_diameter()/2 + stock_to_leave, *ciss) );
+	}
 
 
 	/*	   calculate gradient of dZ/mm */

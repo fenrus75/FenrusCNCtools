@@ -205,7 +205,7 @@ public:
 
     void create_toolpaths(int toolnr, double depth, int finish_pass, int is_optional, double start_inset, double end_inset, bool _want_skeleton_path);
     void create_toolpaths_vcarve(int toolnr, double maxdepth, double stock_to_leave);
-    void create_toolpaths_cutout(int toolnr, double depth);
+    void create_toolpaths_cutout(int toolnr, double depth, bool finish_pass);
     void create_toolpaths_inlayplug(int toolnr, double maxdepth);
     void consolidate_toolpaths(bool _want_inbetween_paths);
 
