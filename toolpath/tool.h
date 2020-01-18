@@ -20,7 +20,7 @@
 
 
 using namespace std;
-#if 0
+#if 1
 typedef CGAL::Exact_predicates_inexact_constructions_kernel K ;
 #else
 typedef CGAL::Exact_predicates_exact_constructions_kernel K ;
@@ -55,6 +55,7 @@ public:
         depth2 = 0;
         toolnr = 0;
         minY = 0;
+	    color = NULL;
     }
 
     int level;
@@ -87,6 +88,7 @@ public:
     double get_minY(void);
 
     vector<Polygon_2*> polygons;
+	const char *color;
 private:
     void output_gcode_slotting(void);
     void output_gcode_reverse(void);
@@ -120,7 +122,7 @@ public:
     double minY;
     
     void add_poly(Polygon_2 *poly, bool is_hole);
-    void add_poly_vcarve(Polygon_2 *poly, double depth1, double depth2);
+    void add_poly_vcarve(Polygon_2 *poly, double depth1, double depth2, const char *color = NULL);
     vector<class toolpath*> toolpaths;
 
 	void consolidate(void);

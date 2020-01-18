@@ -12,14 +12,16 @@ static double dist(double X0, double Y0, double X1, double Y1)
   return sqrt((X1-X0)*(X1-X0) + (Y1-Y0)*(Y1-Y0));
 }
 
-void toolpath::print_as_svg(const char *color)
+void toolpath::print_as_svg(const char *_color)
 {
     double width = diameter * 0.333;
 
 //    if (is_vcarve) width = diameter;
       if (is_vcarve) {
 //          width = 4;
-          color = "purple";
+          _color = "purple";
+		  if (color)
+			_color = color;
           width = 0.5;
       } else return;
 
@@ -31,7 +33,7 @@ void toolpath::print_as_svg(const char *color)
 //        color = "purple";
 //    }
     for (auto i : polygons) {
-        print_polygon(i, color, width);
+        print_polygon(i, _color, width);
         for (unsigned int j = 0; j < i->size(); j++)
           svg_circle(CGAL::to_double((*i)[j].x()), CGAL::to_double((*i)[j].y()), width/2, color, 0);
 #if 0
@@ -141,7 +143,7 @@ void toolpath::output_gcode_vcarve(void)
       continue;
     }    
 
-#if 1
+#if 0
     if (depth < depth2) {
       gcode_vconditional_travel_to(CGAL::to_double((*poly)[1].x()), CGAL::to_double((*poly)[1].y()) - get_minY(), depth2, speed, CGAL::to_double((*poly)[0].x()), CGAL::to_double((*poly)[0].y()) - get_minY(), depth);
       gcode_vmill_to(CGAL::to_double((*poly)[0].x()), CGAL::to_double((*poly)[0].y()) - get_minY(), depth, speed);

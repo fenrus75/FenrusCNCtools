@@ -107,11 +107,7 @@ void inputshape::close_shape(void)
       auto v1 = poly[0];
       auto v2 = poly[poly.size() - 1];
 
-      if (approx4(CGAL::to_double(v1.x()),CGAL::to_double(v2.x())) && approx4(CGAL::to_double(v1.y()), CGAL::to_double(v2.y())) || 1) {
-          poly.erase(poly.vertices_end() - 1);
-	      auto v2 = poly[poly.size() - 1];
-
-      }
+	  poly.erase(poly.vertices_end() - 1);
     }
 
     if (!poly.is_simple())
@@ -554,13 +550,13 @@ static void process_vcarve(class toollevel *tool, double X1, double Y1, double X
                             p->push_back(Point(X2, Y2));
                             tool->diameter = fmax(tool->diameter, -d1 * 2);
                             tool->diameter = fmax(tool->diameter, -d2 * 2);
-                            tool->add_poly_vcarve(p, d1 + z_offset, d2 + z_offset);
+                            tool->add_poly_vcarve(p, d1 + z_offset, d2 + z_offset, "magenta");
                     }
                 }
 #endif                
 #if 1
                 /* case 2: d1 and d2 are both not ok wrt max depth */
-                if (d1 < maxdepth && d2 < maxdepth && should_vcarve(shape, X1, Y1, X2, Y2, is_inner_bisector, is_bisector, false)) {
+                if (0 && d1 < maxdepth && d2 < maxdepth && should_vcarve(shape, X1, Y1, X2, Y2, is_inner_bisector, is_bisector, false)) {
                   if (X1 != X2 || Y1 != Y2) { 
                     double x1,y1,x2,y2,x3,y3,x4,y4;
                     double r1, r2;
@@ -597,13 +593,13 @@ static void process_vcarve(class toollevel *tool, double X1, double Y1, double X
 					  p->push_back(Point(x1, y1));
     	              p->push_back(Point(x2, y2));
                       tool->diameter = depth_to_radius(maxdepth, angle) * 2;
-                      tool->add_poly_vcarve(p, maxdepth + z_offset, maxdepth + z_offset);
+                      tool->add_poly_vcarve(p, maxdepth + z_offset, maxdepth + z_offset, "cyan");
                     
                       Polygon_2 *p2 = new(Polygon_2);
 					  p2->push_back(Point(x3, y3));
         	          p2->push_back(Point(x4, y4));
                       tool->diameter = depth_to_radius(maxdepth, angle) * 2;
-                      tool->add_poly_vcarve(p2, maxdepth + z_offset, maxdepth + z_offset);
+                      tool->add_poly_vcarve(p2, maxdepth + z_offset, maxdepth + z_offset, "purple");
                     }
                 
 //                    printf(" CASE 2 \n");
@@ -652,9 +648,9 @@ static void process_vcarve(class toollevel *tool, double X1, double Y1, double X
                     p->push_back(Point(Xm, Ym));
                     tool->diameter = fmax(tool->diameter, -d1 * 2);
                     tool->diameter = fmax(tool->diameter, -fabs(maxdepth) * 2);
-                    tool->add_poly_vcarve(p, d1 + z_offset, maxdepth + z_offset);
+                    tool->add_poly_vcarve(p, d1 + z_offset, maxdepth + z_offset, "blue");
 
-
+#if 0
                     /* and from Xm to X2 is like case 2 */
                     ret += lines_tangent_to_two_circles(Xm, Ym, 0, 
                                 X2, Y2, depth_to_radius(fabs(maxdepth) - fabs(d2), angle),
@@ -679,17 +675,17 @@ static void process_vcarve(class toollevel *tool, double X1, double Y1, double X
                     p3->push_back(Point(x2, y2));
                     tool->diameter = depth_to_radius(maxdepth, angle) * 2;
                     if (ret == 0)
-                        tool->add_poly_vcarve(p3, maxdepth + z_offset, maxdepth + z_offset);
+                        tool->add_poly_vcarve(p3, maxdepth + z_offset, maxdepth + z_offset, "red");
                     
                     Polygon_2 *p2 = new(Polygon_2);
                     p2->push_back(Point(x3, y3));
                     p2->push_back(Point(x4, y4));
                     tool->diameter = depth_to_radius(maxdepth, angle) * 2;
                     if (ret == 0)
-                        tool->add_poly_vcarve(p2, maxdepth + z_offset, maxdepth + z_offset);
+                        tool->add_poly_vcarve(p2, maxdepth + z_offset, maxdepth + z_offset, "red");
                 
+#endif                    
                     }
-                    
                     
                 }
 #endif
@@ -711,6 +707,77 @@ void inputshape::create_toolpaths_vcarve(int toolnr, double maxdepth, double sto
         iss =  CGAL::create_interior_straight_skeleton_2(*polyhole);
     }
     
+
+	do {
+		double diameter;
+	    class tooldepth * td = new(class tooldepth);
+
+		diameter = depth_to_radius(maxdepth, angle);
+
+	    tooldepths.push_back(td);
+		td->depth = maxdepth + z_offset;
+		td->toolnr = toolnr;
+	    td->diameter = diameter;
+	    td->run_reverse = false;
+    
+        class toollevel *tool = new(class toollevel);
+        
+        tool->level = level;
+        tool->offset = diameter;
+        tool->diameter = diameter;
+        tool->depth = maxdepth + z_offset;
+        tool->toolnr = toolnr;
+        tool->run_reverse = false;
+        tool->minY = minY;
+        tool->name = "Z Magick";
+        
+        PolygonWithHolesPtrVector  offset_polygons;
+
+		bool had_exception = true;
+        while (had_exception) {
+            had_exception = false;
+            try {
+                offset_polygons = arrange_offset_polygons_2(CGAL::create_offset_polygons_2<Polygon_2>(diameter,*iss) );
+            } catch (...) { had_exception = true;};
+            
+            if (had_exception)
+                diameter = diameter + 0.00001;
+        }
+        
+        for (auto ply : offset_polygons) {        
+            Polygon_2 *p;
+            p = new(Polygon_2);
+            *p = ply->outer_boundary();
+			for (unsigned i = 0; i < p->size(); i++) {
+				unsigned next = i + 1;
+				if (next >= p->size())
+					next = 0;
+				Polygon_2 *p2 = new(Polygon_2);
+                p2->push_back(Point(CGAL::to_double((*p)[i].x()), CGAL::to_double((*p)[i].y())));
+                p2->push_back(Point(CGAL::to_double((*p)[next].x()), CGAL::to_double((*p)[next].y())));
+	            tool->add_poly_vcarve(p2, maxdepth + z_offset, maxdepth + z_offset, "orange");
+			}
+
+              for(auto hi = ply->holes_begin() ; hi != ply->holes_end() ; ++ hi ) {
+                Polygon_2 *p;
+                p = new(Polygon_2);
+                *p = *hi;
+				for (unsigned i = 0; i < p->size(); i++) {
+					unsigned next = i + 1;
+					if (next >= p->size())
+						next = 0;
+					Polygon_2 *p2 = new(Polygon_2);
+					p2->push_back(Point(CGAL::to_double((*p)[i].x()), CGAL::to_double((*p)[i].y())));
+   	             	p2->push_back(Point(CGAL::to_double((*p)[next].x()), CGAL::to_double((*p)[next].y())));
+	            	tool->add_poly_vcarve(p2, maxdepth + z_offset, maxdepth + z_offset, "orange");
+				}
+              }
+        }
+        td->toollevels.push_back(tool);       
+	} while (0);
+
+
+
     class tooldepth * td = new(class tooldepth);
     tooldepths.push_back(td);
     td->toolnr = toolnr;

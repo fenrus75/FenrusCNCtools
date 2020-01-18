@@ -71,7 +71,7 @@ static void cubic_bezier(class scene *scene,
         double nX, nY;
         nX = (1-t)*(1-t)*(1-t)*x0 + 3*(1-t)*(1-t)*t*x1 + 3 * (1-t)*t*t*x2 + t*t*t*x3;
         nY = (1-t)*(1-t)*(1-t)*y0 + 3*(1-t)*(1-t)*t*y1 + 3 * (1-t)*t*t*y2 + t*t*t*y3;
-        if (distance(lX,lY, nX,nY) > 0.1) {
+        if (distance(lX,lY, nX,nY) > 0.5) {
             scene->add_point_to_poly(px_to_mm(nX), px_to_mm(svgheight + nY));
             lX = nX;
             lY = nY;
@@ -111,7 +111,7 @@ static void quadratic_bezier(class scene *scene,
         double nX, nY;
         nX = (1-t)*(1-t)*x0 + 2*(1-t)*t*x1 + t*t*x3;
         nY = (1-t)*(1-t)*y0 + 2*(1-t)*t*y1 + t*t*y3;
-        if (distance(lX,lY, nX,nY) > 0.1) {
+        if (distance(lX,lY, nX,nY) > 0.5) {
             scene->add_point_to_poly(px_to_mm(nX), px_to_mm(svgheight + nY));
             lX = nX;
             lY = nY;

@@ -459,7 +459,7 @@ void toollevel::add_poly(Polygon_2 *poly, bool is_hole)
     toolpaths.push_back(tp);    
 }
 
-void toollevel::add_poly_vcarve(Polygon_2 *poly, double depth1, double depth2)
+void toollevel::add_poly_vcarve(Polygon_2 *poly, double depth1, double depth2, const char *color)
 {
     /* check if the same path is already there if we're slotting */
 #if 1
@@ -488,6 +488,7 @@ void toollevel::add_poly_vcarve(Polygon_2 *poly, double depth1, double depth2)
     tp->minY = minY;
     tp->diameter = diameter;
     tp->is_single = true;
+	tp->color = color;
     toolpaths.push_back(tp);    
 }
 
