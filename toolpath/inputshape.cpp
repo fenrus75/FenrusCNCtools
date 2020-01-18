@@ -103,15 +103,11 @@ void inputshape::add_point(double X, double Y)
 void inputshape::close_shape(void)
 {
     /* check if first and last point are the same.. if they are, pop the last */
-    if (poly.size() > 1 && !poly.is_simple()) {
+    while (poly.size() > 1 && !poly.is_simple()) {
       auto v1 = poly[0];
       auto v2 = poly[poly.size() - 1];
 
-      if (approx4(CGAL::to_double(v1.x()),CGAL::to_double(v2.x())) && approx4(CGAL::to_double(v1.y()), CGAL::to_double(v2.y()))) {
-          poly.erase(poly.vertices_end() - 1);
-	      auto v2 = poly[poly.size() - 1];
-	  }
-      if (approx4(CGAL::to_double(v1.x()),CGAL::to_double(v2.x())) && approx4(CGAL::to_double(v1.y()), CGAL::to_double(v2.y()))) {
+      if (approx4(CGAL::to_double(v1.x()),CGAL::to_double(v2.x())) && approx4(CGAL::to_double(v1.y()), CGAL::to_double(v2.y())) || 1) {
           poly.erase(poly.vertices_end() - 1);
 	      auto v2 = poly[poly.size() - 1];
 

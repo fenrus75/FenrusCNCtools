@@ -239,7 +239,7 @@ void gcode_vconditional_travel_to(double X, double Y, double Z, double speed, do
         return;
 
 //    printf("Travel to %5.4f %5.4f %5.4f\n", X, Y, Z);
-    if (dist3(X,Y,Z,cX,cY,cZ) < 0.07) {
+    if (dist3(X,Y,Z,cX,cY,cZ) < 0.05) {
         gcode_mill_to(X, Y, Z, speed);
         return;
     }

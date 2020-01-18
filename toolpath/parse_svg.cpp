@@ -65,7 +65,7 @@ static void cubic_bezier(class scene *scene,
             delta = 1.0;
 
 	/* bad stuff happens if we end up and an exect multiple of 1 */
-	delta += 0.00001;
+	delta += 0.000013121;
     t = 0;
     while (t < 1.0) {
         double nX, nY;
@@ -104,7 +104,7 @@ static void quadratic_bezier(class scene *scene,
     if (dist(x0,y0,x3,y3) < 0.5)
             delta = 1.0;
 
-	delta += 0.00001;
+	delta += 0.0000131313;
     
     t = 0;
     while (t < 1.0) {

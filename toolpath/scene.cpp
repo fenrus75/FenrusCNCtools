@@ -413,6 +413,7 @@ double scene::distance_from_edge(double X, double Y, bool exclude_zero)
 class scene * scene::clone_scene(class scene *input, int mirror, double Xadd)
 {
   class scene *scene = input;
+  double xmin = 500000, ymin = 500000, xmax = 0, ymax = 0;
 //  printf("SCENE_FROM_VCARVE for depth %5.2f\n", depth);
 
   if (!scene) {
@@ -424,22 +425,28 @@ class scene * scene::clone_scene(class scene *input, int mirror, double Xadd)
     scene = i->clone_scene(scene, mirror, Xadd);
 
   sort(scene->shapes.begin(), scene->shapes.end(), compare_shape);
-  auto bbox = scene->shapes[scene->shapes.size() - 1]->get_bbox();
+  for (unsigned int i = 0; i < scene->shapes.size() ; i++ ) {
+		auto bbox = scene->shapes[i]->get_bbox();
+		xmin = fmin(bbox.xmin(), xmin);
+		ymin = fmin(bbox.ymin(), ymin);
+		xmax = fmax(bbox.xmax(), xmax);
+		ymax = fmax(bbox.ymax(), ymax);
+  }
   double outset = 10;
 
 
-  scene->new_poly(bbox.xmin() - outset, bbox.ymin() - outset);
-  scene->add_point_to_poly(bbox.xmin() - outset, bbox.ymax() + outset);
-  scene->add_point_to_poly(bbox.xmax() + outset, bbox.ymax() + outset);
-  scene->add_point_to_poly(bbox.xmax() + outset, bbox.ymin() - outset);
+  scene->new_poly(xmin - outset, ymin - outset);
+  scene->add_point_to_poly(xmin - outset, ymax + outset);
+  scene->add_point_to_poly(xmax + outset, ymax + outset);
+  scene->add_point_to_poly(xmax + outset, ymin - outset);
   scene->end_poly();
 
   if (cutout_depth) {
 	  outset = 7;
-	  scene->new_poly(bbox.xmin() - outset, bbox.ymin() - outset);
-	  scene->add_point_to_poly(bbox.xmin() - outset, bbox.ymax() + outset);
-	  scene->add_point_to_poly(bbox.xmax() + outset, bbox.ymax() + outset);
-	  scene->add_point_to_poly(bbox.xmax() + outset, bbox.ymin() - outset);
+	  scene->new_poly(xmin - outset, ymin - outset);
+	  scene->add_point_to_poly(xmin - outset, ymax + outset);
+	  scene->add_point_to_poly(xmax + outset, ymax + outset);
+	  scene->add_point_to_poly(xmax + outset, ymin - outset);
 	  scene->end_poly();
 
 	  scene->cutout = scene->shapes[scene->shapes.size() - 2];
