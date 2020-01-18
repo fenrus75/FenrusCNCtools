@@ -104,9 +104,6 @@ void inputshape::close_shape(void)
 {
     /* check if first and last point are the same.. if they are, pop the last */
     while (poly.size() > 1 && !poly.is_simple()) {
-      auto v1 = poly[0];
-      auto v2 = poly[poly.size() - 1];
-
 	  poly.erase(poly.vertices_end() - 1);
     }
 
@@ -460,7 +457,7 @@ void inputshape::create_toolpaths_cutout(int toolnr, double depth, bool finish_p
 }
 
 
-static bool should_vcarve(class inputshape *shape, double X1, double Y1, double X2, double Y2, bool is_inner, bool is_bisect, bool is_child) 
+static bool should_vcarve(class inputshape *shape, double X1, double Y1, double X2, double Y2, bool is_inner, bool is_bisect) 
 {
 	if (is_inner)
 		return true;
@@ -511,7 +508,7 @@ static bool should_vcarve(class inputshape *shape, double X1, double Y1, double 
     }
 	for (auto c : shape->children) {
 		bool ret;
-		ret = should_vcarve(c, X1, Y1, X2, Y2, is_inner, is_bisect, true);
+		ret = should_vcarve(c, X1, Y1, X2, Y2, is_inner, is_bisect);
 		if (ret)
 			return true;
 	}
@@ -542,7 +539,7 @@ static void process_vcarve(class toollevel *tool, double X1, double Y1, double X
                 /* four cases to deal with */
 #if 1                
                 /* case 1: d1 and d2 are both ok wrt max depth */
-                if (d1 >= maxdepth && d2 >= maxdepth && should_vcarve(shape, X1, Y1, X2, Y2, is_inner_bisector, is_bisector, false)) {
+                if (d1 >= maxdepth && d2 >= maxdepth && should_vcarve(shape, X1, Y1, X2, Y2, is_inner_bisector, is_bisector)) {
 //                    printf(" CASE 1 \n");
                     if (X1 != X2 || Y1 != Y2) { 
                             Polygon_2 *p = new(Polygon_2);
@@ -556,7 +553,7 @@ static void process_vcarve(class toollevel *tool, double X1, double Y1, double X
 #endif                
 #if 1
                 /* case 2: d1 and d2 are both not ok wrt max depth */
-                if (0 && d1 < maxdepth && d2 < maxdepth && should_vcarve(shape, X1, Y1, X2, Y2, is_inner_bisector, is_bisector, false)) {
+                if (0 && d1 < maxdepth && d2 < maxdepth && should_vcarve(shape, X1, Y1, X2, Y2, is_inner_bisector, is_bisector)) {
                   if (X1 != X2 || Y1 != Y2) { 
                     double x1,y1,x2,y2,x3,y3,x4,y4;
                     double r1, r2;
@@ -623,11 +620,14 @@ static void process_vcarve(class toollevel *tool, double X1, double Y1, double X
                 /* case 4: d1 is ok d2 is not ok */
                 if (d1 >= maxdepth && d2 < maxdepth) {
 				  bool exclusioncase = false;
-				  if (d1 == 0 && !should_vcarve(shape, X1, Y1, X2, Y2, is_inner_bisector, is_bisector, false))
+				  if (d1 == 0 && !should_vcarve(shape, X1, Y1, X2, Y2, is_inner_bisector, is_bisector))
 						exclusioncase = true; 
                   if ( (X1 != X2 || Y1 != Y2) && !exclusioncase) { 
-                    double x1,y1,x2,y2,x3,y3,x4,y4;
+                    double x1,y1;
+#if 0
+					dounle ,x2,y2,x3,y3,x4,y4;
                     int ret = 0;
+#endif
 //                    printf(" CASE 4 \n");
                     double Xm, Ym; /* midpoint of the vector at the place it crosses the depth */
                     double ratio;

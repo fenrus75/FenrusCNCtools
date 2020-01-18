@@ -18,7 +18,11 @@
 /* SVG path supports relative-to-last coordinates... even across elements */
 static double last_X, last_Y;
 
-
+#ifndef FINE
+static const double detail_threshold = 1.0;
+#else
+static const double detail_threshold = 0.5;
+#endif
 
 static double dist(double X0, double Y0, double X1, double Y1)
 {
@@ -61,7 +65,7 @@ static void cubic_bezier(class scene *scene,
     if (dist(x0,y0,x3,y3) < 5)
             delta = 1/5.0;
 
-    if (dist(x0,y0,x3,y3) < 0.5)
+    if (dist(x0,y0,x3,y3) < detail_threshold)
             delta = 1.0;
 
 	/* bad stuff happens if we end up and an exect multiple of 1 */
@@ -71,7 +75,7 @@ static void cubic_bezier(class scene *scene,
         double nX, nY;
         nX = (1-t)*(1-t)*(1-t)*x0 + 3*(1-t)*(1-t)*t*x1 + 3 * (1-t)*t*t*x2 + t*t*t*x3;
         nY = (1-t)*(1-t)*(1-t)*y0 + 3*(1-t)*(1-t)*t*y1 + 3 * (1-t)*t*t*y2 + t*t*t*y3;
-        if (distance(lX,lY, nX,nY) > 0.5) {
+        if (distance(lX,lY, nX,nY) >= detail_threshold) {
             scene->add_point_to_poly(px_to_mm(nX), px_to_mm(svgheight + nY));
             lX = nX;
             lY = nY;
@@ -101,7 +105,7 @@ static void quadratic_bezier(class scene *scene,
     if (dist(x0,y0,x3,y3) < 5)
             delta = 1/5.0;
 
-    if (dist(x0,y0,x3,y3) < 0.5)
+    if (dist(x0,y0,x3,y3) < detail_threshold)
             delta = 1.0;
 
 	delta += 0.0000131313;
@@ -111,7 +115,7 @@ static void quadratic_bezier(class scene *scene,
         double nX, nY;
         nX = (1-t)*(1-t)*x0 + 2*(1-t)*t*x1 + t*t*x3;
         nY = (1-t)*(1-t)*y0 + 2*(1-t)*t*y1 + t*t*y3;
-        if (distance(lX,lY, nX,nY) > 0.5) {
+        if (distance(lX,lY, nX,nY) >= detail_threshold) {
             scene->add_point_to_poly(px_to_mm(nX), px_to_mm(svgheight + nY));
             lX = nX;
             lY = nY;
