@@ -13,6 +13,12 @@ extern "C" {
   #include "toolpath.h"
 }
 
+
+static inline double dist(double X0, double Y0, double X1, double Y1)
+{
+  return sqrt((X1-X0)*(X1-X0) + (Y1-Y0)*(Y1-Y0));
+}
+
 static bool compare_shape(class inputshape *A, class inputshape *B)
 {
   return (fabs(A->area) < fabs(B->area));
@@ -409,6 +415,232 @@ double scene::distance_from_edge(double X, double Y, bool exclude_zero)
   return d;
 }
 
+static Polygon_2 *cutout_clone_split(Polygon_2 *poly, double threshold)
+{
+	Polygon_2 *clone = NULL;
+
+	clone = new(Polygon_2);
+
+	for (unsigned int i = 0; i < poly->size(); i++) {
+		unsigned int next = i + 1;
+		double X1, X2, Y1, Y2;
+		if (next >= poly->size())
+			next = 0;
+
+		X1 = CGAL::to_double((*poly)[i].x());
+		Y1 = CGAL::to_double((*poly)[i].y());
+		X2 = CGAL::to_double((*poly)[next].x());
+		Y2 = CGAL::to_double((*poly)[next].y());
+
+		double d = dist(X1,Y1,X2,Y2);
+
+		clone->push_back(Point(X1, Y1));
+		
+		if (d > threshold) {
+				clone->push_back(Point((X1+X2)/2, (Y1+Y2)/2));
+		}
+	}
+	return clone;
+}
+
+
+static double poly_length(Polygon_2 *poly)
+{
+	double len = 0.0;
+
+//	return CGAL::to_double(poly->area());
+
+	for (unsigned int i = 0; i < poly->size(); i++) {
+		unsigned int next = i + 1;
+		double X1, X2, Y1, Y2;
+		if (next >= poly->size())
+			next = 0;
+
+		X1 = CGAL::to_double((*poly)[i].x());
+		Y1 = CGAL::to_double((*poly)[i].y());
+		X2 = CGAL::to_double((*poly)[next].x());
+		Y2 = CGAL::to_double((*poly)[next].y());
+
+		len += dist(X1,Y1,X2,Y2);
+	}
+
+	return len;
+}
+
+static Polygon_2 *clone_mutate(Polygon_2 *poly, double alpha)
+{
+	unsigned int target;
+
+	Polygon_2 *clone = NULL;
+
+	clone = new(Polygon_2);
+	
+	target = rand() % poly->size();
+
+	double dX = 0;
+	double dY = 0;
+
+	int element = rand() % 8;
+	switch (element) {
+		case 0:
+			dX = alpha;
+			break;
+		case 1:
+			dX = -alpha;
+			break;
+		case 2:
+			dY = alpha;
+			break;
+		case 3:
+			dY = -alpha;
+			break;
+
+		case 4:
+			dX = alpha/1.4;
+			dY = alpha/1.4;
+			break;
+		case 5:
+			dX = -alpha/1.4;
+			dY = -alpha/1.4;
+			break;
+		case 6:
+			dX = -alpha/1.4;
+			dY = alpha/1.4;
+			break;
+		case 7:
+			dX = alpha/1.4;
+			dY = -alpha/1.4;
+			break;
+	}
+
+
+	for (unsigned int i = 0; i < poly->size(); i++) {
+		double X1, Y1;
+
+		X1 = CGAL::to_double((*poly)[i].x());
+		Y1 = CGAL::to_double((*poly)[i].y());
+
+		if (i == target) {
+			X1 += dX;
+			Y1 += dY;
+		}
+
+		clone->push_back(Point(X1, Y1));
+	}
+	return clone;
+}
+
+static bool poly_valid(Polygon_2 *poly, class scene *scene)
+{
+	if (!poly->is_simple())
+		return false;
+	return scene->fits_inside(poly);
+}
+
+
+#define ITER 800
+#define ALPHA 2
+static Polygon_2 * optimize_bb(class scene *scene, Polygon_2 *boundingbox, bool quick, double best_bb_length) 
+{
+	int maxiter = ITER;
+	int i = ITER;
+	double alpha;
+	time_t target;
+
+	alpha = ALPHA;
+
+	target = time(NULL) + 5;
+
+	if (quick) {
+		maxiter = ITER * 2;
+		i = maxiter;
+		target = time(NULL) + 2;
+		alpha = 1;
+	}
+
+
+	while (i > 0) {
+		Polygon_2 *next;
+		double len;
+		i--;
+
+		if (time(NULL) > target)
+			break;
+
+		next = clone_mutate(boundingbox, alpha);
+		alpha = alpha * 0.99;
+		len = poly_length(next);
+
+		if (best_bb_length <= len) {
+			delete next;
+			continue;
+		}
+		if (!poly_valid(next, scene)) {
+			delete next;
+			continue;
+		}
+		delete boundingbox;
+		boundingbox = next;
+		if (len <= best_bb_length || (rand() % 400) == 21) {
+			alpha *= 2;
+			if (alpha < 0.1)
+				alpha = 0.1;
+			if (alpha > 8 && quick == 0)
+				alpha = 8;
+			if (alpha > 16 && quick == 1)
+				alpha = 16;
+			if (!quick)
+				i = maxiter;
+		}
+		best_bb_length = len;
+	}
+	vprintf("Winner with %5.2f  q %i\n", best_bb_length, quick);
+
+	return boundingbox;
+}
+
+
+void scene::optimize_cutout(void) 
+{
+	Polygon_2 *boundingbox;
+	boundingbox = cutout_clone_split(&cutout->poly, 1000);
+	unsigned int iter = 0;
+	double best_bb_length;
+	do {
+		double prev;
+		best_bb_length = poly_length(boundingbox);
+
+		prev = best_bb_length;
+		boundingbox = cutout_clone_split(boundingbox, 4);
+
+		boundingbox = optimize_bb(this, boundingbox, false, best_bb_length);
+
+//		if (iter % 2 == 1 )
+//			boundingbox = optimize_bb(this, boundingbox, false, best_bb_length);
+
+		best_bb_length = poly_length(boundingbox);
+
+		vprintf("BB opt from %5.2f to %5.2f at size %i\n", prev, best_bb_length, (int)boundingbox->size());
+
+		if (prev - best_bb_length  < 0.5)
+			break;
+
+		if (boundingbox->size() > 128)
+			break;
+
+		iter++;
+	} while (1);
+
+	boundingbox = optimize_bb(this, boundingbox, false, best_bb_length);
+
+	best_bb_length = poly_length(boundingbox);
+
+	vprintf("Final bb opt %5.2f with size %i\n", best_bb_length, (int)boundingbox->size());
+
+	cutout->poly = *boundingbox;
+
+}
+
 
 class scene * scene::clone_scene(class scene *input, int mirror, double Xadd)
 {
@@ -432,13 +664,8 @@ class scene * scene::clone_scene(class scene *input, int mirror, double Xadd)
 		xmax = fmax(bbox.xmax(), xmax);
 		ymax = fmax(bbox.ymax(), ymax);
   }
-  double outset = 10;
 
-  scene->new_poly(         xmin - outset, ymin - outset);
-  scene->add_point_to_poly(xmin - outset, ymax + outset);
-  scene->add_point_to_poly(xmax + outset, ymax + outset);
-  scene->add_point_to_poly(xmax + outset, ymin - outset);
-  scene->end_poly();
+  double outset;
 
   if (cutout_depth) {
 	  outset = 7;
@@ -448,11 +675,24 @@ class scene * scene::clone_scene(class scene *input, int mirror, double Xadd)
 	  scene->add_point_to_poly(xmax + outset, ymin - outset);
 	  scene->end_poly();
 
-	  scene->cutout = scene->shapes[scene->shapes.size() - 2];
+	  scene->cutout = scene->shapes[scene->shapes.size() - 1];
 	  scene->set_cutout_depth(cutout_depth);
-	  scene->shapes.erase(scene->shapes.begin() + scene->shapes.size() - 2);
+	  scene->shapes.erase(scene->shapes.begin() + scene->shapes.size() - 1);
 	  scene->cutout->is_cutout = true;
+	  scene->cutout->set_cutout_offset(5);
+
+	  scene->optimize_cutout();
   }
+
+  /* box for area clearance */
+  outset = 10;
+
+  scene->new_poly(         xmin - outset, ymin - outset);
+  scene->add_point_to_poly(xmin - outset, ymax + outset);
+  scene->add_point_to_poly(xmax + outset, ymax + outset);
+  scene->add_point_to_poly(xmax + outset, ymin - outset);
+  scene->end_poly();
+
 
   scene->force_minY(minY);
 
@@ -461,4 +701,17 @@ class scene * scene::clone_scene(class scene *input, int mirror, double Xadd)
 
   scene->process_nesting();    
   return scene;
+}
+
+
+bool scene::fits_inside(Polygon_2 *bound)
+{
+   for (auto inp : shapes) {
+		for(auto vi = inp->poly.vertices_begin() ; vi != inp->poly.vertices_end() ; ++ vi ) {
+			if (bound->bounded_side(*vi) == CGAL::ON_UNBOUNDED_SIDE) {
+			       return false;
+			}
+		}
+	}
+   return true;
 }

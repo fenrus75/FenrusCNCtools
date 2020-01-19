@@ -307,7 +307,7 @@ void inputshape::create_toolpaths_cutout(int toolnr, double depth, bool finish_p
 	}
 #endif
 	outset += 4 * tool_diam(toolnr);
-	outset += 40;
+	outset += 40 + cutout_offset;
 
 	vprintf("Cutout Outset is %5.2f mm\n", outset);
 
@@ -329,7 +329,7 @@ void inputshape::create_toolpaths_cutout(int toolnr, double depth, bool finish_p
 	/* Step 4: Inset the ISS by tool radius */
 	PolygonWithHolesPtrVector  offset_polygons;
 
-	offset_polygons = arrange_offset_polygons_2(CGAL::create_offset_polygons_2<Polygon_2>(get_tool_diameter()/2, *ciss) );
+	offset_polygons = arrange_offset_polygons_2(CGAL::create_offset_polygons_2<Polygon_2>(get_tool_diameter()/2 + cutout_offset, *ciss) );
 
 
 	/* Step 5: The hole perimiter is now our path for the tool */

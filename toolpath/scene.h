@@ -13,6 +13,9 @@ using namespace std;
 
 #include <vector>
 
+
+#include "tool.h"
+
 class input_shape;
 
 class scene {
@@ -93,6 +96,9 @@ public:
 
 		class scene *inlay_plug;
 
+		bool fits_inside(Polygon_2 *poly);
+
+		void optimize_cutout(void);
 
         
 private:
@@ -116,6 +122,7 @@ private:
         
         void consolidate_toolpaths(void);
         void flatten_nesting(void);
+
         
 };
 

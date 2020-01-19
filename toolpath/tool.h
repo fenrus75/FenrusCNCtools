@@ -27,6 +27,7 @@ typedef CGAL::Exact_predicates_exact_constructions_kernel K ;
 #endif
 typedef K::Point_2                   Point ;
 typedef CGAL::Polygon_2<K>           Polygon_2 ;
+typedef CGAL::Vector_2<K>            Vector_2 ;
 typedef CGAL::Straight_skeleton_2<K> Ss ;
 typedef boost::shared_ptr<Polygon_2> PolygonPtr ;
 typedef boost::shared_ptr<Ss> SsPtr ;
@@ -190,6 +191,7 @@ public:
 		is_cutout = false;
 		z_offset = 0.0;
 		stock_to_leave = 0.1;
+		cutout_offset = 0.0;
     }
     void set_level(int _level);
     void add_child(class inputshape *child);
@@ -216,6 +218,9 @@ public:
 
 	void set_stock_to_leave(double d) { stock_to_leave = d; };
 	double get_stock_to_leave(void) { return stock_to_leave; };
+
+	void set_cutout_offset(double d) { cutout_offset = d; };
+	double get_cutout_offset(void) { return cutout_offset; };
 
 
     double area;
@@ -249,6 +254,7 @@ private:
     double bbX1, bbY1, bbX2, bbY2;
     double minY;
 	double z_offset;
+	double cutout_offset;
 	double stock_to_leave;
 };
     
