@@ -43,6 +43,7 @@ public:
         double get_maxY(void);
         
         void declare_minY(double Y);
+        void force_minY(double Y) { minY = Y;}
         void declare_maxX(double X) { if (X > maxX) maxX = X;};
 
         void new_poly(double X, double Y);

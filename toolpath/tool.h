@@ -224,6 +224,7 @@ public:
     
     void set_name(const char *n);
     void set_minY(double mY);
+	double get_minY(void) { return minY;};
     double distance_from_edge(double X, double Y, bool exclude_zero);
 	CGAL::Bbox_2 get_bbox(void) { return poly.bbox(); };
     

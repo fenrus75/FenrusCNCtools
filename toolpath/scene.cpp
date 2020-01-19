@@ -434,8 +434,7 @@ class scene * scene::clone_scene(class scene *input, int mirror, double Xadd)
   }
   double outset = 10;
 
-
-  scene->new_poly(xmin - outset, ymin - outset);
+  scene->new_poly(         xmin - outset, ymin - outset);
   scene->add_point_to_poly(xmin - outset, ymax + outset);
   scene->add_point_to_poly(xmax + outset, ymax + outset);
   scene->add_point_to_poly(xmax + outset, ymin - outset);
@@ -443,7 +442,7 @@ class scene * scene::clone_scene(class scene *input, int mirror, double Xadd)
 
   if (cutout_depth) {
 	  outset = 7;
-	  scene->new_poly(xmin - outset, ymin - outset);
+	  scene->new_poly(         xmin - outset, ymin - outset);
 	  scene->add_point_to_poly(xmin - outset, ymax + outset);
 	  scene->add_point_to_poly(xmax + outset, ymax + outset);
 	  scene->add_point_to_poly(xmax + outset, ymin - outset);
@@ -454,6 +453,8 @@ class scene * scene::clone_scene(class scene *input, int mirror, double Xadd)
 	  scene->shapes.erase(scene->shapes.begin() + scene->shapes.size() - 2);
 	  scene->cutout->is_cutout = true;
   }
+
+  scene->force_minY(minY);
 
   if (scene->toollist.size() == 0)
 		scene->toollist = toollist;
