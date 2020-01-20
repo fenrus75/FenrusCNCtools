@@ -17,8 +17,7 @@ MainWindow::MainWindow(QWidget *parent)
 
   connect(quit, &QAction::triggered, qApp, QApplication::quit);
 
-  MainWidget *mainwidget = new MainWidget(this);
-
+  mainwidget = new MainWidget(this);
   setCentralWidget(mainwidget);
 
 

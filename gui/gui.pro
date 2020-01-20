@@ -5,9 +5,12 @@
 TEMPLATE = app
 TARGET = gui
 INCLUDEPATH += .
+INCLUDEPATH += ../toolpath/
 
 QT += widgets
 
 # Input
-HEADERS += mainwindow.h mainwidget.h
-SOURCES += main.cpp mainwindow.cpp mainwidget.cpp
+HEADERS += mainwindow.h mainwidget.h drawarea.h
+SOURCES += main.cpp mainwindow.cpp mainwidget.cpp drawarea.cpp
+LIBS += -lCGAL -lgmp -lCGAL_Core -lmpfr
+
