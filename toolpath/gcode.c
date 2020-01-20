@@ -144,8 +144,29 @@ void gcode_retract(void)
 void gcode_mill_to(double X, double Y, double Z, double speedratio)
 {
 
-    if (cZ != Z)
+    if (cZ != Z) {
         gcode_plunge_to(Z, speedratio);
+	}
+
+	/* slow start and stop for long distances */
+	if (speedratio == 1.0 && dist(cX,cY,X,Y) >= 1.5 * tool_diameter) {
+		double vX,vY, len;
+		vX = X - cX;
+		vY = Y - cY;
+		len = sqrt(vX*vX + vY * vY);
+		vX /= len;
+		vY /= len;
+
+		gcode_mill_to(cX + vX * tool_diameter/2, cY + vY * tool_diameter/2, Z, 0.66);
+		gcode_mill_to(X - vX * tool_diameter/2, Y - vY * tool_diameter/2, Z, 1.01);
+		gcode_mill_to(X, Y, Z, 0.66);
+		return;
+	} 
+
+	/* slow down for round corners */
+	if (dist(cX,cY,X,Y) < 0.3 * tool_diameter && speedratio > 0.66)
+		speedratio = 0.66;
+
     fprintf(gcode, "G1");
     if (cX != X)
         fprintf(gcode,"X%5.4f", X);
@@ -184,6 +205,12 @@ void gcode_vmill_to(double X, double Y, double Z, double speedratio)
         fprintf(gcode,"Y%5.4f", Y);
 	    cY = Y;
 	}
+
+	/* slow down for round corners */
+	if (dist(cX,cY,X,Y) < 0.5 * tool_diameter && speedratio > 0.66)
+		speedratio = 0.66;
+
+
     if (cZ != Z)
         fprintf(gcode,"Z%5.4f", Z);
     if (cS != speedratio * tool_feedrate)
