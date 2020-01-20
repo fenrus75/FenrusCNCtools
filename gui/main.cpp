@@ -66,7 +66,6 @@ int main(int argc, char **argv)
 
     QApplication app(argc, argv);
 
-    MainWindow window;
 
     
     class scene *scene;
@@ -75,6 +74,8 @@ int main(int argc, char **argv)
     
     read_tool_lib("toollib.csv");
     
+    MainWindow window;
+
     scene->set_depth(inch_to_mm(0.044));
 
     while ((opt = getopt_long(argc, argv, "vfsil:t:d:D:", long_options, &option_index)) != -1) {

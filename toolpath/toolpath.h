@@ -63,6 +63,7 @@ extern void read_tool_lib(const char *filename);
 extern int have_tool(int nr);
 extern int next_tool(int nr);
 extern int first_tool(void);
+extern const char * get_tool_name(int nr);
 extern void activate_tool(int nr);
 extern void print_tools(void);
 extern const char * tool_svgcolor(int toolnr);

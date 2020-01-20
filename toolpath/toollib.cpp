@@ -226,6 +226,16 @@ int have_tool(int nr)
     return 0;
 }
 
+
+const char * get_tool_name(int nr)
+{
+    nr = abs(nr);
+    for (auto tool : tools)
+        if (tool->number == nr)
+            return tool->name;
+    return "<none>";
+}
+
 int first_tool(void)
 {
     for (auto tool : tools)

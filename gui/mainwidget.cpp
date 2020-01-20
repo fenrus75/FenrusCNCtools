@@ -1,5 +1,6 @@
 #include "mainwidget.h"
 #include "drawarea.h"
+#include "toolwidget.h"
 #include <QMenu>
 #include <QMenuBar>
 #include <QStatusBar>
@@ -14,6 +15,10 @@ MainWidget::MainWidget(QWidget *parent)
   QVBoxLayout *right = new QVBoxLayout();
 
   drawarea = new DrawArea(this);
+
+  toolwidget = new ToolWidget(this);
+
+  left->addWidget(toolwidget, Qt::AlignTop);
 
 
   hbox->addLayout(left);
