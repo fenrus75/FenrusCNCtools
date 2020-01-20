@@ -41,9 +41,9 @@ void DrawArea::create_qgraphicsscene_from_scene(void)
 			double X1, Y1, X2, Y2;
 
 			X1 = CGAL::to_double((input->poly)[i].x());
-			Y1 = CGAL::to_double((input->poly)[i].y());
+			Y1 = -CGAL::to_double((input->poly)[i].y());
 			X2 = CGAL::to_double((input->poly)[next].x());
-			Y2 = CGAL::to_double((input->poly)[next].y());
+			Y2 = -CGAL::to_double((input->poly)[next].y());
 
 
 			qscene->addLine(mm_to_px(X1), mm_to_px(Y1), mm_to_px(X2), mm_to_px(Y2), pen);
@@ -57,9 +57,9 @@ void DrawArea::create_qgraphicsscene_from_scene(void)
 				double X1, Y1, X2, Y2;
 
 				X1 = CGAL::to_double((input2->poly)[i].x());
-				Y1 = CGAL::to_double((input2->poly)[i].y());
+				Y1 = -CGAL::to_double((input2->poly)[i].y());
 				X2 = CGAL::to_double((input2->poly)[next].x());
-				Y2 = CGAL::to_double((input2->poly)[next].y());
+				Y2 = -CGAL::to_double((input2->poly)[next].y());
 
 
 				qscene->addLine(mm_to_px(X1), mm_to_px(Y1), mm_to_px(X2), mm_to_px(Y2), pen);
