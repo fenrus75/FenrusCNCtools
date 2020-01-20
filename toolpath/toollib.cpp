@@ -226,6 +226,27 @@ int have_tool(int nr)
     return 0;
 }
 
+int first_tool(void)
+{
+    for (auto tool : tools)
+		return tool->number;
+    return -1;
+}
+
+
+int next_tool(int nr)
+{
+	bool prevhit = false;
+    nr = abs(nr);
+    for (auto tool : tools) {
+		if (prevhit)
+			return tool->number;
+        if (tool->number == nr)
+            prevhit = true;
+	}
+    return -1;
+}
+
 void activate_tool(int nr)
 {
     char toolnr[32];

@@ -94,7 +94,29 @@ void scene::end_poly(void)
 
 void scene::push_tool(int toolnr)
 {
-  toollist.push_back(toolnr);
+	if (has_tool(toolnr))
+		return;
+	toollist.push_back(toolnr);
+}
+
+void scene::drop_tool(int toolnr)
+{
+	for (unsigned int i = 0; i < toollist.size(); i++) {
+		if (toollist[i] == toolnr) {
+			toollist.erase(toollist.begin() + i);
+			return;
+		}
+	}
+}
+
+bool scene::has_tool(int toolnr)
+{
+	for (unsigned int i = 0; i < toollist.size(); i++) {
+		if (toollist[i] == toolnr) {
+			return true;
+		}
+	}
+	return false;
 }
 
 void scene::set_default_tool(int toolnr)

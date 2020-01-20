@@ -55,6 +55,8 @@ public:
         void end_poly(void);
         
         void push_tool(int toolnr);
+        void drop_tool(int toolnr);
+        bool has_tool(int toolnr);
         void set_default_tool(int toolnr);
         
         void write_naked_svg(void);
