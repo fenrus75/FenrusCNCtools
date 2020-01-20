@@ -1,0 +1,6 @@
+gui
+Makefile
+.qmake.stash
+*.o
+*.fo
+*~

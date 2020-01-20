@@ -324,7 +324,7 @@ void scene::create_toolpaths(void)
     } else {
       vprintf("Tool %i goes from %5.2f mm to %5.2f mm\n", toolnr, start, end);
 	  bool inbetween = want_inbetween_paths();
-      while (currentdepth < - z_offset) {
+      while (currentdepth < - z_offset - 0.00000001) {
 	    
 	    	/* we want courser tools to not get within the stepover of the finer tool */
 		    if (tool < (int)toollist.size() -1)

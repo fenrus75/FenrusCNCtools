@@ -1,4 +1,5 @@
 *.o
+*.fo
 toolpath
 *~
 DEADJOE
@@ -7,3 +8,6 @@ cgaltest
 *.nc
 *.c2d
 la_test
+toolpath-fine
+todo
+*.patch
