@@ -34,37 +34,29 @@ void DrawArea::create_qgraphicsscene_from_scene(void)
 	QPen pen(Qt::black, 2, Qt::SolidLine);  
 
 	for (auto input : scene->shapes) {
+		QPolygonF *newpoly = new(QPolygonF);
+
 		for (unsigned int i = 0; i < input->poly.size(); i++) {
-			unsigned int next = i + 1;
-			if (next >= input->poly.size())
-				next = 0;
-			double X1, Y1, X2, Y2;
+			double X1, Y1;
 
 			X1 = CGAL::to_double((input->poly)[i].x());
 			Y1 = -CGAL::to_double((input->poly)[i].y());
-			X2 = CGAL::to_double((input->poly)[next].x());
-			Y2 = -CGAL::to_double((input->poly)[next].y());
 
-
-			qscene->addLine(mm_to_px(X1), mm_to_px(Y1), mm_to_px(X2), mm_to_px(Y2), pen);
+			*newpoly << QPointF(mm_to_px(X1), mm_to_px(Y1));
 		}
+		qscene->addPolygon(*newpoly, pen);
 
 		for (auto input2 : input->children) {
+			QPolygonF *newpoly = new(QPolygonF);
 			for (unsigned int i = 0; i < input2->poly.size(); i++) {
-				unsigned int next = i + 1;
-				if (next >= input2->poly.size())
-					next = 0;
-				double X1, Y1, X2, Y2;
+				double X1, Y1;
 
 				X1 = CGAL::to_double((input2->poly)[i].x());
 				Y1 = -CGAL::to_double((input2->poly)[i].y());
-				X2 = CGAL::to_double((input2->poly)[next].x());
-				Y2 = -CGAL::to_double((input2->poly)[next].y());
-
-
-				qscene->addLine(mm_to_px(X1), mm_to_px(Y1), mm_to_px(X2), mm_to_px(Y2), pen);
+				*newpoly << QPointF(mm_to_px(X1), mm_to_px(Y1));
 
 			}
+			qscene->addPolygon(*newpoly, pen);
 		}
 	}
 	view = new QGraphicsView(qscene);

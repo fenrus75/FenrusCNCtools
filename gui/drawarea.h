@@ -2,7 +2,6 @@
 
 #include <QMainWindow>
 #include <QApplication>
-#include <QGLWidget>
 #include <QGraphicsScene>
 #include <QGraphicsView>
 

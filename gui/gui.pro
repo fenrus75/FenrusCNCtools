@@ -7,7 +7,7 @@ TARGET = gui
 INCLUDEPATH += .
 INCLUDEPATH += ../toolpath/
 
-QT += widgets opengl
+QT += widgets 
 
 # Input
 HEADERS += mainwindow.h mainwidget.h drawarea.h
@@ -15,4 +15,7 @@ SOURCES += main.cpp mainwindow.cpp mainwidget.cpp drawarea.cpp
 
 SOURCES += ../toolpath/parse_svg.cpp ../toolpath/scene.cpp ../toolpath/inputshape.cpp ../toolpath/svg.c ../toolpath/toollib.cpp ../toolpath/gcode.c ../toolpath/linalg.c ../toolpath/toollevel.cpp ../toolpath/toolpath.cpp ../toolpath/tooldepth.cpp
 LIBS += -lCGAL -lgmp -lCGAL_Core -lmpfr
+
+QMAKE_CXXFLAGS += -flto 
+QMAKE_CFLAGS += -flto 
 
