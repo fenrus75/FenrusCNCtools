@@ -100,10 +100,10 @@ public:
 
 		void optimize_cutout(void);
 
+        vector<class inputshape *> shapes;
         
 private:
         vector<int> toollist;
-        vector<class inputshape *> shapes;
 		class inputshape * cutout;
 
         class inputshape *shape;

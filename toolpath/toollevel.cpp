@@ -322,7 +322,7 @@ void toollevel::trim_intersects(void)
 		}
 		for (j = 0; j < toolpaths.size(); j++) {
 			double this_l;
-			double X3,Y3,X4,Y4;
+			double X3 = 0,Y3 = 0,X4 = 0,Y4 = 0;
 			if (i == j)
 				continue;
 
