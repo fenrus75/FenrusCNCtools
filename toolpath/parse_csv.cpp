@@ -131,8 +131,6 @@ static void sphere(class inputshape *input, double X, double Y, double Z, double
 
 		r  = sqrt(R * R - z * z);
 
-		printf("z is %5.2f,  R is %5.2f  r is %5.2f\n", z, R, r);
-
 		circle(input, X, Y, Z + z, r);
 		r += so;
 		if (r > R)
@@ -146,7 +144,6 @@ static void sphere(class inputshape *input, double X, double Y, double Z, double
 		if (deltaZ < 0.01)
 			deltaZ = 0.01;
 
-		printf("DeltaZ is %5.2f,    r = %5.2f, z = %5.2f\n", deltaZ, r, z);
 		z += deltaZ;
 	}
 	first = true;	
