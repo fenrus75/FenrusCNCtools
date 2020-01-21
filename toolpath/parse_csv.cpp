@@ -106,7 +106,7 @@ static void circle(class inputshape *input, double X, double Y, double Z, double
     while (phi <= 360) {
         double P;
         P = phi / 360.0 * 2 * M_PI;
-		if (first || dist(X + R * cos(P), Y + R * sin(P), last_X, last_Y) > 0.2)
+		if (first || dist(X + R * cos(P), Y + R * sin(P), last_X, last_Y) > 0.2 || phi >= 359)
 			line_to(input, X + R * cos(P), Y + R * sin(P), Z );
         phi = phi + 1;
     }
