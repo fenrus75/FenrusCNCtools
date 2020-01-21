@@ -4,6 +4,8 @@
 #include <errno.h>
 #include <string.h>
 
+#include <algorithm>
+
 extern "C" {
     #include "toolpath.h"
 }
@@ -31,6 +33,8 @@ struct tool {
 static vector<struct tool *> tools;
 
 static struct tool * current;
+
+
 
 /* 
 0 number,
@@ -95,6 +99,15 @@ static void print_tool(struct tool *current)
 	    printf("\tPlungerate   : %5.0f ipm (%5.0f mmpm)\n", current->plungerate_ipm, ipm_to_metric(current->plungerate_ipm));
 	}
 	current->printed = true;
+}
+
+static bool compare_tools(struct tool *A, struct tool *B)
+{
+	if (A->diameter_inch > B->diameter_inch)
+		return true;
+	if (A->diameter_inch < B->diameter_inch)
+		return false;
+	return (A->number < B->number);
 }
 
 void print_tools(void)
@@ -214,7 +227,7 @@ void read_tool_lib(const char *filename)
         linenr++;
     }
     fclose(file);
-    
+	sort(tools.begin(), tools.end()  , compare_tools);    
 }
 
 int have_tool(int nr)

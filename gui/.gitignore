@@ -4,3 +4,6 @@ Makefile
 *.o
 *.fo
 *~
+moc_*.cpp
+*.svg
+toollib.csv
