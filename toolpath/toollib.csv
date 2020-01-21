@@ -4,5 +4,6 @@ number,vendor,model,URL,name,type,diameter,cornerradius,flutelength,shaftdiamete
 302,Carbide 3D,302,https://shop.carbide3d.com/products/302-0-50-v-bit-cutter-60-qty-2,60 degree V bit,vee,0.5,0,0.25,0,60,2,0.125,,0,,,,12,35,18000,0.1,,0,20,100,18000
 201,Whiteside,201,https://shop.carbide3d.com/products/201-25-end-mill-cutter-qty-2,Whiteside 1/4"""" downcut,end,0.25,0,0.75,0,0,3,0.125,,0,,,,15,60,18000,0.05,,0.02,20,60,18000
 102,HQMaster,102,https://shop.carbide3d.com/products/102-125-flat-cutter-qty-3,HQMaster 1/8"""" downcut,end,0.125,0,0.75,0,0,2,0.125,,0,,,,18,45,18000,0.045,,0.02,20,45,18000
+101,Cabide 3D,101,https://shop.carbide3d.com/products/102-125-flat-cutter-qty-3,1/8"""" ballnose,end,0.125,0,0.75,0,0,2,0.125,,0,,,,18,45,18000,0.045,,0.02,20,45,18000
 19,HQMaster,19,https://shop.carbide3d.com/products/201-25-end-mill-cutter-qty-2,HQMaster 1.5mm cutter,end,0.059,0,0.75,0,0,3,0.125,,0,,,,15,16,18000,0.031,,0.02,20,16,18000
 23,Carbide 3D,1372,https://shop.carbide3d.com/products/202-25-ball-cutter-qty-2,Whiteside Router Bits 1372 Bowl and Tray Bit,ball,0.75,0,0.75,0,0,3,0.125,,0,,,,15,25,18000,0.04,,0.02,20,25,18000

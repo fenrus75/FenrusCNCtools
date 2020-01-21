@@ -57,6 +57,7 @@ public:
         toolnr = 0;
         minY = 0;
 	    color = NULL;
+		priority = 0.0;
     }
 
     int level;
@@ -90,6 +91,7 @@ public:
 
     vector<Polygon_2*> polygons;
 	const char *color;
+	double priority;
 private:
     void output_gcode_slotting(void);
     void output_gcode_reverse(void);
@@ -123,7 +125,7 @@ public:
     double minY;
     
     void add_poly(Polygon_2 *poly, bool is_hole);
-    void add_poly_vcarve(Polygon_2 *poly, double depth1, double depth2, const char *color = NULL);
+    void add_poly_vcarve(Polygon_2 *poly, double depth1, double depth2, double prio = 0.0, const char *color = NULL);
     vector<class toolpath*> toolpaths;
 
 	void consolidate(void);

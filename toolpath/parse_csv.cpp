@@ -21,7 +21,7 @@ extern "C" {
 static double last_X, last_Y, last_Z;
 static bool first = true;
 static double tooldepth = 0.1;
-
+static double prio = 0;
 static int toolnr;
 
 #ifndef FINE
@@ -90,7 +90,7 @@ static void line_to(class inputshape *input, double X2, double Y2, double Z2)
 		p2 = new(Polygon_2);
 		p2->push_back(Point(X1, Y1));
 		p2->push_back(Point(X2, Y2));
-		input->tooldepths[depth]->toollevels[0]->add_poly_vcarve(p2, Z1, Z2);
+		input->tooldepths[depth]->toollevels[0]->add_poly_vcarve(p2, Z1, Z2, prio);
 		
 		Z1 += tooldepth;
 		Z2 += tooldepth;
@@ -103,6 +103,7 @@ static void circle(class inputshape *input, double X, double Y, double Z, double
     double phi;
 	first = true;
     phi = 0;
+	prio = R;
     while (phi <= 360) {
         double P;
         P = phi / 360.0 * 2 * M_PI;
@@ -111,6 +112,7 @@ static void circle(class inputshape *input, double X, double Y, double Z, double
         phi = phi + 1;
     }
 	first = true;
+	prio = 0;
 }
 
 static void sphere(class inputshape *input, double X, double Y, double Z, double R)

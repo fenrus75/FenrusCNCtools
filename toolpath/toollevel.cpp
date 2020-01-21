@@ -30,6 +30,14 @@ void toollevel::print_as_svg(void)
 static double sortX, sortY;
 static bool compare_path(class toolpath *A, class toolpath *B)
 {
+	if (A->depth > B->depth)
+		return true;
+	if (A->depth < B->depth)
+		return false;
+	if (A->priority < B->priority)
+		return true;
+	if (A->priority > B->priority)
+		return false;
     return (A->distance_from(sortX, sortY) < B->distance_from(sortX, sortY));
 }
 
@@ -459,7 +467,7 @@ void toollevel::add_poly(Polygon_2 *poly, bool is_hole)
     toolpaths.push_back(tp);    
 }
 
-void toollevel::add_poly_vcarve(Polygon_2 *poly, double depth1, double depth2, const char *color)
+void toollevel::add_poly_vcarve(Polygon_2 *poly, double depth1, double depth2, double prio, const char *color)
 {
     /* check if the same path is already there if we're slotting */
 #if 1
@@ -489,6 +497,7 @@ void toollevel::add_poly_vcarve(Polygon_2 *poly, double depth1, double depth2, c
     tp->diameter = diameter;
     tp->is_single = true;
 	tp->color = color;
+	tp->priority = prio;
     toolpaths.push_back(tp);    
 }
 
