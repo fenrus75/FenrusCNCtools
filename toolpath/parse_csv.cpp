@@ -97,6 +97,60 @@ static void line_to(class inputshape *input, double X2, double Y2, double Z2)
 	}
 }
 
+
+static void circle(class inputshape *input, double X, double Y, double Z, double R)
+{
+    double phi;
+	first = true;
+    phi = 0;
+    while (phi <= 360) {
+        double P;
+        P = phi / 360.0 * 2 * M_PI;
+		if (first || dist(X + R * cos(P), Y + R * sin(P), last_X, last_Y) > 0.2)
+			line_to(input, X + R * cos(P), Y + R * sin(P), Z );
+        phi = phi + 1;
+    }
+	first = true;
+}
+
+static void sphere(class inputshape *input, double X, double Y, double Z, double R)
+{
+	double z = - R;
+	double so = get_tool_stepover(toolnr);
+	double maxz;
+
+	maxz = so;
+	if (maxz > tooldepth / 2)
+		maxz = tooldepth / 2;
+	
+	while (z < -0.00001) {
+		double r;
+		double deltaZ, z2;
+
+		r  = sqrt(R * R - z * z);
+
+		printf("z is %5.2f,  R is %5.2f  r is %5.2f\n", z, R, r);
+
+		circle(input, X, Y, Z + z, r);
+		r += so;
+		if (r > R)
+			r = R;
+
+		z2 = sqrt(R*R - r*r);
+		deltaZ = z2 - z;
+		if (deltaZ > maxz)
+			deltaZ = maxz;
+
+		if (deltaZ < 0.01)
+			deltaZ = 0.01;
+
+		printf("DeltaZ is %5.2f,    r = %5.2f, z = %5.2f\n", deltaZ, r, z);
+		z += deltaZ;
+	}
+	first = true;	
+}
+
+
 static void cubic_bezier(class inputshape *inputshape,
                          double x0, double y0, double z0,
                          double x1, double y1, double z1,
@@ -224,6 +278,9 @@ static void parse_line(class inputshape *inputshape, char *line)
         case 3:
 			line_to(inputshape, arg1, arg2, arg3);
             break;
+		case 4:
+			sphere(inputshape, arg1, arg2, arg3, arg4);
+			break;
         case 9:
             cubic_bezier(inputshape, last_X, last_Y, last_Z, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9);
             break;
