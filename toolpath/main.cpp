@@ -135,12 +135,16 @@ int main(int argc, char **argv)
     scene->set_default_tool(tool);
 
     for(; optind < argc; optind++) {      
-		parse_svg_file(scene, argv[optind]);
-		scene->set_filename(argv[optind]);
+		if (strstr(argv[optind], ".csv")) {
+			parse_csv_file(scene, argv[optind], tool);
+		} else {
+			parse_svg_file(scene, argv[optind]);
+			scene->set_filename(argv[optind]);
 
-		scene->process_nesting();
+			scene->process_nesting();
 
-		scene->create_toolpaths();
+			scene->create_toolpaths();
+		}
 		
 		scene->write_svg("output.svg");
 		scene->write_gcode("output.nc", "main design");

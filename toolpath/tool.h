@@ -222,7 +222,6 @@ public:
 	void set_cutout_offset(double d) { cutout_offset = d; };
 	double get_cutout_offset(void) { return cutout_offset; };
 
-
     double area;
     int level;
     vector<class inputshape*> children;
@@ -241,6 +240,7 @@ public:
 	bool is_cutout;
 
     Polygon_2 poly;    
+    vector<class tooldepth*> tooldepths;
 
 private:
     const char *name;
@@ -249,7 +249,6 @@ private:
     vector<SsPtr>	skeleton;
     SsPtr iss;
     
-    vector<class tooldepth*> tooldepths;
     
     double bbX1, bbY1, bbX2, bbY2;
     double minY;
@@ -263,6 +262,6 @@ private:
 #include "scene.h"
 
 extern void parse_svg_file(class scene * scene, const char *filename);
-
+extern void parse_csv_file(class scene *scene, const char *filename, int toolnr);
 
 #endif
