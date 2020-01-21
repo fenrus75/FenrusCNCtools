@@ -115,11 +115,17 @@ static void circle(class inputshape *input, double X, double Y, double Z, double
 	prio = 0;
 }
 
-static void sphere(class inputshape *input, double X, double Y, double Z, double R)
+static void sphere(class scene *scene, double X, double Y, double Z, double R)
 {
 	double z = - R;
 	double so = get_tool_stepover(toolnr);
 	double maxz;
+
+	class inputshape *input;
+
+	input = new(class inputshape);
+	input->set_name("Sphere path");
+	scene->shapes.push_back(input);
 
 	maxz = so;
 	if (maxz > tooldepth / 2)
@@ -235,12 +241,13 @@ static void quadratic_bezier(class inputshape *inputshape,
 	line_to(inputshape, x3, y3, z3);
 }                    
 
-static void parse_line(class inputshape *inputshape, char *line)
+static bool parse_line(class scene *scene, class inputshape *inputshape, char *line)
 {
     char *c;
 
 	char *chunk = line;
 	int argcount = 0;
+	bool need_new_input = false;
 
     double arg1 = 0.0, arg2 = 0.0, arg3 = 0.0, arg4 = 0.0, arg5 = 0.0, arg6 = 0.0, arg7 = 0.0, arg8 = 0.0, arg9 = 0.0;
 
@@ -278,7 +285,8 @@ static void parse_line(class inputshape *inputshape, char *line)
 			line_to(inputshape, arg1, arg2, arg3);
             break;
 		case 4:
-			sphere(inputshape, arg1, arg2, arg3, arg4);
+			sphere(scene, arg1, arg2, arg3, arg4);
+			need_new_input = true;
 			break;
         case 9:
             cubic_bezier(inputshape, last_X, last_Y, last_Z, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9);
@@ -288,11 +296,12 @@ static void parse_line(class inputshape *inputshape, char *line)
             break;
 		case 0:
             first = true;
+			need_new_input = true;
             break;
         default:
             printf("Unparsable line %s\n", line);
     }
-    
+    return need_new_input;
 }
 
 
@@ -310,9 +319,7 @@ void parse_csv_file(class scene *scene, const char *filename, int tool)
 	class inputshape *input;
 
 	input = new(class inputshape);
-
 	input->set_name("Manual path");
-
 	scene->shapes.push_back(input);
 
 	printf("Opening %s\n", filename);
@@ -328,7 +335,11 @@ void parse_csv_file(class scene *scene, const char *filename, int tool)
         char *line = NULL;
         ret = getline(&line, &n, file);
         if (ret >= 0) {
-            parse_line(input, line);
+			if (parse_line(scene, input, line)) {
+				input = new(class inputshape);
+				input->set_name("Manual path");
+				scene->shapes.push_back(input);
+			}
             free(line);
         }
     }

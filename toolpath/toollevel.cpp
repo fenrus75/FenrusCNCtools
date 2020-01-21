@@ -30,10 +30,12 @@ void toollevel::print_as_svg(void)
 static double sortX, sortY;
 static bool compare_path(class toolpath *A, class toolpath *B)
 {
-	if (A->depth > B->depth)
-		return true;
-	if (A->depth < B->depth)
-		return false;
+	if (A->distance_from(sortX, sortY) > 0.1 && B->distance_from(sortX, sortY) > 0.1) {
+		if (A->depth > B->depth)
+			return true;
+		if (A->depth < B->depth)
+			return false;
+	}
 	if (A->priority < B->priority)
 		return true;
 	if (A->priority > B->priority)
