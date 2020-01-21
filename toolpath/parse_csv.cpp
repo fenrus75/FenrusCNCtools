@@ -249,6 +249,8 @@ void parse_csv_file(class scene *scene, const char *filename, int tool)
 	toolnr = tool;
 	tooldepth = get_tool_maxdepth();
 
+	printf("Using tool %i with max depth of cut %5.2fmm\n", toolnr, tooldepth);
+
 	class inputshape *input;
 
 	input = new(class inputshape);
