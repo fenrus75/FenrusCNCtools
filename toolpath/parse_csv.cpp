@@ -121,6 +121,7 @@ static void cubic_bezier(class inputshape *inputshape,
 
 	/* bad stuff happens if we end up and an exect multiple of 1 */
 	delta += 0.000013121;
+	delta = delta / 4;
     t = 0;
     while (t < 1.0) {
         double nX, nY, nZ;
@@ -162,6 +163,7 @@ static void quadratic_bezier(class inputshape *inputshape,
             delta = 1.0;
 
 	delta += 0.0000131313;
+	delta = delta / 4;
     
     t = 0;
     while (t < 1.0) {
@@ -245,6 +247,7 @@ void parse_csv_file(class scene *scene, const char *filename, int tool)
     FILE *file;
 
 	toolnr = tool;
+	tooldepth = get_tool_maxdepth();
 
 	class inputshape *input;
 
