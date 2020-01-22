@@ -34,6 +34,7 @@ toolpath: Makefile $(OBJS)
 
 toolpath.exe: Makefile $(WOBJS)
 	x86_64-w64-mingw32-g++ -static -O3 $(WOBJS) -o toolpath.exe -L/usr/mingw/lib  -lmpfr -lgmp -lboost_thread
+	x86_64-w64-mingw32-strip toolpath.exe 
 
 toolpath-fine: Makefile $(FOBJS)
 	g++ -g -O3 -flto $(FOBJS) -DFINE  -o toolpath-fine -lCGAL -lgmp -lCGAL_Core -lmpfr

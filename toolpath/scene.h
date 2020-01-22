@@ -36,6 +36,7 @@ public:
 			cutout_depth = 0;
 			depth = 0;	
 			stock_to_leave = 0.1;
+	    z_offset = 0;
         }
         
         scene(const char *filename);
