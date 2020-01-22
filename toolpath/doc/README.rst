@@ -29,6 +29,9 @@ Finishing pass
 Multiple tool pocketing for roughing
 
 
+Outside-in pocketing
+
+
 Spiraling cutout
 
 
@@ -42,10 +45,45 @@ Direct Drive toolpaths (CSV)
 
 
 
+Basic working assumptions
+-------------------------
+The toolpath tool assumes that the SVG is exported from Carbide Create, and
+that the topology has no overlaps or other "weird" things.
+Toolpath then will (from outside in) assume that you want to pocket clear
+the area of a shape it finds, but shapes are allowed to have holes that
+won't be pocketed. Holes can have shapes in them etc... basically an "even
+odd" model, where from outside in, every other line you cross will toggle
+"pocket" or "not pocket".
+Toolpath currently only supports 1 pocket depth (V carving, inlay and cutout paths
+behave specially) that is specified on the command line.
+Multiple tools can be specified on the command line, and the tool assumes
+that the order of tools is "Any V carve bits. Then pocket bits from large to
+small". Various options are available in metric and imperial units;
+internally toolpath uses metric units, conversion to/from imperial or other
+units happens at the boundaries of the program.
+
 
 Use examples
 ------------
 
+Create a V carve pocket with a maximum depth of 0.125" using the 60 degree V
+bit and using the 1/8th inch #102 bit for area clearing:
+
+toolpath -d 0.125 -t 302 -t 102 foo.svg
+
+
+Pocket the shape, using bit #201 in "outside in" direction for roughing, and
+bit #102 for final detail, also apply a finishing pass
+
+toolpath -d 0.125 -t -201 -t 102 --finshing-pass  foo.svg
+
+
+Create a V carve inlay with a 60 degree V bit, and use bits 201 and 102 for
+area clearance. Use the outer shape for cutout (using bit 201)
+
+toolpath -d 0.125 -t 302 -t 201 -t 102 --inlay --cutout 0.25  foo.sh
+
+ 
 
 
 
@@ -57,10 +95,11 @@ Things to fix
   this but will add another dependency
 
 
-Things to experiment with
+Future things to experiment with
+* Proper rest machining
 * The slotting toolpaths should likely be full speed at half depth instead
-* An "edge only" toolpath at half depth to reduce fuzz at the edges of the
-  cut
+	-- really should just implement more exact adaptive-style speeds
+
 
 
 
