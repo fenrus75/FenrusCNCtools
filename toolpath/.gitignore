@@ -11,3 +11,5 @@ la_test
 toolpath-fine
 todo
 *.patch
+*.wo
+toolpath.exe

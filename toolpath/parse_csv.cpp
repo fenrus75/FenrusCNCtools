@@ -5,6 +5,7 @@
  *
  * SPDX-License-Identifier: GPL-3.0
  */
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <unistd.h>
@@ -308,7 +309,6 @@ static bool parse_line(class scene *scene, class inputshape *inputshape, char *l
 
 void parse_csv_file(class scene *scene, const char *filename, int tool)
 {
-    size_t n;
     FILE *file;
 
 	toolnr = tool;
@@ -331,16 +331,15 @@ void parse_csv_file(class scene *scene, const char *filename, int tool)
     }
     
     while (!feof(file)) {
-        int ret;
-        char *line = NULL;
-        ret = getline(&line, &n, file);
-        if (ret >= 0) {
+        char * ret;
+        char line[40960];
+	ret = fgets(line, sizeof(line), file);
+        if (ret) {
 			if (parse_line(scene, input, line)) {
 				input = new(class inputshape);
 				input->set_name("Manual path");
 				scene->shapes.push_back(input);
 			}
-            free(line);
         }
     }
     fclose(file);

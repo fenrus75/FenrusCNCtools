@@ -5,6 +5,8 @@ OBJS := parse_csv.o linalg.o tooldepth.o toollib.o gcode.o toolpath.o inputshape
 
 FOBJS := parse_csv.o linalg.o tooldepth.fo toollib.fo gcode.o toolpath.fo inputshape.fo main.fo scene.fo toollevel.fo svg.o parse_svg.fo
 
+WOBJS := parse_csv.wo linalg.wo tooldepth.wo toollib.wo gcode.wo toolpath.wo inputshape.wo main.wo scene.wo toollevel.wo svg.wo parse_svg.wo
+
 
 %.o : %.c toolpath.h Makefile
 	    @echo "Compiling: $< => $@"
@@ -18,8 +20,20 @@ FOBJS := parse_csv.o linalg.o tooldepth.fo toollib.fo gcode.o toolpath.fo inputs
 	    @echo "Compiling: $< => $@ (fine)"
 	    @g++ $(CFLAGS) -O3 -flto -DFINE  -march=native -frounding-math -ffunction-sections -fno-common -Wall -W -g2 -c $< -o $@
 
+%.wo : %.cpp toolpath.h print.h tool.h Makefile scene.h
+	    @echo "Compiling: $< => $@ (windows)"
+	    @x86_64-w64-mingw32-g++ -I/usr/mingw/include -march=westmere  -L/usr/mingw/lib -Wno-address-of-packed-member -Wall -W -O2 -g -c $< -o $@
+
+%.wo : %.c toolpath.h print.h tool.h Makefile scene.h
+	    @echo "Compiling: $< => $@ (windows)"
+	    @x86_64-w64-mingw32-gcc -I/usr/mingw/include -march=westmere  -L/usr/mingw/lib -Wno-address-of-packed-member -Wall -W -O2 -g -c $< -o $@
+
+
 toolpath: Makefile $(OBJS)
-	g++ -g -O3 $(OBJS) -o toolpath -lCGAL -lgmp -lCGAL_Core -lmpfr
+	g++ -g -O3 $(OBJS) -o toolpath -lCGAL -lgmp -lCGAL_Core -lmpfr  -lboost_thread
+
+toolpath.exe: Makefile $(WOBJS)
+	x86_64-w64-mingw32-g++ -static -O3 $(WOBJS) -o toolpath.exe -L/usr/mingw/lib  -lmpfr -lgmp -lboost_thread
 
 toolpath-fine: Makefile $(FOBJS)
 	g++ -g -O3 -flto $(FOBJS) -DFINE  -o toolpath-fine -lCGAL -lgmp -lCGAL_Core -lmpfr

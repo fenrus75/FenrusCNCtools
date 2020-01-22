@@ -203,9 +203,8 @@ static void parse_line(char *line)
 
 void read_tool_lib(const char *filename)
 {
-    size_t n;
     FILE *file;
-    char *line = NULL;
+    char line[40960];
     int linenr = 0;
     
     file = fopen(filename, "r");
@@ -214,16 +213,13 @@ void read_tool_lib(const char *filename)
     }
     
     while (!feof(file)) {
-        int ret;
+        char * ret;
         
-        n = 0;
-        ret = getline(&line, &n, file);
-        if (ret <= 0)
+        ret = fgets(&line[0], sizeof(line), file);
+        if (!ret)
             break;
         if (linenr > 0)
             parse_line(line);
-        free(line);
-        line = NULL;
         linenr++;
     }
     fclose(file);

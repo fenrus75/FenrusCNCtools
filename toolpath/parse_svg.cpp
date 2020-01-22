@@ -303,7 +303,6 @@ static void parse_line(class scene *scene, char *line)
 
 void parse_svg_file(class scene *scene, const char *filename)
 {
-    size_t n;
     FILE *file;
     
     file = fopen(filename, "r");
@@ -313,12 +312,11 @@ void parse_svg_file(class scene *scene, const char *filename)
     }
     
     while (!feof(file)) {
-        int ret;
-        char *line = NULL;
-        ret = getline(&line, &n, file);
-        if (ret >= 0) {
+        char * ret;
+        char line[40960];
+        ret = fgets(&line[0], sizeof(line), file);
+        if (ret) {
             parse_line(scene, line);
-            free(line);
         }
     }
     fclose(file);
