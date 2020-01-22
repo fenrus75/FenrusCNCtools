@@ -190,6 +190,22 @@ void gcode_vmill_to(double X, double Y, double Z, double speedratio)
 {
 
 //    printf("Mill to %5.4f %5.4f %5.4f\n", X, Y, Z);
+
+	/* slow start and stop for long distances */
+	if (speedratio == 1.0 && dist(cX,cY,X,Y) >= 1.5 * tool_diameter && cZ == Z) {
+		double vX,vY, len;
+		vX = X - cX;
+		vY = Y - cY;
+		len = sqrt(vX*vX + vY * vY);
+		vX /= len;
+		vY /= len;
+
+		gcode_vmill_to(cX + vX * tool_diameter/2, cY + vY * tool_diameter/2, Z, 0.66);
+		gcode_vmill_to(X - vX * tool_diameter/2, Y - vY * tool_diameter/2, Z, 1.01);
+		gcode_vmill_to(X, Y, Z, 0.66);
+		return;
+	} 
+
     fprintf(gcode, "G1");
     prevX1 = cX;
     prevY1 = cY;
