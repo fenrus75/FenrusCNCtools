@@ -15,6 +15,9 @@ Requirements
 The tool is developed on Linux. The main external requirement is CGAL
 (libcgal-dev or equivalent). A Windows port is now available as well in the
 "releases" section.
+Also currently Toolpath assumes you have a "bitsetter" or equivalent device
+since it creates one integrated gcode file for all endmills used [todo]. 
+
 
 
 Features
@@ -41,7 +44,14 @@ finshing pass to just about all its operations.  It will then keep a small
 deflection and other forces that might result in visible imperfections.
 
 
-Multiple tool pocketing for roughing
+Multi-tool pocketing for roughing
+
+For fine details you need to use a small diameter endmill, but if you also
+need to clear big areas, the time to do the cut is going to be excesively
+long. Using a roughing pass with a large diameter endmill is the normal
+solution, and Toolpath supports this natively, the user just specifies
+the series of endmills (1, 2 or even more) she or he wants to use, and the
+various toolpaths will be generated automatically.
 
 
 Outside-in pocketing
@@ -110,7 +120,11 @@ Things to fix
 
 
 Future things to experiment with
+
 * Proper rest machining
+
+* Support splitting gcode files per tool
+
 * The slotting toolpaths should likely be full speed at half depth instead
 	-- really should just implement more exact adaptive-style speeds
 
