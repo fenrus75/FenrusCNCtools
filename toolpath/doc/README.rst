@@ -22,8 +22,23 @@ Features
 
 Less-Fuzz pocketing
 
+Sometimes pocketing toolpaths leave "fuzz" in the middle, or even small
+ridges. The root cause for this is that, as the toolpaths get created from
+the outside shape to the closest inner "ring", the final ring is too small
+to fit in another ring at full stepover, but is bigger than a single
+stepover size.
+Toolpath solves this by trying to do a "half stepover" in strategic places,
+making sure that no area of the pocket is cut at more than the stepover
+distance.
+
 
 Finishing pass
+
+Many CAM tools allow you to add a finishing pass, sometimes automatic
+sometimes partially manual.  Toolpath has a simple, central, option to add a
+finshing pass to just about all its operations.  It will then keep a small
+(0.1mm by default) stock to leave for a final pass to clean up, minimizing
+deflection and other forces that might result in visible imperfections.
 
 
 Multiple tool pocketing for roughing
@@ -91,8 +106,7 @@ Todo list (what I know is wrong or what I want to add)
 ------------------------------------------------------
 
 Things to fix
-* SVG parser is extremely hard coded/limited; using a library can improve
-  this but will add another dependency
+* SVG parser is extremely hard coded/limited; using a library can improve this but will add another dependency
 
 
 Future things to experiment with
