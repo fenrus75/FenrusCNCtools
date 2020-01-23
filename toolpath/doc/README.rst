@@ -59,11 +59,34 @@ Outside-in pocketing
 
 Spiraling cutout
 
+Doing a cutout of the work piece out of its larger material is a very common
+operation. Some CAM tools do this by cutting a series of rings at increasing
+depths, while plunging the bit a little deeper each time between rings.
+It turns out that this order of operations causes fluctuating forces (and
+thus deflection from the endmill). Especially if the plunging happens in a
+rounded corner, these can cause visible artifats on the final work piece.
+
+Toolpath uses a spiraling model where the endmill starts above the workpiece
+and gently spirals down to the bottom at a constant vertical decline,
+keeping forces constant for the cutout operation.
+
 
 V carving with depth limit + 2nd tool for pocketing
 
+When doing a V-carve of a complicated design, one of the key issues that
+comes up on the Carbidge 3D forum is the desire to be able to specify a
+maximum depth for the V carve (rather than plunging through the work into
+the wasteboar). Toolpath supports this feature; you just need to specify
+a second tool to be used for clearing out the flat inner pockets and the
+depth will be honered. 
+
 
 Automatic V carve Inlays
+
+
+
+
+Slowing down for corners
 
 
 Direct Drive toolpaths (CSV)
