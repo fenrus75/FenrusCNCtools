@@ -32,6 +32,10 @@ ridges. The root cause for this is that, as the toolpaths get created from
 the outside shape to the closest inner "ring", the final ring is too small
 to fit in another ring at full stepover, but is bigger than a single
 stepover size.
+
+![Image of fuzz]
+(fuzz.png)
+
 Toolpath solves this by trying to do a "half stepover" in strategic places,
 making sure that no area of the pocket is cut at more than the stepover
 distance.
