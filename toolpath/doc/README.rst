@@ -83,10 +83,20 @@ depth will be honered.
 
 Automatic V carve Inlays
 
+Making inlays out of two different pieces of wood can give very beautiful
+results... but it often needs two different steps. Toolpath can generate
+the two sets of gcode files from a single instantiation and input file.
 
 
 
 Slowing down for corners
+
+When cutting pockets, the corners of the design are the most stressful
+operation of the whole cut, since this is where the cutter engagement is the
+highest. Toolpath will slow down cuts just before hitting corners, thus
+reducing the maximum force on the system and reducing the probability
+of the work piece coming lose from the work holding.
+
 
 
 Direct Drive toolpaths (CSV)
