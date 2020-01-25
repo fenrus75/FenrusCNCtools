@@ -1,30 +1,30 @@
 all: toolpath 
 
 
-OBJS := parse_csv.o linalg.o tooldepth.o toollib.o gcode.o toolpath.o inputshape.o main.o scene.o toollevel.o svg.o parse_svg.o
+OBJS := parse_csv.o linalg.o tooldepth.o toollib.o gcode.o toolpath.o inputshape.o main.o scene.o toollevel.o svg.o parse_svg.o stl.o triangle.o
 
-FOBJS := parse_csv.o linalg.o tooldepth.fo toollib.fo gcode.o toolpath.fo inputshape.fo main.fo scene.fo toollevel.fo svg.o parse_svg.fo
+FOBJS := parse_csv.o linalg.o tooldepth.fo toollib.fo gcode.o toolpath.fo inputshape.fo main.fo scene.fo toollevel.fo svg.o parse_svg.fo stl.o triangle.o
 
-WOBJS := parse_csv.wo linalg.wo tooldepth.wo toollib.wo gcode.wo toolpath.wo inputshape.wo main.wo scene.wo toollevel.wo svg.wo parse_svg.wo
+WOBJS := parse_csv.wo linalg.wo tooldepth.wo toollib.wo gcode.wo toolpath.wo inputshape.wo main.wo scene.wo toollevel.wo svg.wo parse_svg.wo stl.wo triangle.wo 
 
 
 %.o : %.c toolpath.h Makefile
 	    @echo "Compiling: $< => $@"
 	    @gcc $(CFLAGS) -march=native  -ffunction-sections  -Wall -W -O3 -flto -g2 -c $< -o $@
 
-%.o : %.cpp toolpath.h print.h tool.h Makefile scene.h
+%.o : %.cpp toolpath.h print.h tool.h Makefile scene.h fenrus.h
 	    @echo "Compiling: $< => $@"
 	    @g++ $(CFLAGS) -O3   -march=native -frounding-math -ffunction-sections -fno-common -Wall -W -g2 -c $< -o $@
 
-%.fo : %.cpp toolpath.h print.h tool.h Makefile scene.h
+%.fo : %.cpp toolpath.h print.h tool.h Makefile scene.h fenrus.h
 	    @echo "Compiling: $< => $@ (fine)"
 	    @g++ $(CFLAGS) -O3 -flto -DFINE  -march=native -frounding-math -ffunction-sections -fno-common -Wall -W -g2 -c $< -o $@
 
-%.wo : %.cpp toolpath.h print.h tool.h Makefile scene.h
+%.wo : %.cpp toolpath.h print.h tool.h Makefile scene.h fenrus.h
 	    @echo "Compiling: $< => $@ (windows)"
 	    @x86_64-w64-mingw32-g++ -I/usr/mingw/include -march=westmere  -L/usr/mingw/lib -Wno-address-of-packed-member -Wall -W -O2 -g -c $< -o $@
 
-%.wo : %.c toolpath.h print.h tool.h Makefile scene.h
+%.wo : %.c toolpath.h print.h tool.h Makefile scene.h fenrus.h
 	    @echo "Compiling: $< => $@ (windows)"
 	    @x86_64-w64-mingw32-gcc -I/usr/mingw/include -march=westmere  -L/usr/mingw/lib -Wno-address-of-packed-member -Wall -W -O2 -g -c $< -o $@
 

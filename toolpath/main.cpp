@@ -137,6 +137,8 @@ int main(int argc, char **argv)
     for(; optind < argc; optind++) {      
 		if (strstr(argv[optind], ".csv")) {
 			parse_csv_file(scene, argv[optind], tool);
+		} if (strstr(argv[optind], ".stl")) {
+			process_stl_file(scene, argv[optind]);
 		} else {
 			parse_svg_file(scene, argv[optind]);
 			scene->set_filename(argv[optind]);
