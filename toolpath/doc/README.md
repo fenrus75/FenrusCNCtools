@@ -36,6 +36,8 @@ Toolpath solves this by trying to do a "half stepover" in strategic places,
 making sure that no area of the pocket is cut at more than the stepover
 distance.
 
+![Image of fuzz](nofuzz.png)
+
 
 ## Finishing pass
 
