@@ -91,6 +91,23 @@ Slowing down for corners
 
 Direct Drive toolpaths (CSV)
 
+Sometimes you just want a simple "run this tool from here to there", while
+honoring max depth of cut and doing multiple passes. Toolpath supports this
+using a special CSV file format.
+The CSV file supports a few primitives
+
+X,Y,Z				simple straight line to the specified coordinates
+	
+Xm1, Ym1, Zm1, X, Y, Z    	quadratic bezier curve via intermediate point
+				Xm1,Ym1,Zm1 to X,Y,Z
+Xm1, Ym1, Zm1, Xm2, Ym2, Z2, X, Y, Z    	cubic bezier curve via two intermediate
+						points			
+
+X, Y, Z, R			cut a sphere a sphere with center X,Y,Z and radius R
+			
+
+
+
 
 
 Basic working assumptions
