@@ -250,9 +250,9 @@ static void create_toolpath(class scene *scene, int tool, bool roughing)
 		input = new(class inputshape);
 		input->set_name("STL path");
 		scene->shapes.push_back(input);
+		first = true;
 		while (Y < maxY) {
 			X = -diam/2 * 0.99;
-			first = true;
 			while (X < maxX) {
 				double d;
 				d = get_height_tool(X, Y, diam + offset);
@@ -281,10 +281,10 @@ static void create_toolpath(class scene *scene, int tool, bool roughing)
 		input = new(class inputshape);
 		input->set_name("STL path");
 		scene->shapes.push_back(input);
+		first = true;
 		X = -diam/2 * 0.99;
 		while (X < maxX) {
 			Y = -diam/2 * 0.99;
-			first = true;
 			while (Y < maxY) {
 				double d;
 				d = get_height_tool(X, Y, diam + offset);
