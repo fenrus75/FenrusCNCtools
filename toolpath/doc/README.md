@@ -9,6 +9,8 @@ This is very early stage software and really only meant to experiment with
 toolpath generation techniques etc etc... so meant for prototyping &
 research not production
 
+Carbide 3D forum discussion at https://community.carbide3d.com/t/cutting-forces-with-carbide-create-and-how-i-got-derailed-a-bit/18097/
+
 
 # Requirements
 
