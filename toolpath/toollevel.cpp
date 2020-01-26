@@ -287,7 +287,9 @@ void toollevel::consolidate(void)
 		}
 	}
 
-	/* first, now the O(N^2) part */
+	if (no_sort)
+		return;
+	/* now the O(N^2) part */
 
 	for (i = 0; i < toolpaths.size(); i++) {
 	  for (j = 0; j < toolpaths.size(); j++) {
@@ -373,9 +375,11 @@ void toollevel::output_gcode(void)
 	consolidate();
 //	vprintf("Work size before trim_intersect  %i\n", (int)toolpaths.size());
 #if 1
-	trim_intersects(); /* This is unproven correct so far */
-	consolidate();
-	consolidate();
+	if (!no_sort) {
+		trim_intersects(); /* This is unproven correct so far */
+		consolidate();
+		consolidate();
+	}
 #endif
 //	vprintf("Work size after trim_intersect  %i\n", (int)toolpaths.size());
     worklist = toolpaths;
