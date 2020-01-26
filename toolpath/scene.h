@@ -104,6 +104,9 @@ public:
 		void optimize_cutout(void);
 
         vector<class inputshape *> shapes;
+
+		unsigned int get_tool_nr(int index) { return toollist[index];};
+		unsigned int get_tool_count(void) { return toollist.size();};
         
 private:
         vector<int> toollist;

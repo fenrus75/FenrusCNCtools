@@ -30,16 +30,6 @@ struct stltriangle {
 static int toolnr;
 static double tooldepth = 0.1;
 
-static void print_stl_triangle(struct stltriangle *t)
-{
-	printf("\t(%5.1f, %5.1f, %5.1f) - (%5.1f, %5.1f, %5.1f) - (%5.1f, %5.1f, %5.1f)  %i\n",
-		t->vertex1[0], t->vertex1[1], t->vertex1[2],
-		t->vertex2[0], t->vertex2[1], t->vertex2[2],
-		t->vertex3[0], t->vertex3[1], t->vertex3[2],
-		t->attribute);
-}
-
-
 static int read_stl_file(const char *filename)
 {
 	FILE *file;
@@ -112,6 +102,7 @@ static void line_to(class inputshape *input, double X2, double Y2, double Z2)
 					tool->toolnr = toolnr;
 					tool->minY = 0;
 					tool->name = "Manual toolpath";
+					tool->no_sort = true;
 					input->tooldepths[depth]->toollevels.push_back(tool);
 		}
 		Polygon_2 *p2;
@@ -133,14 +124,33 @@ static inline double get_height_tool(double X, double Y, double R)
 	d = fmax(d, get_height(X - R, Y));
 	d = fmax(d, get_height(X + R, Y));
 	d = fmax(d, get_height(X, Y + R));
-	d = fmax(d, get_height(X, Y - R));
+	d = fmax(d, get_height(X, Y - R));	
+
+	d = fmax(d, get_height(X - R/1.4, Y - R/1.4));
+	d = fmax(d, get_height(X + R/1.4, Y + R/1.4));
+	d = fmax(d, get_height(X - R/1.4, Y + R/1.4));
+	d = fmax(d, get_height(X + R/1.4, Y - R/1.4));
 	return d;
 }
 
-static void create_toolpath(class scene *scene, int tool)
+static void print_progress(double pct) {
+	char line[] = "----------------------------------------";
+	int i;
+	int len = strlen(line);
+	for (i = 0; i < len; i++ ) {
+		if (i * 100.0 / len < pct)
+			line[i] = '#';
+	}
+	printf("Progress =[%s]=     \r", line);
+	fflush(stdout);
+}
+
+static void create_toolpath(class scene *scene, int tool, bool roughing)
 {
 	double X, Y = 0, maxX, maxY, stepover;
 	double maxZ, diam;
+	double offset = 0;
+
 	class inputshape *input;
 	toolnr = tool;
 	diam = tool_diam(tool);
@@ -150,23 +160,51 @@ static void create_toolpath(class scene *scene, int tool)
 	input->set_name("STL path");
 	scene->shapes.push_back(input);
 
-	Y = 0;
-	maxX = stl_image_X();
-	maxY = stl_image_Y();
+	Y = -diam;
+	maxX = stl_image_X() + diam;
+	maxY = stl_image_Y() + diam;
 	stepover = get_tool_stepover(toolnr);
-	while (Y < maxY) {
-		X = 0;
-		first = true;
-		while (X < maxX) {
-			double d;
-			d = get_height_tool(X, Y, diam);
 
-			line_to(input, X, Y, -maxZ + d);
+	if (!roughing)
+		stepover = stepover / 1.42;
+
+	offset = 0;
+	if (roughing) 
+		offset = scene->get_stock_to_leave();
+
+	if (roughing || scene->want_finishing_pass()) {
+		while (Y < maxY) {
+			X = -diam;
+			first = true;
+			while (X < maxX) {
+				double d;
+				d = get_height_tool(X, Y, diam);
+
+				line_to(input, X, Y, -maxZ + d + offset);
+				X = X + stepover;
+			}
+			print_progress(100.0 * Y / maxY);
+			Y = Y + stepover;
+		}
+	}
+	if (!roughing) {
+		X = -diam;
+		while (X < maxX) {
+			Y = -diam;
+			first = true;
+			while (Y < maxY) {
+				double d;
+				d = get_height_tool(X, Y, diam);
+
+				line_to(input, X, Y, -maxZ + d + offset);
+				Y = Y + stepover;
+			}
+			print_progress(100.0 * X / maxX);
 			X = X + stepover;
 		}
-		printf("Y is %5.2f\n", Y);
-		Y = Y + stepover;
 	}
+
+	printf("                                                          \r");
 }
 
 void process_stl_file(class scene *scene, const char *filename)
@@ -178,8 +216,18 @@ void process_stl_file(class scene *scene, const char *filename)
 	}
 	scale_design_Z(scene->get_cutout_depth());
 	print_triangle_stats();
+	for ( int i = scene->get_tool_count() - 1; i >= 0 ; i-- ) {
+		activate_tool(scene->get_tool_nr(i));
+		printf("Create toolpaths for tool %i \n", scene->get_tool_nr(i));
 
-	create_toolpath(scene, 201);
+		/* only for the first roughing tool do we need to honor the max tool depth */
+		if (i != 0) {
+			tooldepth = 5000;
+		} else {
+			tooldepth = get_tool_maxdepth();
+		}
+		create_toolpath(scene, scene->get_tool_nr(i), i < (int)scene->get_tool_count() - 1);
+	}
 }
 
 

@@ -113,6 +113,7 @@ public:
         name = "unknown";
         depth = 0.0;
         toolnr = 0;
+		no_sort = false;
     }
     
     double get_minY(void) { return minY;};
@@ -143,6 +144,9 @@ public:
     
     /* don't complete the poly */
     bool is_single;
+
+	/* don't reorder toolpaths */
+	bool no_sort;
     
     void print_as_svg(void);
     void output_gcode(void);

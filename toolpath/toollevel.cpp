@@ -31,10 +31,12 @@ static double sortX, sortY;
 static bool compare_path(class toolpath *A, class toolpath *B)
 {
 	if (A->distance_from(sortX, sortY) > 0.1 && B->distance_from(sortX, sortY) > 0.1) {
-		if (A->depth > B->depth)
-			return true;
-		if (A->depth < B->depth)
-			return false;
+		if (fabs(A->depth - B->depth) > 0.1) {
+			if (A->depth > B->depth)
+				return true;
+			if (A->depth < B->depth)
+				return false;
+		}
 	}
 	if (A->priority < B->priority)
 		return true;
@@ -402,7 +404,8 @@ void toollevel::output_gcode(void)
     sortX = gcode_current_X();
     sortY = gcode_current_Y() + get_minY();
         
-    sort(worklist.begin(), worklist.end(), compare_path);
+	if (!no_sort)
+	    sort(worklist.begin(), worklist.end(), compare_path);
     
     while (worklist.size() > 0) {
 		bool zero_retracts;
@@ -421,7 +424,8 @@ void toollevel::output_gcode(void)
 	        sortX = gcode_current_X();
 	        sortY = gcode_current_Y() + get_minY();
         
-        sort(worklist.begin(), worklist.end(), compare_path);
+		if (!no_sort)
+    	    sort(worklist.begin(), worklist.end(), compare_path);
     }
 }
 
