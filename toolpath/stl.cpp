@@ -141,9 +141,10 @@ Angle 337.50     X 0.9239   Y -0.3827
 */
 static inline double get_height_tool(double X, double Y, double R)
 {	
-	double d;
+	double d = 0;
 
-	d = get_height(X, Y);
+	d = fmax(d, get_height(X + 0.0000 * R, Y + 0.0000 * R));
+
 	d = fmax(d, get_height(X + 1.0000 * R, Y + 0.0000 * R));
 	d = fmax(d, get_height(X + 0.9239 * R, Y + 0.3827 * R));
 	d = fmax(d, get_height(X + 0.7071 * R, Y + 0.7071 * R));
