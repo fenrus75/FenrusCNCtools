@@ -1,5 +1,7 @@
 This code turns an SVG file into a gcode toolpath where it basically area
-clears inside the shapes
+clears inside the shapes.
+Althernatively you can provide a binary STL file and create toolpaths from
+that.
 
 NOTE: The SVG parser is extremely limited and only really works on SVG files
 exported from Carbide Create. Over time I'll work on expanding the SVG
