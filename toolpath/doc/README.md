@@ -120,7 +120,10 @@ Xm1, Ym1, Zm1, Xm2, Ym2, Z2, X, Y, Z    	cubic bezier curve via two intermediate
 X, Y, Z, R			cut a sphere a sphere with center X,Y,Z and radius R
 			
 
+## STL files
 
+If all you want to do is turn that STL file you downloaded into a nice wood
+design... Toolpath can also do that... see the examples below
 
 
 
@@ -162,8 +165,10 @@ area clearance. Use the outer shape for cutout (using bit 201)
 
 > toolpath -d 0.125 -t 302 -t 201 -t 102 --inlay --cutout 0.25  foo.sh
 
- 
 
+Create the gcode for carving out an STL design
+ 
+> toolpath --cutout 0.75 -t 201 -t 101 --finish-pass heart.stl
 
 
 # Todo list (what I know is wrong or what I want to add)

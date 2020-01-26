@@ -209,13 +209,17 @@ static void create_toolpath(class scene *scene, int tool, bool roughing)
 
 void process_stl_file(class scene *scene, const char *filename)
 {
+
 	read_stl_file(filename);
 	normalize_design_to_zero();
+
 	if (scene->get_cutout_depth() < 0.01) {
 		printf("Error: No cutout depth set\n");
 	}
+
 	scale_design_Z(scene->get_cutout_depth());
 	print_triangle_stats();
+
 	for ( int i = scene->get_tool_count() - 1; i >= 0 ; i-- ) {
 		activate_tool(scene->get_tool_nr(i));
 		printf("Create toolpaths for tool %i \n", scene->get_tool_nr(i));
