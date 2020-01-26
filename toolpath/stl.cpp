@@ -120,20 +120,92 @@ static void line_to(class inputshape *input, double X2, double Y2, double Z2)
 	}
 }
 
+/*
+sin/cos circle table:
+Angle  0.00     X 1.0000   Y 0.0000
+Angle 22.50     X 0.9239   Y 0.3827
+Angle 45.00     X 0.7071   Y 0.7071
+Angle 67.50     X 0.3827   Y 0.9239
+Angle 90.00     X 0.0000   Y 1.0000
+Angle 112.50     X -0.3827   Y 0.9239
+Angle 135.00     X -0.7071   Y 0.7071
+Angle 157.50     X -0.9239   Y 0.3827
+Angle 180.00     X -1.0000   Y 0.0000
+Angle 202.50     X -0.9239   Y -0.3827
+Angle 225.00     X -0.7071   Y -0.7071
+Angle 247.50     X -0.3827   Y -0.9239
+Angle 270.00     X -0.0000   Y -1.0000
+Angle 292.50     X 0.3827   Y -0.9239
+Angle 315.00     X 0.7071   Y -0.7071
+Angle 337.50     X 0.9239   Y -0.3827
+*/
 static inline double get_height_tool(double X, double Y, double R)
 {	
 	double d;
 
 	d = get_height(X, Y);
-	d = fmax(d, get_height(X - R, Y));
-	d = fmax(d, get_height(X + R, Y));
-	d = fmax(d, get_height(X, Y + R));
-	d = fmax(d, get_height(X, Y - R));	
+	d = fmax(d, get_height(X + 1.0000 * R, Y + 0.0000 * R));
+	d = fmax(d, get_height(X + 0.9239 * R, Y + 0.3827 * R));
+	d = fmax(d, get_height(X + 0.7071 * R, Y + 0.7071 * R));
+	d = fmax(d, get_height(X + 0.3827 * R, Y + 0.9239 * R));
+	d = fmax(d, get_height(X + 0.0000 * R, Y + 1.0000 * R));
+	d = fmax(d, get_height(X - 0.3872 * R, Y + 0.9239 * R));
+	d = fmax(d, get_height(X - 0.7071 * R, Y + 0.7071 * R));
+	d = fmax(d, get_height(X - 0.9239 * R, Y + 0.3827 * R));
+	d = fmax(d, get_height(X - 1.0000 * R, Y + 0.0000 * R));
+	d = fmax(d, get_height(X - 0.9239 * R, Y - 0.3827 * R));
+	d = fmax(d, get_height(X - 0.7071 * R, Y - 0.7071 * R));
+	d = fmax(d, get_height(X - 0.3827 * R, Y - 0.9239 * R));
+	d = fmax(d, get_height(X - 0.0000 * R, Y - 1.0000 * R));
+	d = fmax(d, get_height(X + 0.3827 * R, Y - 0.9239 * R));
+	d = fmax(d, get_height(X + 0.7071 * R, Y - 0.7071 * R));
+	d = fmax(d, get_height(X + 0.9239 * R, Y - 0.3827 * R));
 
-	d = fmax(d, get_height(X - R/1.4, Y - R/1.4));
-	d = fmax(d, get_height(X + R/1.4, Y + R/1.4));
-	d = fmax(d, get_height(X - R/1.4, Y + R/1.4));
-	d = fmax(d, get_height(X + R/1.4, Y - R/1.4));
+	R = R / 1.5;
+
+	if (R < 1)
+		return d;
+
+	d = fmax(d, get_height(X + 1.0000 * R, Y + 0.0000 * R));
+	d = fmax(d, get_height(X + 0.9239 * R, Y + 0.3827 * R));
+	d = fmax(d, get_height(X + 0.7071 * R, Y + 0.7071 * R));
+	d = fmax(d, get_height(X + 0.3827 * R, Y + 0.9239 * R));
+	d = fmax(d, get_height(X + 0.0000 * R, Y + 1.0000 * R));
+	d = fmax(d, get_height(X - 0.3872 * R, Y + 0.9239 * R));
+	d = fmax(d, get_height(X - 0.7071 * R, Y + 0.7071 * R));
+	d = fmax(d, get_height(X - 0.9239 * R, Y + 0.3827 * R));
+	d = fmax(d, get_height(X - 1.0000 * R, Y + 0.0000 * R));
+	d = fmax(d, get_height(X - 0.9239 * R, Y - 0.3827 * R));
+	d = fmax(d, get_height(X - 0.7071 * R, Y - 0.7071 * R));
+	d = fmax(d, get_height(X - 0.3827 * R, Y - 0.9239 * R));
+	d = fmax(d, get_height(X - 0.0000 * R, Y - 1.0000 * R));
+	d = fmax(d, get_height(X + 0.3827 * R, Y - 0.9239 * R));
+	d = fmax(d, get_height(X + 0.7071 * R, Y - 0.7071 * R));
+	d = fmax(d, get_height(X + 0.9239 * R, Y - 0.3827 * R));
+
+	R = R / 1.5;
+
+	if (R < 1)
+		return d;
+
+	d = fmax(d, get_height(X + 1.0000 * R, Y + 0.0000 * R));
+	d = fmax(d, get_height(X + 0.9239 * R, Y + 0.3827 * R));
+	d = fmax(d, get_height(X + 0.7071 * R, Y + 0.7071 * R));
+	d = fmax(d, get_height(X + 0.3827 * R, Y + 0.9239 * R));
+	d = fmax(d, get_height(X + 0.0000 * R, Y + 1.0000 * R));
+	d = fmax(d, get_height(X - 0.3872 * R, Y + 0.9239 * R));
+	d = fmax(d, get_height(X - 0.7071 * R, Y + 0.7071 * R));
+	d = fmax(d, get_height(X - 0.9239 * R, Y + 0.3827 * R));
+	d = fmax(d, get_height(X - 1.0000 * R, Y + 0.0000 * R));
+	d = fmax(d, get_height(X - 0.9239 * R, Y - 0.3827 * R));
+	d = fmax(d, get_height(X - 0.7071 * R, Y - 0.7071 * R));
+	d = fmax(d, get_height(X - 0.3827 * R, Y - 0.9239 * R));
+	d = fmax(d, get_height(X - 0.0000 * R, Y - 1.0000 * R));
+	d = fmax(d, get_height(X + 0.3827 * R, Y - 0.9239 * R));
+	d = fmax(d, get_height(X + 0.7071 * R, Y - 0.7071 * R));
+	d = fmax(d, get_height(X + 0.9239 * R, Y - 0.3827 * R));
+
+
 	return d;
 }
 
@@ -166,7 +238,7 @@ static void create_toolpath(class scene *scene, int tool, bool roughing)
 	maxY = stl_image_Y() + diam/2;
 	stepover = get_tool_stepover(toolnr);
 
-	if (!roughing && stepover > 0.5)
+	if (!roughing && stepover > 0.2)
 		stepover = stepover / 1.42;
 
 	offset = 0;

@@ -63,8 +63,8 @@ struct bucket *allocate_bucket(void)
 
 	nrbuckets ++;
 	for (j = 0; j < BUCKETSIZE; j++)
-		buckets[nrbuckets].triangles[j] = -1;
-	return &buckets[nrbuckets];
+		buckets[nrbuckets - 1].triangles[j] = -1;
+	return &buckets[nrbuckets - 1];
 }
 
 void push_triangle(float v1[3], float v2[3], float v3[3])
@@ -387,6 +387,7 @@ double get_height(double X, double Y)
 		make_buckets();
 
 	for (b = 0; b < nrbuckets; b++) {
+
 		if (buckets[b].minX > X)
 			continue;
 		if (buckets[b].minY > Y)
@@ -395,6 +396,7 @@ double get_height(double X, double Y)
 			continue;
 		if (buckets[b].maxY < Y)
 			continue;
+
 		for (j = 0; j < BUCKETSIZE; j++) {
 			double newZ;
 			i = buckets[b].triangles[j];
