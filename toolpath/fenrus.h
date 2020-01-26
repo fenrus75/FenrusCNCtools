@@ -7,6 +7,13 @@
 struct triangle {
 	float vertex[3][3];
 	float minX, minY, maxX, maxY;
+	int status;
+};
+
+#define BUCKETSIZE 512
+struct bucket {
+	float minX, minY, maxX, maxY;
+	int triangles[BUCKETSIZE];
 };
 
 extern void set_max_triangles(int count);

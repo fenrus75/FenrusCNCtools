@@ -15,8 +15,11 @@
 
 
 static int maxtriangle = 0;
+static int maxbuckets = 0;
 static int current = 0;
 static struct triangle *triangles;
+static struct bucket *buckets;
+static int nrbuckets = 0;
 
 
 static float minX = 100000;
@@ -46,6 +49,23 @@ void set_max_triangles(int count)
 	triangles = realloc(triangles, count * sizeof(struct triangle));
 }
 
+void set_max_buckets(int count)
+{
+	maxbuckets = count;
+	buckets = realloc(buckets, count * sizeof(struct bucket));
+}
+
+struct bucket *allocate_bucket(void)
+{
+	int j;
+	if (nrbuckets >= maxbuckets - 1)
+		set_max_buckets(nrbuckets + 16);
+
+	nrbuckets ++;
+	for (j = 0; j < BUCKETSIZE; j++)
+		buckets[nrbuckets].triangles[j] = -1;
+	return &buckets[nrbuckets];
+}
 
 void push_triangle(float v1[3], float v2[3], float v3[3])
 {
@@ -198,6 +218,61 @@ void scale_design_Z(double newheight)
 	maxZ *= factor;
 }
 
+void make_buckets(void)
+{
+	int i;
+	double slop = fmax(stl_image_X(), stl_image_Y())/50;
+	double maxslop = slop * 2;
+
+	for (i = 0; i < current; i++) {
+		int j;
+		double Xmax, Ymax, Xmin, Ymin;
+		double rXmax, rYmax, rXmin, rYmin;
+		int bucketptr = 0;
+		struct bucket *bucket;
+		if (triangles[i].status)
+			continue;
+
+		bucket = allocate_bucket();
+		Xmax = triangles[i].maxX;
+		Xmin = triangles[i].minX;
+		Ymax = triangles[i].maxY;
+		Ymin = triangles[i].minY;
+
+		rXmax = Xmax + slop;
+		rYmax = Ymax + slop;
+		rXmin = Xmin - slop;
+		rYmin = Ymin - slop;
+
+		bucket->triangles[bucketptr++] = i;
+		triangles[i].status = 1;
+	
+		for (j = i + 1; j < current && bucketptr < BUCKETSIZE; j++)	{
+			if (triangles[j].maxX <= rXmax && triangles[j].maxY <= rYmax && triangles[j].minY >= rYmin &&  triangles[j].minX >= rXmin) {
+				Xmax = fmax(Xmax, triangles[j].maxX);
+				Ymax = fmax(Ymax, triangles[j].maxY);
+				Xmin = fmin(Xmin, triangles[j].minX);
+				Ymin = fmin(Ymin, triangles[j].minY);
+				bucket->triangles[bucketptr++] = j;
+				triangles[j].status = 1;				
+			}				
+		}
+
+		if (bucketptr >= BUCKETSIZE -5)
+			slop = slop * 0.9;
+		if (bucketptr < BUCKETSIZE / 8)
+			slop = fmin(slop * 1.1, maxslop);
+		if (bucketptr < BUCKETSIZE / 2)
+			slop = fmin(slop * 1.05, maxslop);
+
+		bucket->minX = Xmin;
+		bucket->minY = Ymin;
+		bucket->maxX = Xmax;
+		bucket->maxY = Ymax;
+	}
+	printf("Created %i buckets\n", nrbuckets);
+}
+
 double stl_image_X(void)
 {
 	return maxX;
@@ -212,8 +287,11 @@ double scale_Z(void)
 {
 	return 255.0 / maxZ;
 }
+
 void print_triangle_stats(void)
 {
+	int i;
+	double sum = 0;
 	printf("Number of triangles in file   : %i\n", current);
 /*
 	printf("Span of the design	      : (%5.1f, %5.1f, %5.1f) - (%5.1f, %5.1f, %5.1f) \n",
@@ -225,6 +303,13 @@ void print_triangle_stats(void)
 
 	if (current > 10000)
 		printf("Large number of triangles, this may take some time\n");
+	for (i = 0; i < current; i++) {
+		double size;
+		size = fmax(triangles[i].maxX-triangles[i].minX, triangles[i].maxY-triangles[i].minY);
+		sum += size;
+	}
+	printf("Average triangle size: %5.2f\n", sum / current);
+	make_buckets();
 }
 
 static double point_to_the_left(double X, double Y, double AX, double AY, double BX, double BY)
@@ -251,7 +336,7 @@ static int within_triangle(double X, double Y, int i)
 }
 
 
-float calc_Z(float X, float Y, int index)
+static float calc_Z(float X, float Y, int index)
 {
 	float det = (triangles[index].vertex[1][1] - triangles[index].vertex[2][1]) * 
 		    (triangles[index].vertex[0][0] - triangles[index].vertex[2][0]) + 
@@ -265,7 +350,7 @@ float calc_Z(float X, float Y, int index)
 	return l1 * triangles[index].vertex[0][2] + l2 * triangles[index].vertex[1][2] + l3 * triangles[index].vertex[2][2];
 }
 
-double get_height(double X, double Y)
+double get_height_old(double X, double Y)
 {
 	double value = 0;
 	int i;
@@ -289,6 +374,51 @@ double get_height(double X, double Y)
 		newZ = calc_Z(X, Y, i);
 
 		value = fmax(newZ, value);
+	}
+	return value;
+}
+
+double get_height(double X, double Y)
+{
+	double value = 0;
+	int i, b, j;
+
+	if (nrbuckets == 0)
+		make_buckets();
+
+	for (b = 0; b < nrbuckets; b++) {
+		if (buckets[b].minX > X)
+			continue;
+		if (buckets[b].minY > Y)
+			continue;
+		if (buckets[b].maxX < X)
+			continue;
+		if (buckets[b].maxY < Y)
+			continue;
+		for (j = 0; j < BUCKETSIZE; j++) {
+			double newZ;
+			i = buckets[b].triangles[j];
+			if (i < 0)
+				break;
+
+			/* first a few quick bounding box checks */
+			if (triangles[i].minX > X)
+				continue;
+			if (triangles[i].minY > Y)
+				continue;
+			if (triangles[i].maxX < X)
+				continue;
+			if (triangles[i].maxY < Y)
+				continue;
+	
+			/* then a more expensive detailed triangle test */
+			if (!within_triangle(X, Y, i))
+				continue;
+			/* now calculate the Z height within the triangle */
+			newZ = calc_Z(X, Y, i);
+
+			value = fmax(newZ, value);
+		}
 	}
 	return value;
 }

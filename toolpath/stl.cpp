@@ -66,6 +66,7 @@ static int read_stl_file(const char *filename)
 }
 
 static double last_X,  last_Y, last_Z;
+static double cur_X, cur_Y, cur_Z;
 static bool first;
 
 static void line_to(class inputshape *input, double X2, double Y2, double Z2)
@@ -79,6 +80,9 @@ static void line_to(class inputshape *input, double X2, double Y2, double Z2)
 
 	if (first) {
 		first = false;
+		cur_X = X2;
+		cur_Y = Y2;
+		cur_Z = Z2;
 		return;
 	}
 
@@ -165,7 +169,7 @@ static void create_toolpath(class scene *scene, int tool, bool roughing)
 	maxY = stl_image_Y() + diam;
 	stepover = get_tool_stepover(toolnr);
 
-	if (!roughing)
+	if (!roughing && stepover > 0.5)
 		stepover = stepover / 1.42;
 
 	offset = 0;
@@ -173,15 +177,42 @@ static void create_toolpath(class scene *scene, int tool, bool roughing)
 		offset = scene->get_stock_to_leave();
 
 	if (roughing || scene->want_finishing_pass()) {
+		double threshold = 0.04;
+		if (roughing)
+			threshold =  tooldepth / 4;
+
+		threshold = 0;
 		while (Y < maxY) {
+			int skipcount = 0;
 			X = -diam;
 			first = true;
 			while (X < maxX) {
 				double d;
 				d = get_height_tool(X, Y, diam);
 
-				line_to(input, X, Y, -maxZ + d + offset);
+				if (fabs(d-last_Z) > threshold || X > maxX -stepover * 2 || first || skipcount > 4 || 1) {
+					line_to(input, X, Y, -maxZ + d + offset);
+					skipcount = 0;
+				} else {
+					skipcount++;
+				}
 				X = X + stepover;
+			}
+			print_progress(100.0 * Y / maxY);
+			Y = Y + stepover;
+			line_to(input, X, Y, -maxZ + offset + get_height_tool(X, Y, diam));
+
+			while (X > -diam) {
+				double d;
+				d = get_height_tool(X, Y, diam);
+
+				if (fabs(d-last_Z) > threshold || X < 0 || first || skipcount > 4 || 1) {
+					line_to(input, X, Y, -maxZ + d + offset);
+					skipcount = 0;
+				} else {
+					skipcount++;
+				}
+				X = X - stepover;
 			}
 			print_progress(100.0 * Y / maxY);
 			Y = Y + stepover;
@@ -190,14 +221,36 @@ static void create_toolpath(class scene *scene, int tool, bool roughing)
 	if (!roughing) {
 		X = -diam;
 		while (X < maxX) {
+			int skipcount = 0;
 			Y = -diam;
 			first = true;
 			while (Y < maxY) {
 				double d;
 				d = get_height_tool(X, Y, diam);
 
-				line_to(input, X, Y, -maxZ + d + offset);
+				if (fabs(d-last_Z) > 0.04 || Y > maxY -stepover * 2 || first || skipcount > 0 || 1)  {
+					line_to(input, X, Y, -maxZ + d + offset);
+					skipcount = 0; 
+				}  else {
+					skipcount++;
+				}
 				Y = Y + stepover;
+			}
+			print_progress(100.0 * X / maxX);
+			X = X + stepover;
+			line_to(input, X, Y, -maxZ + offset + get_height_tool(X, Y, diam));
+
+			while (Y > - diam) {
+				double d;
+				d = get_height_tool(X, Y, diam);
+
+				if (fabs(d-last_Z) > 0.04 || Y > maxY -stepover * 2 || first || skipcount > 4 || 1) {
+					line_to(input, X, Y, -maxZ + d + offset);
+					skipcount = 0; 
+				} else {
+					skipcount++;
+				}
+				Y = Y - stepover;
 			}
 			print_progress(100.0 * X / maxX);
 			X = X + stepover;
