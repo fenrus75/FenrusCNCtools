@@ -161,9 +161,9 @@ static void create_toolpath(class scene *scene, int tool, bool roughing)
 	maxZ = scene->get_cutout_depth();
 
 
-	Y = -diam;
-	maxX = stl_image_X() + diam;
-	maxY = stl_image_Y() + diam;
+	Y = -diam/2;
+	maxX = stl_image_X() + diam/2;
+	maxY = stl_image_Y() + diam/2;
 	stepover = get_tool_stepover(toolnr);
 
 	if (!roughing && stepover > 0.5)
@@ -178,7 +178,7 @@ static void create_toolpath(class scene *scene, int tool, bool roughing)
 		input->set_name("STL path");
 		scene->shapes.push_back(input);
 		while (Y < maxY) {
-			X = -diam;
+			X = -diam/2;
 			first = true;
 			while (X < maxX) {
 				double d;
@@ -192,7 +192,7 @@ static void create_toolpath(class scene *scene, int tool, bool roughing)
 			Y = Y + stepover;
 			line_to(input, X, Y, -maxZ + offset + get_height_tool(X, Y, diam + offset));
 
-			while (X > -diam) {
+			while (X > -diam/2) {
 				double d;
 				d = get_height_tool(X, Y, diam + offset);
 
@@ -208,9 +208,9 @@ static void create_toolpath(class scene *scene, int tool, bool roughing)
 		input = new(class inputshape);
 		input->set_name("STL path");
 		scene->shapes.push_back(input);
-		X = -diam;
+		X = -diam/2;
 		while (X < maxX) {
-			Y = -diam;
+			Y = -diam/2;
 			first = true;
 			while (Y < maxY) {
 				double d;
@@ -224,7 +224,7 @@ static void create_toolpath(class scene *scene, int tool, bool roughing)
 			X = X + stepover;
 			line_to(input, X, Y, -maxZ + offset + get_height_tool(X, Y, diam + offset));
 
-			while (Y > - diam) {
+			while (Y > - diam/2) {
 				double d;
 				d = get_height_tool(X, Y, diam + offset);
 
