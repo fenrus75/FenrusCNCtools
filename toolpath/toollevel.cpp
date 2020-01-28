@@ -76,6 +76,8 @@ static class toolpath *can_merge(class toolpath *tp1, class toolpath *tp2)
 		return NULL;
 	if (tp1->depth2 != tp2->depth2) 
 		return NULL;
+	if (tp1->depth != tp1->depth2)
+		return NULL;
 	if (tp1->polygons.size() > 1)
 		return NULL;
 	if (tp2->polygons.size() > 1)
