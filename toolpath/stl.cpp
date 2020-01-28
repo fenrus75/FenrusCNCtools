@@ -117,6 +117,9 @@ static void line_to(class inputshape *input, double X2, double Y2, double Z2)
 		
 		Z1 += tooldepth;
 		Z2 += tooldepth;
+
+		Z1 = ceil(Z1 * 20) / 20.0;
+		Z2 = ceil(Z2 * 20) / 20.0;
 	}
 }
 
