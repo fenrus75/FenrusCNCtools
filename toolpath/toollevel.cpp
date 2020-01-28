@@ -258,6 +258,38 @@ static class toolpath *can_merge(class toolpath *tp1, class toolpath *tp2)
 }
 
 
+void toollevel::consolidate_quick(void)
+{
+	unsigned int i, j;
+	class toolpath *tp;
+
+	if (toolpaths.size() < 5)
+		return; /* nothing to consolidate */
+
+	/* first, we do +1 and +2 as that's a common case */
+
+	for (i = toolpaths.size() - 4; i < toolpaths.size() - 2; i++) {
+		tp = can_merge(toolpaths[i], toolpaths[i + 1]);
+		if (tp) {
+			toolpaths[i] = tp;
+			toolpaths.erase(toolpaths.begin() + i + 1);
+			if (i >= 2)
+				i -= 2;	
+//			vprintf("Can merge %i, %i \n", i, i+1);
+			continue;
+		}
+		tp = can_merge(toolpaths[i], toolpaths[i + 2]);
+		if (tp) {
+			toolpaths[i] = tp;
+			toolpaths.erase(toolpaths.begin() + i + 2);
+			if (i >= 2)
+				i -= 2;	
+//			vprintf("Can merge2 %i, %i \n", i, i+2);
+			continue;
+		}
+	}
+}
+
 void toollevel::consolidate(void)
 {
 	unsigned int i, j;
@@ -513,6 +545,7 @@ void toollevel::add_poly_vcarve(Polygon_2 *poly, double depth1, double depth2, d
 	tp->color = color;
 	tp->priority = prio;
     toolpaths.push_back(tp);    
+	consolidate_quick();
 }
 
 void toollevel::sort_if_slotting(void)

@@ -130,6 +130,7 @@ public:
     vector<class toolpath*> toolpaths;
 
 	void consolidate(void);
+	void consolidate_quick(void);
 	void trim_intersects(void);
     
     /* for in-between paths, if a path has even deeper paths it will be optimized go away eventually */
