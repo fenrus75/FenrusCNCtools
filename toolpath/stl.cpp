@@ -7,13 +7,13 @@
  */
 #include <unistd.h>
 #include <stdlib.h>
-#include <math.h>
 #include <stdio.h>
 #include <stdint.h>
 #include <errno.h>
 #include <string.h>
 
 extern "C" {
+#include <math.h>
 #include "fenrus.h"
 #include "toolpath.h"
 }
@@ -176,7 +176,7 @@ static inline double get_height_tool(double X, double Y, double R, bool ballnose
 
 	R = R / 1.5;
 
-	if (R < 0.3)
+	if (R < 0.4)
 		return ceil(d*ACC)/ACC;
 
 	if (ballnose) {
@@ -202,7 +202,7 @@ static inline double get_height_tool(double X, double Y, double R, bool ballnose
 
 	R = R / 1.5;
 
-	if (R < 0.3)
+	if (R < 0.4)
 		return ceil(d*ACC)/ACC;
 
 
@@ -227,7 +227,7 @@ static inline double get_height_tool(double X, double Y, double R, bool ballnose
 	d = fmax(d, get_height(X + 0.9239 * R, Y - 0.3827 * R) + balloffset);
 
 
-		return ceil(d*ACC)/ACC;
+	return ceil(d*ACC)/ACC;
 
 }
 
@@ -287,25 +287,38 @@ static void create_toolpath(class scene *scene, int tool, bool roughing)
 		scene->shapes.push_back(input);
 		first = true;
 		while (Y < maxY) {
+			double prevX;
 			X = -diam/2 * 0.99;
+			prevX = X;
 			while (X < maxX) {
 				double d;
 				d = get_height_tool(X, Y, radius + offset, ballnose);
 
+				if (fabs(d - last_Z) > 1) {
+					X = prevX + stepover / 1.5;
+					d = get_height_tool(X, Y, radius + offset, ballnose);
+				}
+
 				line_to(input, X, Y, -maxZ + d + offset);
 
+				prevX = X;
 				X = X + stepover;
 			}
 			print_progress(100.0 * Y / maxY);
 			Y = Y + stepover;
 			line_to(input, X, Y, -maxZ + offset + get_height_tool(X, Y, radius + offset, ballnose));
 
+			prevX = X;
 			while (X > -diam/2 * 0.99) {
 				double d;
 				d = get_height_tool(X, Y, radius + offset, ballnose);
+				if (fabs(d - last_Z) > 1) {
+					X = prevX - stepover / 1.5;
+					d = get_height_tool(X, Y, radius + offset, ballnose);
+				}
 
 				line_to(input, X, Y, -maxZ + d + offset);
-
+				prevX = X;
 				X = X - stepover;
 			}
 			print_progress(100.0 * Y / maxY);
@@ -319,24 +332,27 @@ static void create_toolpath(class scene *scene, int tool, bool roughing)
 		first = true;
 		X = -diam/2 * 0.99;
 		while (X < maxX) {
+			double prevY;
 			Y = -diam/2 * 0.99;
+			prevY = Y;
 			while (Y < maxY) {
 				double d;
 				d = get_height_tool(X, Y, radius + offset, ballnose);
 
 				line_to(input, X, Y, -maxZ + d + offset);
-
+				prevY = Y;
 				Y = Y + stepover;
 			}
 			print_progress(100.0 * X / maxX);
 			X = X + stepover;
 			line_to(input, X, Y, -maxZ + offset + get_height_tool(X, Y, radius + offset, ballnose));
-
+			prevY = Y;
 			while (Y > - diam/2 * 0.99) {
 				double d;
 				d = get_height_tool(X, Y, radius + offset, ballnose);
 
 				line_to(input, X, Y, -maxZ + d + offset);
+				prevY = Y;
 				Y = Y - stepover;
 			}
 			print_progress(100.0 * X / maxX);

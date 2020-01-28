@@ -72,11 +72,11 @@ static class toolpath *can_merge(class toolpath *tp1, class toolpath *tp2)
 	double ox2, oy2, ox4, oy4;
 	double len;
 
-	if (tp1->depth != tp2->depth) 
+	if (!approx4(tp1->depth,tp2->depth)) 
 		return NULL;
-	if (tp1->depth2 != tp2->depth2) 
+	if (!approx4(tp1->depth2, tp2->depth2)) 
 		return NULL;
-	if (tp1->depth != tp1->depth2)
+	if (!approx4(tp1->depth, tp1->depth2))
 		return NULL;
 	if (tp1->polygons.size() > 1)
 		return NULL;
@@ -260,7 +260,7 @@ static class toolpath *can_merge(class toolpath *tp1, class toolpath *tp2)
 
 void toollevel::consolidate_quick(void)
 {
-	unsigned int i, j;
+	unsigned int i;
 	class toolpath *tp;
 
 	if (toolpaths.size() < 5)
