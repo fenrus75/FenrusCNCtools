@@ -31,6 +31,7 @@ static int mill_count;
 /* in mm */
 static double cX, cY, cZ, cS;
 static int has_current = 0;
+static int am_roughing = 0;
 
 /* for vcarving */
 
@@ -192,7 +193,7 @@ void gcode_vmill_to(double X, double Y, double Z, double speedratio)
 //    printf("Mill to %5.4f %5.4f %5.4f\n", X, Y, Z);
 
 	/* slow start and stop for long distances */
-	if (speedratio == 1.0 && dist(cX,cY,X,Y) >= 1.5 * tool_diameter && approx4(cZ,Z)) {
+	if (speedratio == 1.0 && dist(cX,cY,X,Y) >= 1.5 * tool_diameter && approx4(cZ,Z) && !am_roughing) {
 		double vX,vY, len;
 		vX = X - cX;
 		vY = Y - cY;
@@ -213,7 +214,7 @@ void gcode_vmill_to(double X, double Y, double Z, double speedratio)
     prevY2 = Y;
 
 	/* slow down for round corners */
-	if (dist(cX,cY,X,Y) < 0.5 * tool_diameter && speedratio > 0.7)
+	if (dist(cX,cY,X,Y) < 0.5 * tool_diameter && speedratio > 0.7 && !am_roughing)
 		speedratio = 0.66;
 
 
@@ -407,4 +408,9 @@ void gcode_reset_current(void)
 	cX = -500000;
 	cY = -500000;
 	cZ = -500000;	
+}
+
+void gcode_set_roughing(int value)
+{
+	am_roughing = value;
 }

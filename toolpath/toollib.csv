@@ -7,4 +7,4 @@ number,vendor,model,URL,name,type,diameter,cornerradius,flutelength,shaftdiamete
 101,Cabide 3D,101,https://shop.carbide3d.com/products/102-125-flat-cutter-qty-3,1/8"""" ballnose,end,0.125,0,0.75,0,0,2,0.125,,0,,,,18,45,18000,0.045,,0.02,20,45,18000
 19,HQMaster,19,https://shop.carbide3d.com/products/201-25-end-mill-cutter-qty-2,HQMaster 1.5mm cutter,end,0.059,0,0.75,0,0,3,0.125,,0,,,,15,16,18000,0.031,,0.02,20,16,18000
 23,Carbide 3D,1372,https://shop.carbide3d.com/products/202-25-ball-cutter-qty-2,Whiteside Router Bits 1372 Bowl and Tray Bit,ball,0.75,0,0.75,0,0,3,0.125,,0,,,,15,25,18000,0.04,,0.02,20,25,18000
-27,Jerray,19,https://shop.carbide3d.com/products/201-25-end-mill-cutter-qty-2,JERRAY CNC Carving 4.82 Deg Tapered Angle Ball Tip Radius=0.5mm,end,0.039,0,0.75,0,0,3,0.125,,0,,,,16,30,18000,0.039,,0.02,20,16,18000
+27,Jerray,19,https://shop.carbide3d.com/products/201-25-end-mill-cutter-qty-2,JERRAY CNC Carving 4.82 Deg Tapered Angle Ball Tip Radius=0.5mm,ball,0.039,0,0.75,0,0,3,0.125,,0,,,,16,30,18000,0.039,,0.02,20,16,18000

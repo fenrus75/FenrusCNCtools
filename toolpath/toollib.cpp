@@ -27,6 +27,7 @@ struct tool {
     double plungerate_ipm;
     double angle;
     bool is_vcarve;
+	bool is_ballnose;
 	bool printed;
 };
 
@@ -73,13 +74,18 @@ static void push_word(char *word, int level)
     if (level == 0)
         current->number = strtoull(word, NULL, 10);
     if (level == 4)
-        current->name = strdup(word);
-    if (level == 6)
-        current->diameter_inch = strtod(word, NULL);
+		current->name = strdup(word);
+    if (level == 6) {
+		current->diameter_inch = strtod(word, NULL);
+	}
+	if (level == 5) {
+		if (strstr(word, "vee")) 
+			current->is_vcarve = true;
+		if (strstr(word, "ball"))
+			current->is_ballnose = true;
+	}
     if (level == 10) {
         current->angle = strtod(word, NULL);
-        if (current->angle > 0)
-            current->is_vcarve = true;
     }
     if (level == 21)
         current->depth_inch = strtod(word, NULL);
@@ -161,6 +167,15 @@ int tool_is_vcarve(int toolnr)
     toolnr = abs(toolnr);
     for (auto tool : tools)
         if (tool->number == toolnr && tool->is_vcarve)
+            return 1;
+    return 0;
+}
+
+int tool_is_ballnose(int toolnr)
+{
+    toolnr = abs(toolnr);
+    for (auto tool : tools)
+        if (tool->number == toolnr && tool->is_ballnose)
             return 1;
     return 0;
 }
