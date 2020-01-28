@@ -143,7 +143,7 @@ Angle 315.00     X 0.7071   Y -0.7071
 Angle 337.50     X 0.9239   Y -0.3827
 */
 
-#define ACC 100.0
+#define ACC 1000.0
 
 static inline double get_height_tool(double X, double Y, double R, bool ballnose)
 {	
