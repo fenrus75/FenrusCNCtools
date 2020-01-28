@@ -142,75 +142,94 @@ Angle 292.50     X 0.3827   Y -0.9239
 Angle 315.00     X 0.7071   Y -0.7071
 Angle 337.50     X 0.9239   Y -0.3827
 */
-static inline double get_height_tool(double X, double Y, double R)
+
+#define ACC 100.0
+
+static inline double get_height_tool(double X, double Y, double R, bool ballnose)
 {	
 	double d = 0;
+	double orgR = R;
+	double balloffset = 0.0;
+
 
 	d = fmax(d, get_height(X + 0.0000 * R, Y + 0.0000 * R));
 
-	d = fmax(d, get_height(X + 1.0000 * R, Y + 0.0000 * R));
-	d = fmax(d, get_height(X + 0.9239 * R, Y + 0.3827 * R));
-	d = fmax(d, get_height(X + 0.7071 * R, Y + 0.7071 * R));
-	d = fmax(d, get_height(X + 0.3827 * R, Y + 0.9239 * R));
-	d = fmax(d, get_height(X + 0.0000 * R, Y + 1.0000 * R));
-	d = fmax(d, get_height(X - 0.3872 * R, Y + 0.9239 * R));
-	d = fmax(d, get_height(X - 0.7071 * R, Y + 0.7071 * R));
-	d = fmax(d, get_height(X - 0.9239 * R, Y + 0.3827 * R));
-	d = fmax(d, get_height(X - 1.0000 * R, Y + 0.0000 * R));
-	d = fmax(d, get_height(X - 0.9239 * R, Y - 0.3827 * R));
-	d = fmax(d, get_height(X - 0.7071 * R, Y - 0.7071 * R));
-	d = fmax(d, get_height(X - 0.3827 * R, Y - 0.9239 * R));
-	d = fmax(d, get_height(X - 0.0000 * R, Y - 1.0000 * R));
-	d = fmax(d, get_height(X + 0.3827 * R, Y - 0.9239 * R));
-	d = fmax(d, get_height(X + 0.7071 * R, Y - 0.7071 * R));
-	d = fmax(d, get_height(X + 0.9239 * R, Y - 0.3827 * R));
+//	if (ballnose) {
+//		balloffset = orgR - sqrt(orgR*orgR - R*R);
+//		printf("balloffset = %5.2f\n", balloffset);
+//	}
+
+	d = fmax(d, get_height(X + 1.0000 * R, Y + 0.0000 * R) + balloffset);
+	d = fmax(d, get_height(X + 0.9239 * R, Y + 0.3827 * R) + balloffset);
+	d = fmax(d, get_height(X + 0.7071 * R, Y + 0.7071 * R) + balloffset);
+	d = fmax(d, get_height(X + 0.3827 * R, Y + 0.9239 * R) + balloffset);
+	d = fmax(d, get_height(X + 0.0000 * R, Y + 1.0000 * R) + balloffset);
+	d = fmax(d, get_height(X - 0.3872 * R, Y + 0.9239 * R) + balloffset);
+	d = fmax(d, get_height(X - 0.7071 * R, Y + 0.7071 * R) + balloffset);
+	d = fmax(d, get_height(X - 0.9239 * R, Y + 0.3827 * R) + balloffset);
+	d = fmax(d, get_height(X - 1.0000 * R, Y + 0.0000 * R) + balloffset);
+	d = fmax(d, get_height(X - 0.9239 * R, Y - 0.3827 * R) + balloffset);
+	d = fmax(d, get_height(X - 0.7071 * R, Y - 0.7071 * R) + balloffset);
+	d = fmax(d, get_height(X - 0.3827 * R, Y - 0.9239 * R) + balloffset);
+	d = fmax(d, get_height(X - 0.0000 * R, Y - 1.0000 * R) + balloffset);
+	d = fmax(d, get_height(X + 0.3827 * R, Y - 0.9239 * R) + balloffset);
+	d = fmax(d, get_height(X + 0.7071 * R, Y - 0.7071 * R) + balloffset);
+	d = fmax(d, get_height(X + 0.9239 * R, Y - 0.3827 * R) + balloffset);
 
 	R = R / 1.5;
 
 	if (R < 1)
-		return d;
+		return ceil(d*ACC)/ACC;
 
-	d = fmax(d, get_height(X + 1.0000 * R, Y + 0.0000 * R));
-	d = fmax(d, get_height(X + 0.9239 * R, Y + 0.3827 * R));
-	d = fmax(d, get_height(X + 0.7071 * R, Y + 0.7071 * R));
-	d = fmax(d, get_height(X + 0.3827 * R, Y + 0.9239 * R));
-	d = fmax(d, get_height(X + 0.0000 * R, Y + 1.0000 * R));
-	d = fmax(d, get_height(X - 0.3872 * R, Y + 0.9239 * R));
-	d = fmax(d, get_height(X - 0.7071 * R, Y + 0.7071 * R));
-	d = fmax(d, get_height(X - 0.9239 * R, Y + 0.3827 * R));
-	d = fmax(d, get_height(X - 1.0000 * R, Y + 0.0000 * R));
-	d = fmax(d, get_height(X - 0.9239 * R, Y - 0.3827 * R));
-	d = fmax(d, get_height(X - 0.7071 * R, Y - 0.7071 * R));
-	d = fmax(d, get_height(X - 0.3827 * R, Y - 0.9239 * R));
-	d = fmax(d, get_height(X - 0.0000 * R, Y - 1.0000 * R));
-	d = fmax(d, get_height(X + 0.3827 * R, Y - 0.9239 * R));
-	d = fmax(d, get_height(X + 0.7071 * R, Y - 0.7071 * R));
-	d = fmax(d, get_height(X + 0.9239 * R, Y - 0.3827 * R));
+//	if (ballnose)
+//		balloffset = orgR - sqrt(orgR*orgR - R*R);
+
+	d = fmax(d, get_height(X + 1.0000 * R, Y + 0.0000 * R) + balloffset);
+	d = fmax(d, get_height(X + 0.9239 * R, Y + 0.3827 * R) + balloffset);
+	d = fmax(d, get_height(X + 0.7071 * R, Y + 0.7071 * R) + balloffset);
+	d = fmax(d, get_height(X + 0.3827 * R, Y + 0.9239 * R) + balloffset);
+	d = fmax(d, get_height(X + 0.0000 * R, Y + 1.0000 * R) + balloffset);
+	d = fmax(d, get_height(X - 0.3872 * R, Y + 0.9239 * R) + balloffset);
+	d = fmax(d, get_height(X - 0.7071 * R, Y + 0.7071 * R) + balloffset);
+	d = fmax(d, get_height(X - 0.9239 * R, Y + 0.3827 * R) + balloffset);
+	d = fmax(d, get_height(X - 1.0000 * R, Y + 0.0000 * R) + balloffset);
+	d = fmax(d, get_height(X - 0.9239 * R, Y - 0.3827 * R) + balloffset);
+	d = fmax(d, get_height(X - 0.7071 * R, Y - 0.7071 * R) + balloffset);
+	d = fmax(d, get_height(X - 0.3827 * R, Y - 0.9239 * R) + balloffset);
+	d = fmax(d, get_height(X - 0.0000 * R, Y - 1.0000 * R) + balloffset);
+	d = fmax(d, get_height(X + 0.3827 * R, Y - 0.9239 * R) + balloffset);
+	d = fmax(d, get_height(X + 0.7071 * R, Y - 0.7071 * R) + balloffset);
+	d = fmax(d, get_height(X + 0.9239 * R, Y - 0.3827 * R) + balloffset);
 
 	R = R / 1.5;
 
 	if (R < 1)
-		return d;
-
-	d = fmax(d, get_height(X + 1.0000 * R, Y + 0.0000 * R));
-	d = fmax(d, get_height(X + 0.9239 * R, Y + 0.3827 * R));
-	d = fmax(d, get_height(X + 0.7071 * R, Y + 0.7071 * R));
-	d = fmax(d, get_height(X + 0.3827 * R, Y + 0.9239 * R));
-	d = fmax(d, get_height(X + 0.0000 * R, Y + 1.0000 * R));
-	d = fmax(d, get_height(X - 0.3872 * R, Y + 0.9239 * R));
-	d = fmax(d, get_height(X - 0.7071 * R, Y + 0.7071 * R));
-	d = fmax(d, get_height(X - 0.9239 * R, Y + 0.3827 * R));
-	d = fmax(d, get_height(X - 1.0000 * R, Y + 0.0000 * R));
-	d = fmax(d, get_height(X - 0.9239 * R, Y - 0.3827 * R));
-	d = fmax(d, get_height(X - 0.7071 * R, Y - 0.7071 * R));
-	d = fmax(d, get_height(X - 0.3827 * R, Y - 0.9239 * R));
-	d = fmax(d, get_height(X - 0.0000 * R, Y - 1.0000 * R));
-	d = fmax(d, get_height(X + 0.3827 * R, Y - 0.9239 * R));
-	d = fmax(d, get_height(X + 0.7071 * R, Y - 0.7071 * R));
-	d = fmax(d, get_height(X + 0.9239 * R, Y - 0.3827 * R));
+		return ceil(d*ACC)/ACC;
 
 
-	return d;
+//	if (ballnose)
+//		balloffset = orgR - sqrt(orgR*orgR - R*R);
+
+	d = fmax(d, get_height(X + 1.0000 * R, Y + 0.0000 * R) + balloffset);
+	d = fmax(d, get_height(X + 0.9239 * R, Y + 0.3827 * R) + balloffset);
+	d = fmax(d, get_height(X + 0.7071 * R, Y + 0.7071 * R) + balloffset);
+	d = fmax(d, get_height(X + 0.3827 * R, Y + 0.9239 * R) + balloffset);
+	d = fmax(d, get_height(X + 0.0000 * R, Y + 1.0000 * R) + balloffset);
+	d = fmax(d, get_height(X - 0.3872 * R, Y + 0.9239 * R) + balloffset);
+	d = fmax(d, get_height(X - 0.7071 * R, Y + 0.7071 * R) + balloffset);
+	d = fmax(d, get_height(X - 0.9239 * R, Y + 0.3827 * R) + balloffset);
+	d = fmax(d, get_height(X - 1.0000 * R, Y + 0.0000 * R) + balloffset);
+	d = fmax(d, get_height(X - 0.9239 * R, Y - 0.3827 * R) + balloffset);
+	d = fmax(d, get_height(X - 0.7071 * R, Y - 0.7071 * R) + balloffset);
+	d = fmax(d, get_height(X - 0.3827 * R, Y - 0.9239 * R) + balloffset);
+	d = fmax(d, get_height(X - 0.0000 * R, Y - 1.0000 * R) + balloffset);
+	d = fmax(d, get_height(X + 0.3827 * R, Y - 0.9239 * R) + balloffset);
+	d = fmax(d, get_height(X + 0.7071 * R, Y - 0.7071 * R) + balloffset);
+	d = fmax(d, get_height(X + 0.9239 * R, Y - 0.3827 * R) + balloffset);
+
+
+		return ceil(d*ACC)/ACC;
+
 }
 
 static void print_progress(double pct) {
@@ -228,14 +247,20 @@ static void print_progress(double pct) {
 static void create_toolpath(class scene *scene, int tool, bool roughing)
 {
 	double X, Y = 0, maxX, maxY, stepover;
-	double maxZ, diam;
+	double maxZ, diam, radius;
 	double offset = 0;
+	bool ballnose = false;
 
 	class inputshape *input;
 	toolnr = tool;
 	diam = tool_diam(tool);
 	maxZ = scene->get_cutout_depth();
 
+
+	radius = diam / 2;
+	/* when roughing, look much wider */
+	if (roughing)
+		radius = diam;
 
 	Y = -diam/2 * 0.99;
 	maxX = stl_image_X() + diam/2 * 0.99;
@@ -245,9 +270,17 @@ static void create_toolpath(class scene *scene, int tool, bool roughing)
 	if (!roughing && stepover > 0.2)
 		stepover = stepover / 1.42;
 
+	if (!roughing && tool_is_ballnose(tool)) {
+		stepover = stepover / 2;
+		ballnose = true;
+	}
+
 	offset = 0;
 	if (roughing) 
 		offset = scene->get_stock_to_leave();
+
+	if (roughing)
+		gcode_set_roughing(1);
 
 	if (roughing || scene->want_finishing_pass()) {
 		input = new(class inputshape);
@@ -258,7 +291,7 @@ static void create_toolpath(class scene *scene, int tool, bool roughing)
 			X = -diam/2 * 0.99;
 			while (X < maxX) {
 				double d;
-				d = get_height_tool(X, Y, diam + offset);
+				d = get_height_tool(X, Y, radius + offset, ballnose);
 
 				line_to(input, X, Y, -maxZ + d + offset);
 
@@ -266,11 +299,11 @@ static void create_toolpath(class scene *scene, int tool, bool roughing)
 			}
 			print_progress(100.0 * Y / maxY);
 			Y = Y + stepover;
-			line_to(input, X, Y, -maxZ + offset + get_height_tool(X, Y, diam + offset));
+			line_to(input, X, Y, -maxZ + offset + get_height_tool(X, Y, radius + offset, ballnose));
 
 			while (X > -diam/2 * 0.99) {
 				double d;
-				d = get_height_tool(X, Y, diam + offset);
+				d = get_height_tool(X, Y, radius + offset, ballnose);
 
 				line_to(input, X, Y, -maxZ + d + offset);
 
@@ -290,7 +323,7 @@ static void create_toolpath(class scene *scene, int tool, bool roughing)
 			Y = -diam/2 * 0.99;
 			while (Y < maxY) {
 				double d;
-				d = get_height_tool(X, Y, diam + offset);
+				d = get_height_tool(X, Y, radius + offset, ballnose);
 
 				line_to(input, X, Y, -maxZ + d + offset);
 
@@ -298,11 +331,11 @@ static void create_toolpath(class scene *scene, int tool, bool roughing)
 			}
 			print_progress(100.0 * X / maxX);
 			X = X + stepover;
-			line_to(input, X, Y, -maxZ + offset + get_height_tool(X, Y, diam + offset));
+			line_to(input, X, Y, -maxZ + offset + get_height_tool(X, Y, radius + offset, ballnose));
 
 			while (Y > - diam/2 * 0.99) {
 				double d;
-				d = get_height_tool(X, Y, diam + offset);
+				d = get_height_tool(X, Y, radius + offset, ballnose);
 
 				line_to(input, X, Y, -maxZ + d + offset);
 				Y = Y - stepover;
