@@ -13,3 +13,4 @@ todo
 *.patch
 *.wo
 toolpath.exe
+*.stl

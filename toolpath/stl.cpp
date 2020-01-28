@@ -151,13 +151,11 @@ static inline double get_height_tool(double X, double Y, double R, bool ballnose
 	double orgR = R;
 	double balloffset = 0.0;
 
-
 	d = fmax(d, get_height(X + 0.0000 * R, Y + 0.0000 * R));
 
-//	if (ballnose) {
-//		balloffset = orgR - sqrt(orgR*orgR - R*R);
-//		printf("balloffset = %5.2f\n", balloffset);
-//	}
+	if (ballnose) {
+		balloffset = sqrt(orgR*orgR - R*R) - orgR;
+	}
 
 	d = fmax(d, get_height(X + 1.0000 * R, Y + 0.0000 * R) + balloffset);
 	d = fmax(d, get_height(X + 0.9239 * R, Y + 0.3827 * R) + balloffset);
@@ -178,11 +176,12 @@ static inline double get_height_tool(double X, double Y, double R, bool ballnose
 
 	R = R / 1.5;
 
-	if (R < 1)
+	if (R < 0.3)
 		return ceil(d*ACC)/ACC;
 
-//	if (ballnose)
-//		balloffset = orgR - sqrt(orgR*orgR - R*R);
+	if (ballnose) {
+		balloffset = sqrt(orgR*orgR - R*R) - orgR;
+	}
 
 	d = fmax(d, get_height(X + 1.0000 * R, Y + 0.0000 * R) + balloffset);
 	d = fmax(d, get_height(X + 0.9239 * R, Y + 0.3827 * R) + balloffset);
@@ -203,12 +202,12 @@ static inline double get_height_tool(double X, double Y, double R, bool ballnose
 
 	R = R / 1.5;
 
-	if (R < 1)
+	if (R < 0.3)
 		return ceil(d*ACC)/ACC;
 
 
-//	if (ballnose)
-//		balloffset = orgR - sqrt(orgR*orgR - R*R);
+	if (ballnose)
+		balloffset = sqrt(orgR*orgR - R*R) - orgR;
 
 	d = fmax(d, get_height(X + 1.0000 * R, Y + 0.0000 * R) + balloffset);
 	d = fmax(d, get_height(X + 0.9239 * R, Y + 0.3827 * R) + balloffset);
