@@ -22,6 +22,7 @@ static double tool_stepover = 3;
 static double tool_maxdepth = 1;
 static double tool_feedrate = 0;
 static double tool_plungerate = 0;
+static int tool_nr = 0;
 static double rippem = 10000;
 static double safe_retract_height = 2;
 
@@ -55,6 +56,7 @@ void set_tool_imperial(const char *name, int nr, double diameter_inch, double st
     tool_maxdepth = inch_to_mm(maxdepth_inch);
     tool_feedrate = ipm_to_metric(feedrate_ipm);
     tool_plungerate = ipm_to_metric(plungerate_ipm);
+	tool_nr = nr;
     prev_valid = 0;
 	has_current = 0;
 }
@@ -67,6 +69,7 @@ void set_tool_metric(const char *name, int nr, double diameter_mm, double stepov
     tool_maxdepth = maxdepth_mm;
     tool_feedrate = feedrate_metric;
     tool_plungerate = plungerate_metric;
+	tool_nr = nr;
     prev_valid = 0;
 	has_current = 0;
 }
@@ -189,7 +192,8 @@ void gcode_mill_to(double X, double Y, double Z, double speedratio)
 
 void gcode_vmill_to(double X, double Y, double Z, double speedratio)
 {
-
+	double d;
+	double toolspeed;
 //    printf("Mill to %5.4f %5.4f %5.4f\n", X, Y, Z);
 
 	/* slow start and stop for long distances */
@@ -213,6 +217,10 @@ void gcode_vmill_to(double X, double Y, double Z, double speedratio)
     prevX2 = X;
     prevY2 = Y;
 
+	d = dist3(cX,cY,cZ,X,Y,Z);
+
+	toolspeed = dist(cX,cY,X,Y) / d * tool_feedrate + fabs(cZ-Z) / d * tool_plungerate;
+
 	/* slow down for round corners */
 	if (dist(cX,cY,X,Y) < 0.5 * tool_diameter && speedratio > 0.7 && !am_roughing)
 		speedratio = 0.66;
@@ -228,15 +236,17 @@ void gcode_vmill_to(double X, double Y, double Z, double speedratio)
 	}
 
 
+	toolspeed = ceil(speedratio * toolspeed /10)*10;
+
     if (cZ != Z)
         fprintf(gcode,"Z%5.4f", Z);
-    if (cS != speedratio * tool_feedrate)
-        fprintf(gcode, "F%i", (int)(speedratio * tool_feedrate));
+    if (cS != toolspeed)
+        fprintf(gcode, "F%i", (int)(toolspeed));
         
     prev_valid = 1;
 	has_current = 1;
     cZ = Z;
-    cS = speedratio * tool_feedrate;
+    cS = toolspeed;
     fprintf(gcode, "\n");
     mill_count++;
 }
@@ -326,7 +336,7 @@ int gcode_vconditional_would_retract(double X, double Y, double Z, double speed,
     if (cX == X && cY == Y && cZ == Z)
         return 0;
 
-    if (dist3(X,Y,Z,cX,cY,cZ) < 0.07) {
+    if (dist3(X,Y,Z,cX,cY,cZ) < 0.07 || speed < 0) {
         return 0;
     }
     /* can we just go back */
