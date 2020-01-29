@@ -193,7 +193,7 @@ void gcode_vmill_to(double X, double Y, double Z, double speedratio)
 //    printf("Mill to %5.4f %5.4f %5.4f\n", X, Y, Z);
 
 	/* slow start and stop for long distances */
-	if (speedratio == 1.0 && dist(cX,cY,X,Y) >= 1.5 * tool_diameter && approx4(cZ,Z) && !am_roughing) {
+	if (speedratio == 1.0 && dist(cX,cY,X,Y) >= 1.5 * tool_diameter && approx4(cZ,Z)) {
 		double vX,vY, len;
 		vX = X - cX;
 		vY = Y - cY;
