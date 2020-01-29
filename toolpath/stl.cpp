@@ -431,7 +431,7 @@ static void create_toolpath(class scene *scene, int tool, bool roughing)
 				X = X - stepover;
 			}
 
-			X = -diam/2;
+			X = -diam/2 * 0.99;
 			print_progress(100.0 * Y / maxY);
 			Y = Y + stepover;
 			if (Y < maxY)
@@ -471,7 +471,7 @@ static void create_toolpath(class scene *scene, int tool, bool roughing)
 			}
 			print_progress(100.0 * X / maxX);
 			X = X + stepover;
-			Y = -diam/2;
+			Y = -diam/2 * 0.99;
 			if (X < maxX)
 				line_to(input, X, Y, -maxZ + offset + get_height_tool(X, Y, radius + offset, ballnose));
 
