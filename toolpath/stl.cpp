@@ -30,6 +30,12 @@ struct stltriangle {
 static int toolnr;
 static double tooldepth = 0.1;
 
+
+static inline double dist(double X0, double Y0, double X1, double Y1)
+{
+  return sqrt((X1-X0)*(X1-X0) + (Y1-Y0)*(Y1-Y0));
+}
+
 static int read_stl_file(const char *filename)
 {
 	FILE *file;
@@ -243,6 +249,109 @@ static void print_progress(double pct) {
 	fflush(stdout);
 }
 
+static void create_cutout(class scene *scene, int tool)
+{
+	Polygon_2 *p;
+	double diam = tool_diam(tool);;
+	double gradient = 0, circumfence = 0;
+	double currentdepth = -scene->get_cutout_depth();
+	class inputshape *input;
+
+	input = new(class inputshape);
+	input->set_name("Cutout path");
+	scene->shapes.push_back(input);
+
+	p = new(Polygon_2);
+	p->push_back(Point(-diam/2, -diam/2));
+	p->push_back(Point(stl_image_X() + diam/2, -diam/2));
+	p->push_back(Point(stl_image_X() + diam/2, stl_image_Y() + diam/2));
+	p->push_back(Point(-diam/2, stl_image_Y() + diam / 2));
+
+	for (unsigned int i = 0; i < p->size(); i++) {
+		unsigned int next = i + 1;
+		if (next >= p->size())
+			next = 0;
+
+		class tooldepth * td = new(class tooldepth);
+		input->tooldepths.push_back(td);
+		td->depth = currentdepth;
+		td->toolnr = toolnr;
+		td->diameter = get_tool_diameter();
+		
+		class toollevel *tool = new(class toollevel);
+		tool->level = 0;
+		tool->offset = get_tool_diameter();
+		tool->diameter = get_tool_diameter();
+		tool->depth = currentdepth;
+		tool->toolnr = toolnr;
+		tool->minY = 0;
+		tool->name = "Cutout";
+		td->toollevels.push_back(tool);
+
+	    Polygon_2 *p2;
+		p2 = new(Polygon_2);
+		double d1 = currentdepth;
+		p2->push_back(Point(CGAL::to_double((*p)[i].x()), CGAL::to_double((*p)[i].y())));
+		p2->push_back(Point(CGAL::to_double((*p)[next].x()), CGAL::to_double((*p)[next].y())));
+		tool->add_poly_vcarve(p2, d1, d1);
+	}			
+
+	for (unsigned int i = 0; i < p->size(); i++) {
+		unsigned int next = i + 1;
+		if (next >= p->size())
+			next = 0;
+		circumfence += dist(
+					CGAL::to_double((*p)[i].x()), 
+					CGAL::to_double((*p)[i].y()), 
+					CGAL::to_double((*p)[next].x()), 
+					CGAL::to_double((*p)[next].y()));
+	}
+
+	if (circumfence == 0)
+		return;
+
+	gradient = fabs(get_tool_maxdepth()) / circumfence;
+	/*     walk the gradient up until we break the surface */
+	while (currentdepth < 0) {
+		for (unsigned int i = 0; i < p->size(); i++) {
+			unsigned int next = i + 1;
+			if (next >= p->size())
+				next = 0;
+
+			if (currentdepth > 0)
+				break;
+
+			class tooldepth * td = new(class tooldepth);
+			input->tooldepths.push_back(td);
+			td->depth = currentdepth;
+			td->toolnr = toolnr;
+			td->diameter = get_tool_diameter();
+			class toollevel *tool = new(class toollevel);
+			tool->level = 0;
+			tool->offset = get_tool_diameter();
+			tool->diameter = get_tool_diameter();
+			tool->depth = currentdepth;
+			tool->toolnr = toolnr;
+			tool->minY = 0;
+			tool->name = NULL;
+			td->toollevels.push_back(tool);
+
+			Polygon_2 *p2;
+			p2 = new(Polygon_2);
+			double d1 = currentdepth;
+			double d2 = gradient * dist(	CGAL::to_double((*p)[i].x()), 
+														CGAL::to_double((*p)[i].y()), 
+														CGAL::to_double((*p)[next].x()), 
+														CGAL::to_double((*p)[next].y()));
+			p2->push_back(Point(CGAL::to_double((*p)[i].x()), CGAL::to_double((*p)[i].y())));
+			p2->push_back(Point(CGAL::to_double((*p)[next].x()), CGAL::to_double((*p)[next].y())));
+			tool->add_poly_vcarve(p2, d1, d1 + d2);
+			currentdepth += d2;
+					
+		}
+	}
+}
+
 static void create_toolpath(class scene *scene, int tool, bool roughing)
 {
 	double X, Y = 0, maxX, maxY, stepover;
@@ -306,8 +415,8 @@ static void create_toolpath(class scene *scene, int tool, bool roughing)
 			}
 			print_progress(100.0 * Y / maxY);
 			Y = Y + stepover;
+			X = maxX;
 			line_to(input, X, Y, -maxZ + offset + get_height_tool(X, Y, radius + offset, ballnose));
-
 			prevX = X;
 			while (X > -diam/2 * 0.99) {
 				double d;
@@ -345,6 +454,7 @@ static void create_toolpath(class scene *scene, int tool, bool roughing)
 			}
 			print_progress(100.0 * X / maxX);
 			X = X + stepover;
+			Y = maxY;
 			line_to(input, X, Y, -maxZ + offset + get_height_tool(X, Y, radius + offset, ballnose));
 			prevY = Y;
 			while (Y > - diam/2 * 0.99) {
@@ -376,8 +486,10 @@ void process_stl_file(class scene *scene, const char *filename)
 	scale_design_Z(scene->get_cutout_depth());
 	print_triangle_stats();
 
+
 	for ( int i = scene->get_tool_count() - 1; i >= 0 ; i-- ) {
 		activate_tool(scene->get_tool_nr(i));
+
 		printf("Create toolpaths for tool %i \n", scene->get_tool_nr(i));
 
 		/* only for the first roughing tool do we need to honor the max tool depth */
@@ -388,6 +500,8 @@ void process_stl_file(class scene *scene, const char *filename)
 		}
 		create_toolpath(scene, scene->get_tool_nr(i), i < (int)scene->get_tool_count() - 1);
 	}
+	activate_tool(scene->get_tool_nr(0));
+	create_cutout(scene, scene->get_tool_nr(0));
 }
 
 
