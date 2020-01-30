@@ -19,8 +19,11 @@ Carbide 3D forum discussion at https://community.carbide3d.com/t/cutting-forces-
 The tool is developed on Linux. The main external requirement is CGAL
 (libcgal-dev or equivalent). A Windows port is now available as well in the
 "releases" section.
+
 Also currently Toolpath assumes you have a "bitsetter" or equivalent device
-since it creates one integrated gcode file for all endmills used [todo]. 
+since it creates one integrated gcode file for all endmills used. If you 
+do not have a bitsetter device or similar, you should pass the "-x" command
+line option to generate separate gcode files for each tool.
 
 
 
