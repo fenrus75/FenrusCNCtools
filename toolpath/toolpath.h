@@ -82,6 +82,7 @@ extern double tool_diam(int toolnr);
 extern int gcode_has_current(void);
 extern void gcode_reset_current(void);
 extern void gcode_set_roughing(int value);
+extern void gcode_want_separate_files(void);
 
 static inline double px_to_inch(double px) { return px / 96.0; };
 static inline double px_to_mm(double px) { return 25.4 * px / 96.0; };

@@ -32,6 +32,7 @@ void usage(void)
 	printf("\t--Depth <mm>      	(-D)    set cutting depth in mm\n");
 	printf("\t--cutout <inch>   	(-c)    cut out the outer geometry to depth <inch>\n");
 	printf("\t--stock-to-leave <mm> (-o)    how much stock to leave between roughing and finishing pass\n");
+	printf("\t--separate			(-x)	create one gcode (.nc) file per tool\n");
 	exit(EXIT_SUCCESS);
 }
 
@@ -50,6 +51,7 @@ static struct option long_options[] =
           {"depth",    required_argument, 0, 'd'},
           {"Depth",    required_argument, 0, 'D'},
 		  {"help",	no_argument, 0, 'h'},
+		  {"separate",	no_argument, 0, 'x'},
           {0, 0, 0, 0}
         };
 
@@ -67,7 +69,7 @@ int main(int argc, char **argv)
     
     scene->set_depth(inch_to_mm(0.044));
 
-    while ((opt = getopt_long(argc, argv, "vfsil:t:d:D:", long_options, &option_index)) != -1) {
+    while ((opt = getopt_long(argc, argv, "vfsil:t:d:D:xh", long_options, &option_index)) != -1) {
         switch (opt)
 		{
 			case 'v':
@@ -107,6 +109,9 @@ int main(int argc, char **argv)
 			case 'o': /* mm */
 				scene->set_stock_to_leave(strtod(optarg, NULL));
 				printf("Setting stock to leave to  %5.2fmm\n", scene->get_stock_to_leave());
+				break;
+			case 'x':
+				gcode_want_separate_files();
 				break;
 			case 't':
 				int arg;

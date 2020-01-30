@@ -352,6 +352,21 @@ static void create_cutout(class scene *scene, int tool)
 	}
 }
 
+static bool outside_area(double X, double Y, double mX, double mY, double diam)
+{
+	if (Y > mY)
+		Y = mY - Y;
+
+	if (X > mX)
+		X = mX - X;
+
+	if (X < 0 && Y < 0 && sqrt(X*X+Y*Y) > diam/2 * 0.90)
+		return true;
+
+	return false;
+
+}
+
 static void create_toolpath(class scene *scene, int tool, bool roughing)
 {
 	double X, Y = 0, maxX, maxY, stepover;
@@ -452,28 +467,32 @@ static void create_toolpath(class scene *scene, int tool, bool roughing)
 				double d;
 				d = get_height_tool(X, Y, radius + offset, ballnose);
 
-				line_to(input, X, Y, -maxZ + d + offset);
+				if (!outside_area(X, Y, stl_image_X(), stl_image_Y(), diam))
+					line_to(input, X, Y, -maxZ + d + offset);
 				prevY = Y;
 				Y = Y + stepover;
 			}
 			print_progress(100.0 * X / maxX);
 			X = X + stepover;
 			Y = maxY;
-			line_to(input, X, Y, -maxZ + offset + get_height_tool(X, Y, radius + offset, ballnose));
+			if (!outside_area(X, Y, stl_image_X(), stl_image_Y(), diam) &&  (X < maxX))
+				line_to(input, X, Y, -maxZ + offset + get_height_tool(X, Y, radius + offset, ballnose));
 			prevY = Y;
 			while (Y > - diam/2 * 0.99) {
 				double d;
 				d = get_height_tool(X, Y, radius + offset, ballnose);
 
-				line_to(input, X, Y, -maxZ + d + offset);
+				if (!outside_area(X, Y, stl_image_X(), stl_image_Y(), diam))
+					line_to(input, X, Y, -maxZ + d + offset);
 				prevY = Y;
 				Y = Y - stepover;
 			}
 			print_progress(100.0 * X / maxX);
 			X = X + stepover;
 			Y = -diam/2 * 0.99;
-			if (X < maxX)
-				line_to(input, X, Y, -maxZ + offset + get_height_tool(X, Y, radius + offset, ballnose));
+
+			if (!outside_area(X, Y, stl_image_X(), stl_image_Y(), diam) &&  (X < maxX))
+					line_to(input, X, Y, -maxZ + offset + get_height_tool(X, Y, radius + offset, ballnose));
 
 		}
 	}

@@ -25,7 +25,9 @@ static double tool_plungerate = 0;
 static int tool_nr = 0;
 static double rippem = 10000;
 static double safe_retract_height = 2;
+static int want_separate;
 
+static char stored_filename[8192];
 static FILE *gcode;
 static int retract_count;
 static int mill_count;
@@ -103,9 +105,25 @@ void set_retract_height_metric(double _rh_mm)
     safe_retract_height = _rh_mm;
 }
 
+static int iter = 0;
 void write_gcode_header(const char *filename)
 {
-    gcode = fopen(filename, "w");
+	char actual_filename[8192];
+	if (strlen(stored_filename) == 0) {
+		char *c;
+		strncpy(stored_filename, filename,8000);
+		c = strstr(stored_filename, ".nc");
+		if (c) *c = 0;	
+	}
+	strcpy(actual_filename, filename);
+
+	if (want_separate) {
+		sprintf(actual_filename, "%s-%i-%i.nc", stored_filename, ++iter, tool_nr);
+	}
+
+	
+
+    gcode = fopen(actual_filename, "w");
     if (!gcode) {
         printf("Cannot open %s for gcode output: %s\n", filename, strerror(errno));
         return;
@@ -394,6 +412,10 @@ void gcode_tool_change(int toolnr)
  }
  current_tool_nr = toolnr;
  activate_tool(toolnr); 
+ if (want_separate && !first_time) {
+		write_gcode_footer();
+		write_gcode_header(stored_filename);
+ }
  fprintf(gcode, "M6 T%i\n", abs(toolnr));
  fprintf(gcode, "M3 S%i\n", (int)rippem);  
  fprintf(gcode, "G0 X0Y0\n");
@@ -423,4 +445,9 @@ void gcode_reset_current(void)
 void gcode_set_roughing(int value)
 {
 	am_roughing = value;
+}
+
+void gcode_want_separate_files(void)
+{
+	want_separate = 1;
 }
