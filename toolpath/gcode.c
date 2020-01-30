@@ -408,7 +408,8 @@ void gcode_tool_change(int toolnr)
    return;
  if (!first_time) {
   gcode_retract();
-  fprintf(gcode, "M5\n");
+  if (!want_separate)
+	  fprintf(gcode, "M5\n");
  }
  current_tool_nr = toolnr;
  activate_tool(toolnr); 
