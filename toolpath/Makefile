@@ -43,4 +43,4 @@ la_test: Makefile la_test.o linalg.o
 	gcc la_test.o linalg.o -lm -o la_test
 	
 clean:
-	rm -f *.o *~ DEADJOE toolpath
+	rm -f *.o *.wo *.fo *~ DEADJOE toolpath toolpath.exe toolpath-fine

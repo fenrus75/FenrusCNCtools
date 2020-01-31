@@ -108,7 +108,7 @@ void set_retract_height_metric(double _rh_mm)
 static int iter = 0;
 void write_gcode_header(const char *filename)
 {
-	char actual_filename[8192];
+	char actual_filename[8392];
 	if (strlen(stored_filename) == 0) {
 		char *c;
 		strncpy(stored_filename, filename,8000);
