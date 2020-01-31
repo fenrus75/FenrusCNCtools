@@ -504,12 +504,15 @@ static void create_toolpath(class scene *scene, int tool, bool roughing)
 
 void process_stl_file(class scene *scene, const char *filename)
 {
+	bool omit_cutout = false;
 
 	read_stl_file(filename);
 	normalize_design_to_zero();
 
 	if (scene->get_cutout_depth() < 0.01) {
-		printf("Error: No cutout depth set\n");
+		scene->set_cutout_depth(scene->get_depth());
+		printf("Warning: No cutout depth set, using %5.2fmm for the model height\n", scene->get_cutout_depth());
+		omit_cutout = true;
 	}
 
 	scale_design_Z(scene->get_cutout_depth());
@@ -529,8 +532,10 @@ void process_stl_file(class scene *scene, const char *filename)
 		}
 		create_toolpath(scene, scene->get_tool_nr(i), i < (int)scene->get_tool_count() - 1);
 	}
-	activate_tool(scene->get_tool_nr(0));
-	create_cutout(scene, scene->get_tool_nr(0));
+	if (!omit_cutout) { 
+		activate_tool(scene->get_tool_nr(0));
+		create_cutout(scene, scene->get_tool_nr(0));
+	}
 }
 
 
