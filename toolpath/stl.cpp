@@ -367,12 +367,14 @@ static bool outside_area(double X, double Y, double mX, double mY, double diam)
 
 }
 
-static void create_toolpath(class scene *scene, int tool, bool roughing)
+static void create_toolpath(class scene *scene, int tool, bool roughing, bool has_cutout)
 {
 	double X, Y = 0, maxX, maxY, stepover;
 	double maxZ, diam, radius;
 	double offset = 0;
 	bool ballnose = false;
+
+	double overshoot;
 
 	class inputshape *input;
 	toolnr = tool;
@@ -385,9 +387,18 @@ static void create_toolpath(class scene *scene, int tool, bool roughing)
 	if (roughing)
 		radius = diam;
 
-	Y = -diam/2 * 0.99;
-	maxX = stl_image_X() + diam/2 * 0.99;
-	maxY = stl_image_Y() + diam/2 * 0.99;
+	overshoot = diam/2 * 0.9;
+
+	if (!has_cutout) {
+		overshoot = overshoot /2;
+		if (roughing)
+			overshoot = 0;
+	}
+
+	Y = -overshoot;
+	maxX = stl_image_X() + overshoot;
+	maxY = stl_image_Y() + overshoot;
+
 	stepover = get_tool_stepover(toolnr);
 
 	if (!roughing && stepover > 0.2)
@@ -414,7 +425,7 @@ static void create_toolpath(class scene *scene, int tool, bool roughing)
 		first = true;
 		while (Y < maxY) {
 			double prevX;
-			X = -diam/2 * 0.99;
+			X = -overshoot;
 			prevX = X;
 			while (X < maxX) {
 				double d;
@@ -435,7 +446,7 @@ static void create_toolpath(class scene *scene, int tool, bool roughing)
 			X = maxX;
 			line_to(input, X, Y, -maxZ + offset + get_height_tool(X, Y, radius + offset, ballnose));
 			prevX = X;
-			while (X > -diam/2 * 0.99) {
+			while (X > -overshoot) {
 				double d;
 				d = get_height_tool(X, Y, radius + offset, ballnose);
 				if (fabs(d - last_Z) > 1) {
@@ -448,7 +459,7 @@ static void create_toolpath(class scene *scene, int tool, bool roughing)
 				X = X - stepover;
 			}
 
-			X = -diam/2 * 0.99;
+			X = -overshoot;
 			print_progress(100.0 * Y / maxY);
 			Y = Y + stepover;
 			if (Y < maxY)
@@ -460,10 +471,10 @@ static void create_toolpath(class scene *scene, int tool, bool roughing)
 		input->set_name("STL path");
 		scene->shapes.push_back(input);
 		first = true;
-		X = -diam/2 * 0.99;
+		X = -overshoot;
 		while (X < maxX) {
 			double prevY;
-			Y = -diam/2 * 0.99;
+			Y = -overshoot;
 			prevY = Y;
 			while (Y < maxY) {
 				double d;
@@ -480,7 +491,7 @@ static void create_toolpath(class scene *scene, int tool, bool roughing)
 			if (!outside_area(X, Y, stl_image_X(), stl_image_Y(), diam) &&  (X < maxX))
 				line_to(input, X, Y, -maxZ + offset + get_height_tool(X, Y, radius + offset, ballnose));
 			prevY = Y;
-			while (Y > - diam/2 * 0.99) {
+			while (Y > - overshoot) {
 				double d;
 				d = get_height_tool(X, Y, radius + offset, ballnose);
 
@@ -491,7 +502,7 @@ static void create_toolpath(class scene *scene, int tool, bool roughing)
 			}
 			print_progress(100.0 * X / maxX);
 			X = X + stepover;
-			Y = -diam/2 * 0.99;
+			Y = -overshoot;
 
 			if (!outside_area(X, Y, stl_image_X(), stl_image_Y(), diam) &&  (X < maxX))
 					line_to(input, X, Y, -maxZ + offset + get_height_tool(X, Y, radius + offset, ballnose));
@@ -530,7 +541,7 @@ void process_stl_file(class scene *scene, const char *filename)
 		} else {
 			tooldepth = get_tool_maxdepth();
 		}
-		create_toolpath(scene, scene->get_tool_nr(i), i < (int)scene->get_tool_count() - 1);
+		create_toolpath(scene, scene->get_tool_nr(i), i < (int)scene->get_tool_count() - 1, !omit_cutout);
 	}
 	if (!omit_cutout) { 
 		activate_tool(scene->get_tool_nr(0));
