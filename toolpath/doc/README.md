@@ -158,24 +158,30 @@ units happens at the boundaries of the program.
 Create a V carve pocket with a maximum depth of 0.125" using the 60 degree V
 bit and using the 1/8th inch #102 bit for area clearing:
 
-> toolpath -d 0.125 -t 302 -t 102 foo.svg
+> toolpath -d 0.125in -t 302 -t 102 foo.svg
 
 
 Pocket the shape, using bit #201 in "outside in" direction for roughing, and
 bit #102 for final detail, also apply a finishing pass
 
-> toolpath -d 0.125 -t -201 -t 102 --finshing-pass  foo.svg
+> toolpath -d 0.125in -t -201 -t 102 --finshing-pass  foo.svg
 
 
 Create a V carve inlay with a 60 degree V bit, and use bits 201 and 102 for
 area clearance. Use the outer shape for cutout (using bit 201)
 
-> toolpath -d 0.125 -t 302 -t 201 -t 102 --inlay --cutout 0.25  foo.sh
+> toolpath -d 0.125in -t 302 -t 201 -t 102 --inlay --cutout 0.25in  foo.sh
 
 
-Create the gcode for carving out an STL design
+Create the gcode for carving out an STL design with a cutout
  
-> toolpath --cutout 0.75 -t 201 -t 101 --finish-pass heart.stl
+> toolpath --cutout 0.75in -t 201 -t 101 --finish-pass heart.stl
+
+
+Create the gcode for carving out an STL design without a cutout, and
+splitting the output in one file per tool
+ 
+> toolpath --depth 0.75in -t 201 -t 101 --stock-to-leave 0.2mm  heart.stl
 
 
 # Todo list (what I know is wrong or what I want to add)
