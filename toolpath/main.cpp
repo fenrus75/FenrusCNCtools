@@ -33,6 +33,7 @@ void usage(void)
 	printf("\t--cutout <inch>   	(-c)    cut out the outer geometry to depth <inch>\n");
 	printf("\t--stock-to-leave <mm> (-o)    how much stock to leave between roughing and finishing pass\n");
 	printf("\t--separate			(-x)	create one gcode (.nc) file per tool\n");
+	printf("\t--stepover <mm>       (-e)    stepover to use for the finishing pass\n");
 	exit(EXIT_SUCCESS);
 }
 
@@ -52,6 +53,7 @@ static struct option long_options[] =
           {"Depth",    required_argument, 0, 'D'},
 		  {"help",	no_argument, 0, 'h'},
 		  {"separate",	no_argument, 0, 'x'},
+		  {"stepover", required_argument, 0, 'e'},
           {0, 0, 0, 0}
         };
 
@@ -101,6 +103,10 @@ int main(int argc, char **argv)
 			case 'D': /* metric mm*/
 				scene->set_depth(strtod(optarg, NULL));
 				printf("Depth set to %5.2fmm\n", scene->get_depth());
+				break;
+			case 'e':
+				scene->set_finishing_pass_stepover(strtod(optarg, NULL));
+				printf("Stepover for finishing pass set to %5.2fmm\n", scene->get_finishing_pass_stepover());
 				break;
 			case 'c': /* inch */
 				scene->set_cutout_depth(inch_to_mm(strtod(optarg, NULL)));

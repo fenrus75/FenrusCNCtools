@@ -393,9 +393,11 @@ static void create_toolpath(class scene *scene, int tool, bool roughing)
 	if (!roughing && stepover > 0.2)
 		stepover = stepover / 1.42;
 
-	if (!roughing && tool_is_ballnose(tool)) {
+	if (!roughing && tool_is_ballnose(tool)) { 
 		stepover = stepover / 2;
 		ballnose = true;
+		if (scene->get_finishing_pass_stepover() > 0)
+			stepover = scene->get_finishing_pass_stepover();
 	}
 
 	offset = 0;

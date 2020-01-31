@@ -36,6 +36,7 @@ public:
 			cutout_depth = 0;
 			depth = 0;	
 			stock_to_leave = 0.1;
+			finishing_pass_stepover = -1;
 	    z_offset = 0;
         }
         
@@ -86,6 +87,9 @@ public:
 		void set_stock_to_leave(double d) { stock_to_leave = d; };
 		double get_stock_to_leave(void) { return stock_to_leave; };
 
+		void set_finishing_pass_stepover(double d) { finishing_pass_stepover = d; };
+		double get_finishing_pass_stepover(void) { return finishing_pass_stepover; };
+
 		void set_depth(double d) { depth = d; };
 		double get_depth(void) { return depth; };
 
@@ -118,6 +122,7 @@ private:
         double minX, minY, maxX, maxY;
 		double z_offset;
 		double stock_to_leave;
+		double finishing_pass_stepover;
         bool _want_finishing_pass;
         bool _want_inbetween_paths;
         bool _want_skeleton_paths;
