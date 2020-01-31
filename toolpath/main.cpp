@@ -18,6 +18,24 @@ extern "C" {
 
 int verbose = 0;
 
+
+double option_to_double_mm(char *str, bool metric_default)
+{
+	double d;
+	d = strtod(str, NULL);
+	if (strstr(str, "mm")) {
+		/* nothing, we're metric output */
+		return d;
+	}
+	if (strstr(str, "in")) {
+		return inch_to_mm(d);
+	}
+	if (!metric_default)
+		return inch_to_mm(d);
+	return d;
+		
+}
+
 void usage(void)
 {
 	printf("Usage:\n\ttoolpath [options] <file.svg>\n");
@@ -97,23 +115,23 @@ int main(int argc, char **argv)
 				read_tool_lib(optarg);
 				break;	
 			case 'd': /* inch */
-				scene->set_depth(inch_to_mm(strtod(optarg, NULL)));
+				scene->set_depth(option_to_double_mm(optarg, false));
 				printf("Depth set to %5.2fmm\n", scene->get_depth());
 				break;
 			case 'D': /* metric mm*/
-				scene->set_depth(strtod(optarg, NULL));
+				scene->set_depth(option_to_double_mm(optarg, true));
 				printf("Depth set to %5.2fmm\n", scene->get_depth());
 				break;
 			case 'e':
-				scene->set_finishing_pass_stepover(strtod(optarg, NULL));
+				scene->set_finishing_pass_stepover(option_to_double_mm(optarg, true));
 				printf("Stepover for finishing pass set to %5.2fmm\n", scene->get_finishing_pass_stepover());
 				break;
 			case 'c': /* inch */
-				scene->set_cutout_depth(inch_to_mm(strtod(optarg, NULL)));
+				scene->set_cutout_depth(option_to_double_mm(optarg, false));
 				printf("Enabling cutout to depth %5.2fmm\n", scene->get_cutout_depth());
 				break;
 			case 'o': /* mm */
-				scene->set_stock_to_leave(strtod(optarg, NULL));
+				scene->set_stock_to_leave(option_to_double_mm(optarg, true));
 				printf("Setting stock to leave to  %5.2fmm\n", scene->get_stock_to_leave());
 				break;
 			case 'x':
