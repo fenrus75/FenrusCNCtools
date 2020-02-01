@@ -333,7 +333,13 @@ void gcode_vconditional_travel_to(double X, double Y, double Z, double speed, do
 
 //    printf("Travel to %5.4f %5.4f %5.4f\n", X, Y, Z);
     if (dist3(X,Y,Z,cX,cY,cZ) < 0.05) {
-        gcode_mill_to(X, Y, Z, speed);
+        gcode_vmill_to(X, Y, Z, speed);
+        return;
+    }
+
+// if both soure and target are above 0, consider just millting to it */
+    if (dist3(X,Y,Z,cX,cY,cZ) < 20 && Z > 0 && cZ > 0) {
+        gcode_vmill_to(X, Y, Z, speed);
         return;
     }
         
