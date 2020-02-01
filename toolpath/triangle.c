@@ -250,6 +250,7 @@ void make_buckets(void)
 
 	for (i = 0; i < current; i++) {
 		int j;
+		int reach;
 		double Xmax, Ymax, Xmin, Ymin;
 		double rXmax, rYmax, rXmin, rYmin;
 		int bucketptr = 0;
@@ -270,8 +271,12 @@ void make_buckets(void)
 
 		bucket->triangles[bucketptr++] = i;
 		triangles[i].status = 1;
+
+		reach = current;
+		if (reach > i + 50000)
+			reach = i + 50000;
 	
-		for (j = i + 1; j < current && bucketptr < BUCKETSIZE; j++)	{
+		for (j = i + 1; j < reach && bucketptr < BUCKETSIZE; j++)	{
 			if (triangles[j].status == 0 && triangles[j].maxX <= rXmax && triangles[j].maxY <= rYmax && triangles[j].minY >= rYmin &&  triangles[j].minX >= rXmin) {
 				Xmax = fmax(Xmax, triangles[j].maxX);
 				Ymax = fmax(Ymax, triangles[j].maxY);
