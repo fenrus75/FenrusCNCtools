@@ -91,7 +91,7 @@ struct l2bucket *allocate_l2bucket(void)
 }
 
 
-void push_triangle(float v1[3], float v2[3], float v3[3])
+void push_triangle(float v1[3], float v2[3], float v3[3], float norm[3])
 {
 	if (current >= maxtriangle)
 		set_max_triangles(current + 16);
@@ -107,6 +107,17 @@ void push_triangle(float v1[3], float v2[3], float v3[3])
 	triangles[current].vertex[2][0] = v3[0];
 	triangles[current].vertex[2][1] = v3[1];
 	triangles[current].vertex[2][2] = v3[2];
+
+	triangles[current].normal[0] = norm[0];
+	triangles[current].normal[1] = norm[1];
+	triangles[current].normal[2] = norm[2];
+
+
+
+	if (fabs(norm[2]) < 0.001 && fabs(norm[0])+fabs(norm[1]) > 0.01) {
+		triangles[current].vertical = 1;
+	}
+
 
 	minX = fminf(minX, v1[0]);
 	minX = fminf(minX, v2[0]);
@@ -157,6 +168,34 @@ void normalize_design_to_zero(void)
 	maxZ = maxZ - minZ;
 	minZ = 0;
 }
+
+void normalize_design_to_offset(double offsetpct)
+{
+	int i;
+	double Zadj;
+
+	Zadj = ((100 - offsetpct) * minZ + offsetpct * maxZ) / 100;
+	for (i = 0; i < current; i++) {
+		triangles[i].vertex[0][0] -= minX;
+		triangles[i].vertex[1][0] -= minX;
+		triangles[i].vertex[2][0] -= minX;
+
+		triangles[i].vertex[0][1] -= minY;
+		triangles[i].vertex[1][1] -= minY;
+		triangles[i].vertex[2][1] -= minY;
+
+		triangles[i].vertex[0][2] -= Zadj;
+		triangles[i].vertex[1][2] -= Zadj;
+		triangles[i].vertex[2][2] -= Zadj;
+	}
+
+	maxX = maxX - minX;
+	minX = 0;
+	maxY = maxY - minY;
+	minY = 0;
+	maxZ = maxZ - Zadj;
+	minZ = minZ - Zadj;
+}
 void scale_design(double newsize)
 {
 	double factor ;
@@ -200,15 +239,15 @@ void scale_design(double newsize)
 	maxZ *= factor;
 }
 
-void scale_design_Z(double newheight)
+void scale_design_Z(double newheight, double z_offset)
 {
-	double factor ;
+	double factor, factor2 ;
 	int i;
 
-	normalize_design_to_zero();
+	normalize_design_to_offset(100.0 * z_offset / newheight);
 
-	factor = newheight / maxZ;
-		
+	factor = (newheight) / (maxZ);
+	factor2 = factor;
 
 	
 	for (i = 0; i < current; i++) {
@@ -516,6 +555,11 @@ double get_height(double X, double Y)
 			}
 		}
 	}
+
+	if (value < 0)
+		value = 0;
+	
+
 	return value;
 }
 

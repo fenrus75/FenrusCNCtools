@@ -54,6 +54,7 @@ void usage(void)
 	printf("\t--separate			(-x)	create one gcode (.nc) file per tool\n");
 	printf("\t--stepover <mm>       (-e)    stepover to use for the finishing pass\n");
 	printf("\t--stlYZflip			(-Y)	Show STL model from the front instead of the top\n");
+	printf("\t--stlZoffset <mm>		(-Z)	put a floor in the STL model\n");
 	exit(EXIT_SUCCESS);
 }
 
@@ -75,6 +76,7 @@ static struct option long_options[] =
 		  {"separate",	no_argument, 0, 'x'},
 		  {"stepover", required_argument, 0, 'e'},
 		  {"stlXYZflip",	required_argument, 0, 'Y'},
+		  {"stlZoffset",	required_argument, 0, 'Z'},
           {0, 0, 0, 0}
         };
 
@@ -92,7 +94,7 @@ int main(int argc, char **argv)
     
     scene->set_depth(inch_to_mm(0.044));
 
-    while ((opt = getopt_long(argc, argv, "vfsil:t:d:D:xhY:c:o:", long_options, &option_index)) != -1) {
+    while ((opt = getopt_long(argc, argv, "vfsil:t:d:D:xhY:c:o:Z:", long_options, &option_index)) != -1) {
         switch (opt)
 		{
 			case 'v':
@@ -142,6 +144,9 @@ int main(int argc, char **argv)
 				break;
 			case 'Y':
 				stl_flip = strtoull(optarg, NULL, 10);
+				break;
+			case 'Z':
+				scene->set_z_offset(option_to_double_mm(optarg, true));
 				break;
 			case 't':
 				int arg;

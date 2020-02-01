@@ -92,13 +92,15 @@ static int read_stl_file(const char *filename, int flip)
 			flip_triangle_YZ(&t.vertex1[0]);
 			flip_triangle_YZ(&t.vertex2[0]);
 			flip_triangle_YZ(&t.vertex3[0]);
+			flip_triangle_YZ(&t.normal[0]);
 		}
 		if (flip == 2) {
 			flip_triangle_XZ(&t.vertex1[0]);
 			flip_triangle_XZ(&t.vertex2[0]);
 			flip_triangle_XZ(&t.vertex3[0]);
+			flip_triangle_XZ(&t.normal[0]);
 		}
-		push_triangle(t.vertex1, t.vertex2, t.vertex3);
+		push_triangle(t.vertex1, t.vertex2, t.vertex3, t.normal);
 	}
 
 	fclose(file);
@@ -580,7 +582,7 @@ void process_stl_file(class scene *scene, const char *filename, int flip)
 		omit_cutout = true;
 	}
 
-	scale_design_Z(scene->get_cutout_depth());
+	scale_design_Z(scene->get_cutout_depth(), scene->get_z_offset());
 	print_triangle_stats();
 
 

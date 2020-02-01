@@ -6,8 +6,10 @@
 
 struct triangle {
 	float vertex[3][3];
+	float normal[3];
 	float minX, minY, maxX, maxY;
 	int status;
+	int vertical;
 };
 
 #define BUCKETSIZE 64
@@ -24,10 +26,10 @@ struct l2bucket {
 };
 
 extern void set_max_triangles(int count);
-extern void push_triangle(float v1[3], float v2[3], float v3[3]);
+extern void push_triangle(float v1[3], float v2[3], float v3[3], float norm[3]);
 extern void normalize_design_to_zero(void);
 extern void scale_design(double newsize);
-extern void scale_design_Z(double newsize);
+extern void scale_design_Z(double newsize, double z_offset);
 extern void print_triangle_stats(void);
 extern double stl_image_X(void);
 extern double stl_image_Y(void);
