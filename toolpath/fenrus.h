@@ -10,8 +10,8 @@ struct triangle {
 	int status;
 };
 
-#define BUCKETSIZE 128
-#define L2BUCKETSIZE 32
+#define BUCKETSIZE 64
+#define L2BUCKETSIZE 64
 struct bucket {
 	float minX, minY, maxX, maxY;
 	int triangles[BUCKETSIZE];

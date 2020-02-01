@@ -14,7 +14,7 @@ WOBJS := parse_csv.wo linalg.wo tooldepth.wo toollib.wo gcode.wo toolpath.wo inp
 
 %.o : %.cpp toolpath.h print.h tool.h Makefile scene.h fenrus.h
 	    @echo "Compiling: $< => $@"
-	    @g++ $(CFLAGS) -O3   -march=native -frounding-math -ffunction-sections -fno-common -Wall -W -g2 -c $< -o $@
+	    @g++ $(CFLAGS) -O3   -march=native -frounding-math -ffunction-sections -fno-common -Wno-address-of-packed-member -Wall -W -g2 -c $< -o $@
 
 %.fo : %.cpp toolpath.h print.h tool.h Makefile scene.h fenrus.h
 	    @echo "Compiling: $< => $@ (fine)"
