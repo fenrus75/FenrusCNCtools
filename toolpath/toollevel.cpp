@@ -404,6 +404,18 @@ void toollevel::output_gcode(void)
 {
     vector<class toolpath*> worklist;    
 
+	if (no_sort) {
+		if (name)
+		    gcode_write_comment(name);
+	    sortX = gcode_current_X();
+	    sortY = gcode_current_Y() + get_minY();
+		unsigned int i;
+
+		for (i = 0; i < toolpaths.size(); i++)
+			toolpaths[i]->output_gcode();
+		return;
+    }
+
 
 //	vprintf("Work size before consolidate  %i\n", (int)toolpaths.size());
 	consolidate();
@@ -415,6 +427,8 @@ void toollevel::output_gcode(void)
 		consolidate();
 	}
 #endif
+
+
 //	vprintf("Work size after trim_intersect  %i\n", (int)toolpaths.size());
     worklist = toolpaths;
 
