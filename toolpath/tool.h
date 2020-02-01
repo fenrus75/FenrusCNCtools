@@ -270,6 +270,6 @@ private:
 
 extern void parse_svg_file(class scene * scene, const char *filename);
 extern void parse_csv_file(class scene *scene, const char *filename, int toolnr);
-extern void process_stl_file(class scene *scene, const char *filename);
+extern void process_stl_file(class scene *scene, const char *filename, int flip);
 
 #endif

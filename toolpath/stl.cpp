@@ -36,7 +36,30 @@ static inline double dist(double X0, double Y0, double X1, double Y1)
   return sqrt((X1-X0)*(X1-X0) + (Y1-Y0)*(Y1-Y0));
 }
 
-static int read_stl_file(const char *filename)
+static void flip_triangle_YZ(float *R) 
+{
+	float x,y,z;
+	x = (R)[0];
+	y = (R)[1];
+	z = (R)[2];
+
+	(R)[0] = x;
+	(R)[1] = z;
+	(R)[2] = -y;
+}
+
+static void flip_triangle_XZ(float *R) 
+{
+	float x,y,z;
+	x = (R)[0];
+	y = (R)[1];
+	z = (R)[2];
+
+	(R)[0] = z;
+	(R)[1] = y;
+	(R)[2] = -x;
+}
+static int read_stl_file(const char *filename, int flip)
 {
 	FILE *file;
 	char header[80];
@@ -64,6 +87,17 @@ static int read_stl_file(const char *filename)
 		ret = fread(&t, 1, sizeof(struct stltriangle), file);
 		if (ret < 1)
 			break;
+
+		if (flip == 1) {
+			flip_triangle_YZ(&t.vertex1[0]);
+			flip_triangle_YZ(&t.vertex2[0]);
+			flip_triangle_YZ(&t.vertex3[0]);
+		}
+		if (flip == 2) {
+			flip_triangle_XZ(&t.vertex1[0]);
+			flip_triangle_XZ(&t.vertex2[0]);
+			flip_triangle_XZ(&t.vertex3[0]);
+		}
 		push_triangle(t.vertex1, t.vertex2, t.vertex3);
 	}
 
@@ -532,12 +566,12 @@ static void create_toolpath(class scene *scene, int tool, bool roughing, bool ha
 	printf("                                                          \r");
 }
 
-void process_stl_file(class scene *scene, const char *filename)
+void process_stl_file(class scene *scene, const char *filename, int flip)
 {
 	bool omit_cutout = false;
 	bool even = true;
 
-	read_stl_file(filename);
+	read_stl_file(filename, flip);
 	normalize_design_to_zero();
 
 	if (scene->get_cutout_depth() < 0.01) {

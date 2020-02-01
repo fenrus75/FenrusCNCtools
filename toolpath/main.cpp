@@ -18,6 +18,7 @@ extern "C" {
 
 int verbose = 0;
 
+static int stl_flip = 1;
 
 double option_to_double_mm(char *str, bool metric_default)
 {
@@ -52,6 +53,7 @@ void usage(void)
 	printf("\t--stock-to-leave <mm> (-o)    how much stock to leave between roughing and finishing pass\n");
 	printf("\t--separate			(-x)	create one gcode (.nc) file per tool\n");
 	printf("\t--stepover <mm>       (-e)    stepover to use for the finishing pass\n");
+	printf("\t--stlYZflip			(-Y)	Show STL model from the front instead of the top\n");
 	exit(EXIT_SUCCESS);
 }
 
@@ -72,6 +74,7 @@ static struct option long_options[] =
 		  {"help",	no_argument, 0, 'h'},
 		  {"separate",	no_argument, 0, 'x'},
 		  {"stepover", required_argument, 0, 'e'},
+		  {"stlXYZflip",	required_argument, 0, 'Y'},
           {0, 0, 0, 0}
         };
 
@@ -89,7 +92,7 @@ int main(int argc, char **argv)
     
     scene->set_depth(inch_to_mm(0.044));
 
-    while ((opt = getopt_long(argc, argv, "vfsil:t:d:D:xh", long_options, &option_index)) != -1) {
+    while ((opt = getopt_long(argc, argv, "vfsil:t:d:D:xhY:c:o:", long_options, &option_index)) != -1) {
         switch (opt)
 		{
 			case 'v':
@@ -137,6 +140,9 @@ int main(int argc, char **argv)
 			case 'x':
 				gcode_want_separate_files();
 				break;
+			case 'Y':
+				stl_flip = strtoull(optarg, NULL, 10);
+				break;
 			case 't':
 				int arg;
 				arg = strtoull(optarg, NULL, 10);
@@ -167,7 +173,7 @@ int main(int argc, char **argv)
 		if (strstr(argv[optind], ".csv")) {
 			parse_csv_file(scene, argv[optind], tool);
 		} if (strstr(argv[optind], ".stl")) {
-			process_stl_file(scene, argv[optind]);
+			process_stl_file(scene, argv[optind], stl_flip);
 		} else {
 			parse_svg_file(scene, argv[optind]);
 			scene->set_filename(argv[optind]);
