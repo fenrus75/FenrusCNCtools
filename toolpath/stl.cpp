@@ -153,7 +153,7 @@ Angle 337.50     X 0.9239   Y -0.3827
 
 static inline double get_height_tool(double X, double Y, double R, bool ballnose)
 {	
-	double d = 0;
+	double d = 0, dorg;
 	double orgR = R;
 	double balloffset = 0.0;
 
@@ -164,15 +164,17 @@ static inline double get_height_tool(double X, double Y, double R, bool ballnose
 	}
 
 	d = fmax(d, get_height(X + 1.0000 * R, Y + 0.0000 * R) + balloffset);
-	d = fmax(d, get_height(X + 0.7071 * R, Y + 0.7071 * R) + balloffset);
 	d = fmax(d, get_height(X + 0.0000 * R, Y + 1.0000 * R) + balloffset);
-	d = fmax(d, get_height(X - 0.7071 * R, Y + 0.7071 * R) + balloffset);
 	d = fmax(d, get_height(X - 1.0000 * R, Y + 0.0000 * R) + balloffset);
-	d = fmax(d, get_height(X - 0.7071 * R, Y - 0.7071 * R) + balloffset);
 	d = fmax(d, get_height(X - 0.0000 * R, Y - 1.0000 * R) + balloffset);
+
+	dorg = d;
+	d = fmax(d, get_height(X + 0.7071 * R, Y + 0.7071 * R) + balloffset);
+	d = fmax(d, get_height(X - 0.7071 * R, Y + 0.7071 * R) + balloffset);
+	d = fmax(d, get_height(X - 0.7071 * R, Y - 0.7071 * R) + balloffset);
 	d = fmax(d, get_height(X + 0.7071 * R, Y - 0.7071 * R) + balloffset);
 
-	if (R < 0.6)
+	if (R < 0.6 && fabs(d-dorg) < 0.1)
 		return ceil(d*ACC)/ACC;
 
 	d = fmax(d, get_height(X + 0.9239 * R, Y + 0.3827 * R) + balloffset);
