@@ -50,6 +50,27 @@ static double dist3(double X0, double Y0, double Z0, double X1, double Y1, doubl
   return sqrt((X1-X0)*(X1-X0) + (Y1-Y0)*(Y1-Y0) + (Z1-Z0)*(Z1-Z0));
 }
 
+static char *double_to_str(double X)
+{
+	static char buffer[128];
+	char buf[96];
+	int x;
+	int i;
+	x = (int)(X * 10000);
+
+	if (X < 0)
+		sprintf(buf, "%06i", x);
+	else
+		sprintf(buf, "%05i", x);
+
+	strcpy(buffer, buf);
+	i = strlen(buf) - 4;
+	buffer[i] = '.';
+	strcpy(buffer + i + 1, buf + i);
+	//printf("Double %5.4f to string %s \n", X, buffer);
+	return buffer;
+}
+
 void set_tool_imperial(const char *name, int nr, double diameter_inch, double stepover_inch, double maxdepth_inch, double feedrate_ipm, double plungerate_ipm)
 {
     tool_name = strdup(name);
@@ -155,7 +176,7 @@ void gcode_retract(void)
 //    printf("retract\n");
     fprintf(gcode, "G0");
     if (cZ != safe_retract_height)
-        fprintf(gcode,"Z%5.4f", safe_retract_height);
+        fprintf(gcode,"Z%s", double_to_str(safe_retract_height));
     cZ = safe_retract_height;
     fprintf(gcode, "\n");
     retract_count++;
@@ -191,11 +212,11 @@ void gcode_mill_to(double X, double Y, double Z, double speedratio)
 
     fprintf(gcode, "G1");
     if (cX != X)
-        fprintf(gcode,"X%5.4f", X);
+        fprintf(gcode,"X%sf", double_to_str(X));
     if (cY != Y)
-        fprintf(gcode,"Y%5.4f", Y);
+        fprintf(gcode,"Y%s", double_to_str(Y));
     if (cZ != Z)
-        fprintf(gcode,"Z%5.4f", Z);
+        fprintf(gcode,"Z%s", double_to_str(Z));
     if (cS != speedratio * tool_feedrate)
         fprintf(gcode, "F%i", (int)(speedratio * tool_feedrate));
     cX = X;
@@ -245,11 +266,11 @@ void gcode_vmill_to(double X, double Y, double Z, double speedratio)
 
 
     if (cX != X) {
-        fprintf(gcode,"X%5.4f", X);
+        fprintf(gcode,"X%s", double_to_str(X));
 	    cX = X;
 	}
     if (cY != Y) {
-        fprintf(gcode,"Y%5.4f", Y);
+        fprintf(gcode,"Y%s", double_to_str(Y));
 	    cY = Y;
 	}
 
@@ -257,7 +278,7 @@ void gcode_vmill_to(double X, double Y, double Z, double speedratio)
 	toolspeed = ceil(speedratio * toolspeed /10)*10;
 
     if (cZ != Z)
-        fprintf(gcode,"Z%5.4f", Z);
+        fprintf(gcode,"Z%s", double_to_str(Z));
     if (cS != toolspeed)
         fprintf(gcode, "F%i", (int)(toolspeed));
         
@@ -278,9 +299,9 @@ void gcode_travel_to(double X, double Y)
         gcode_retract();
     fprintf(gcode, "G0");
     if (cX != X)
-        fprintf(gcode,"X%5.4f", X);
+        fprintf(gcode,"X%s", double_to_str(X));
     if (cY != Y)
-        fprintf(gcode,"Y%5.4f", Y);
+        fprintf(gcode,"Y%s", double_to_str(Y));
     cX = X;
     cY = Y;
     fprintf(gcode, "\n");
