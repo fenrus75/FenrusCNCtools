@@ -272,7 +272,7 @@ void make_buckets(void)
 		triangles[i].status = 1;
 	
 		for (j = i + 1; j < current && bucketptr < BUCKETSIZE; j++)	{
-			if (triangles[j].maxX <= rXmax && triangles[j].maxY <= rYmax && triangles[j].minY >= rYmin &&  triangles[j].minX >= rXmin) {
+			if (triangles[j].status == 0 && triangles[j].maxX <= rXmax && triangles[j].maxY <= rYmax && triangles[j].minY >= rYmin &&  triangles[j].minX >= rXmin) {
 				Xmax = fmax(Xmax, triangles[j].maxX);
 				Ymax = fmax(Ymax, triangles[j].maxY);
 				Xmin = fmin(Xmin, triangles[j].minX);
@@ -323,7 +323,7 @@ void make_buckets(void)
 		buckets[i].status = 1;
 	
 		for (j = i + 1; j < nrbuckets && bucketptr < L2BUCKETSIZE; j++)	{
-			if (buckets[j].maxX <= rXmax && buckets[j].maxY <= rYmax && buckets[j].minY >= rYmin &&  buckets[j].minX >= rXmin) {
+			if (buckets[j].status == 0 && buckets[j].maxX <= rXmax && buckets[j].maxY <= rYmax && buckets[j].minY >= rYmin &&  buckets[j].minX >= rXmin) {
 				Xmax = fmax(Xmax, buckets[j].maxX);
 				Ymax = fmax(Ymax, buckets[j].maxY);
 				Xmin = fmin(Xmin, buckets[j].minX);
