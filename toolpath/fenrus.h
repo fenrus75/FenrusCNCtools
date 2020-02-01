@@ -10,10 +10,17 @@ struct triangle {
 	int status;
 };
 
-#define BUCKETSIZE 512
+#define BUCKETSIZE 128
+#define L2BUCKETSIZE 32
 struct bucket {
 	float minX, minY, maxX, maxY;
 	int triangles[BUCKETSIZE];
+	int status;
+};
+
+struct l2bucket {
+	double minX, minY, maxX, maxY;
+	struct bucket *buckets[L2BUCKETSIZE];
 };
 
 extern void set_max_triangles(int count);

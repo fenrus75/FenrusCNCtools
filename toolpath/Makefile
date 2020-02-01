@@ -44,3 +44,4 @@ la_test: Makefile la_test.o linalg.o
 	
 clean:
 	rm -f *.o *.wo *.fo *~ DEADJOE toolpath toolpath.exe toolpath-fine
+	ccache -C
