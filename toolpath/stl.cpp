@@ -431,7 +431,7 @@ static void create_toolpath(class scene *scene, int tool, bool roughing, bool ha
 				double d;
 				d = get_height_tool(X, Y, radius + offset, ballnose);
 
-				if (fabs(d - last_Z) > 1) {
+				if (fabs(d - last_Z) > 1 && roughing) {
 					X = prevX + stepover / 1.5;
 					d = get_height_tool(X, Y, radius + offset, ballnose);
 				}
@@ -451,7 +451,7 @@ static void create_toolpath(class scene *scene, int tool, bool roughing, bool ha
 			while (X > -overshoot) {
 				double d;
 				d = get_height_tool(X, Y, radius + offset, ballnose);
-				if (fabs(d - last_Z) > 1) {
+				if (fabs(d - last_Z) > 1 && roughing) {
 					X = prevX - stepover / 1.5;
 					d = get_height_tool(X, Y, radius + offset, ballnose);
 				}
@@ -482,7 +482,7 @@ static void create_toolpath(class scene *scene, int tool, bool roughing, bool ha
 			while (Y < maxY) {
 				double d;
 				d = get_height_tool(X, Y, radius + offset, ballnose);
-				if (fabs(d - last_Z) > 1) {
+				if (fabs(d - last_Z) > 1 && roughing) {
 					Y = prevY + stepover / 1.5;
 					d = get_height_tool(X, Y, radius + offset, ballnose);
 				}
@@ -502,7 +502,7 @@ static void create_toolpath(class scene *scene, int tool, bool roughing, bool ha
 			while (Y > - overshoot) {
 				double d;
 				d = get_height_tool(X, Y, radius + offset, ballnose);
-				if (fabs(d - last_Z) > 1) {
+				if (fabs(d - last_Z) > 1 && roughing) {
 					Y = prevY - stepover / 1.5;
 					d = get_height_tool(X, Y, radius + offset, ballnose);
 				}
