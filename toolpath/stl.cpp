@@ -149,7 +149,7 @@ Angle 315.00     X 0.7071   Y -0.7071
 Angle 337.50     X 0.9239   Y -0.3827
 */
 
-#define ACC 1000.0
+#define ACC 100.0
 
 static inline double get_height_tool(double X, double Y, double R, bool ballnose)
 {	
@@ -367,7 +367,7 @@ static bool outside_area(double X, double Y, double mX, double mY, double diam)
 
 }
 
-static void create_toolpath(class scene *scene, int tool, bool roughing, bool has_cutout)
+static void create_toolpath(class scene *scene, int tool, bool roughing, bool has_cutout, bool even)
 {
 	double X, Y = 0, maxX, maxY, stepover;
 	double maxZ, diam, radius;
@@ -418,7 +418,7 @@ static void create_toolpath(class scene *scene, int tool, bool roughing, bool ha
 	if (roughing)
 		gcode_set_roughing(1);
 
-	if (roughing || scene->want_finishing_pass()) {
+	if (even) {
 		input = new(class inputshape);
 		input->set_name("STL path");
 		scene->shapes.push_back(input);
@@ -436,7 +436,8 @@ static void create_toolpath(class scene *scene, int tool, bool roughing, bool ha
 					d = get_height_tool(X, Y, radius + offset, ballnose);
 				}
 
-				line_to(input, X, Y, -maxZ + d + offset);
+				if (!outside_area(X, Y, stl_image_X(), stl_image_Y(), diam))
+					line_to(input, X, Y, -maxZ + d + offset);
 
 				prevX = X;
 				X = X + stepover;
@@ -444,7 +445,8 @@ static void create_toolpath(class scene *scene, int tool, bool roughing, bool ha
 			print_progress(100.0 * Y / maxY);
 			Y = Y + stepover;
 			X = maxX;
-			line_to(input, X, Y, -maxZ + offset + get_height_tool(X, Y, radius + offset, ballnose));
+			if (!outside_area(X, Y, stl_image_X(), stl_image_Y(), diam))
+				line_to(input, X, Y, -maxZ + offset + get_height_tool(X, Y, radius + offset, ballnose));
 			prevX = X;
 			while (X > -overshoot) {
 				double d;
@@ -454,7 +456,8 @@ static void create_toolpath(class scene *scene, int tool, bool roughing, bool ha
 					d = get_height_tool(X, Y, radius + offset, ballnose);
 				}
 
-				line_to(input, X, Y, -maxZ + d + offset);
+				if (!outside_area(X, Y, stl_image_X(), stl_image_Y(), diam))
+					line_to(input, X, Y, -maxZ + d + offset);
 				prevX = X;
 				X = X - stepover;
 			}
@@ -462,11 +465,11 @@ static void create_toolpath(class scene *scene, int tool, bool roughing, bool ha
 			X = -overshoot;
 			print_progress(100.0 * Y / maxY);
 			Y = Y + stepover;
-			if (Y < maxY)
+			if (Y < maxY && !outside_area(X, Y, stl_image_X(), stl_image_Y(), diam))
 				line_to(input, X, Y, -maxZ + offset + get_height_tool(X, Y, radius + offset, ballnose));
 		}
 	}
-	if (!roughing) {
+	if (!even) {
 		input = new(class inputshape);
 		input->set_name("STL path");
 		scene->shapes.push_back(input);
@@ -479,6 +482,11 @@ static void create_toolpath(class scene *scene, int tool, bool roughing, bool ha
 			while (Y < maxY) {
 				double d;
 				d = get_height_tool(X, Y, radius + offset, ballnose);
+				if (fabs(d - last_Z) > 1) {
+					Y = prevY + stepover / 1.5;
+					d = get_height_tool(X, Y, radius + offset, ballnose);
+				}
+
 
 				if (!outside_area(X, Y, stl_image_X(), stl_image_Y(), diam))
 					line_to(input, X, Y, -maxZ + d + offset);
@@ -494,6 +502,11 @@ static void create_toolpath(class scene *scene, int tool, bool roughing, bool ha
 			while (Y > - overshoot) {
 				double d;
 				d = get_height_tool(X, Y, radius + offset, ballnose);
+				if (fabs(d - last_Z) > 1) {
+					Y = prevY - stepover / 1.5;
+					d = get_height_tool(X, Y, radius + offset, ballnose);
+				}
+
 
 				if (!outside_area(X, Y, stl_image_X(), stl_image_Y(), diam))
 					line_to(input, X, Y, -maxZ + d + offset);
@@ -516,6 +529,7 @@ static void create_toolpath(class scene *scene, int tool, bool roughing, bool ha
 void process_stl_file(class scene *scene, const char *filename)
 {
 	bool omit_cutout = false;
+	bool even = true;
 
 	read_stl_file(filename);
 	normalize_design_to_zero();
@@ -541,7 +555,14 @@ void process_stl_file(class scene *scene, const char *filename)
 		} else {
 			tooldepth = get_tool_maxdepth();
 		}
-		create_toolpath(scene, scene->get_tool_nr(i), i < (int)scene->get_tool_count() - 1, !omit_cutout);
+		create_toolpath(scene, scene->get_tool_nr(i), i < (int)scene->get_tool_count() - 1, !omit_cutout, even);
+
+		even = !even;
+		if (i == (int)scene->get_tool_count() - 1 && scene->want_finishing_pass()) {
+			create_toolpath(scene, scene->get_tool_nr(i), i < (int)scene->get_tool_count() - 1, !omit_cutout, even);
+
+			even = !even;
+		}
 	}
 	if (!omit_cutout) { 
 		activate_tool(scene->get_tool_nr(0));
