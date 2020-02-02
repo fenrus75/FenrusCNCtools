@@ -18,7 +18,7 @@ extern "C" {
 
 int verbose = 0;
 
-static int stl_flip = 1;
+static int stl_flip = 0;
 
 double option_to_double_mm(char *str, bool metric_default)
 {

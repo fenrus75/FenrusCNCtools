@@ -36,6 +36,11 @@ static inline double dist(double X0, double Y0, double X1, double Y1)
   return sqrt((X1-X0)*(X1-X0) + (Y1-Y0)*(Y1-Y0));
 }
 
+static double dist3(double X0, double Y0, double Z0, double X1, double Y1, double Z1)
+{
+  return sqrt((X1-X0)*(X1-X0) + (Y1-Y0)*(Y1-Y0) + (Z1-Z0)*(Z1-Z0));
+}
+
 static void flip_triangle_YZ(float *R) 
 {
 	float x,y,z;
@@ -115,6 +120,9 @@ static void line_to(class inputshape *input, double X2, double Y2, double Z2)
 {
 	double X1 = last_X, Y1 = last_Y, Z1 = last_Z;
 	unsigned int depth = 0;
+
+	if (dist3(X1,Y1,Z1, X2,Y2,Z2) < 0.000001 && !first)
+		return;
 
 	last_X = X2;
 	last_Y = Y2;
@@ -426,8 +434,8 @@ static void create_toolpath(class scene *scene, int tool, bool roughing, bool ha
 
 	radius = diam / 2;
 	/* when roughing, look much wider */
-	if (roughing)
-		radius = diam;
+//	if (roughing)
+//		radius = diam / 1.9;
 
 	overshoot = diam/2 * 0.9;
 
@@ -471,15 +479,19 @@ static void create_toolpath(class scene *scene, int tool, bool roughing, bool ha
 			prevX = X;
 			while (X < maxX) {
 				double d;
-				d = get_height_tool(X, Y, radius + offset, ballnose);
+				d = get_height_tool(X, Y, radius + offset, ballnose) + offset - maxZ;
 
-				if (fabs(d - last_Z) > 1 && roughing) {
-					X = prevX + stepover / 1.5;
-					d = get_height_tool(X, Y, radius + offset, ballnose);
+				if (fabs(d - last_Z) > 0.5 && roughing) {
+					X = prevX + stepover / 3;
+					d = get_height_tool(X, Y, radius + offset, ballnose) + offset - maxZ;
+					if (fabs(d - last_Z) > 0.5) {
+						line_to(input, last_X, last_Y, fmax(last_Z, d));
+						line_to(input, X, Y, fmax(last_Z, d));
+					}
 				}
 
 				if (!outside_area(X, Y, stl_image_X(), stl_image_Y(), diam))
-					line_to(input, X, Y, -maxZ + d + offset);
+					line_to(input, X, Y, d);
 
 				prevX = X;
 				X = X + stepover;
@@ -487,19 +499,29 @@ static void create_toolpath(class scene *scene, int tool, bool roughing, bool ha
 			print_progress(100.0 * Y / maxY);
 			Y = Y + stepover;
 			X = maxX;
-			if (!outside_area(X, Y, stl_image_X(), stl_image_Y(), diam))
-				line_to(input, X, Y, -maxZ + offset + get_height_tool(X, Y, radius + offset, ballnose));
+			if (!outside_area(X, Y, stl_image_X(), stl_image_Y(), diam)) {
+				double d =  -maxZ + offset + get_height_tool(X, Y, radius + offset, ballnose);
+				if (fabs(d - last_Z) > 0.1) {
+					line_to(input, last_X, last_Y, fmax(last_Z, d));
+					line_to(input, X, Y, fmax(last_Z, d));
+				}
+				line_to(input, X, Y, d);
+			}
 			prevX = X;
 			while (X > -overshoot) {
 				double d;
-				d = get_height_tool(X, Y, radius + offset, ballnose);
-				if (fabs(d - last_Z) > 1 && roughing) {
-					X = prevX - stepover / 1.5;
-					d = get_height_tool(X, Y, radius + offset, ballnose);
+				d = get_height_tool(X, Y, radius + offset, ballnose) + offset - maxZ;
+				if (fabs(d - last_Z) > 0.5 && roughing) {
+					X = prevX - stepover / 3;
+					d = get_height_tool(X, Y, radius + offset, ballnose) + offset - maxZ;
+					if (fabs(d - last_Z) > 0.5) {
+						line_to(input, last_X, last_Y, fmax(last_Z, d));
+						line_to(input, X, Y, fmax(last_Z, d));
+					}
 				}
 
-				if (!outside_area(X, Y, stl_image_X(), stl_image_Y(), diam))
-					line_to(input, X, Y, -maxZ + d + offset);
+				line_to(input, X, Y, d);
+
 				prevX = X;
 				X = X - stepover;
 			}
@@ -507,8 +529,14 @@ static void create_toolpath(class scene *scene, int tool, bool roughing, bool ha
 			X = -overshoot;
 			print_progress(100.0 * Y / maxY);
 			Y = Y + stepover;
-			if (Y < maxY && !outside_area(X, Y, stl_image_X(), stl_image_Y(), diam))
-				line_to(input, X, Y, -maxZ + offset + get_height_tool(X, Y, radius + offset, ballnose));
+			if (Y < maxY && !outside_area(X, Y, stl_image_X(), stl_image_Y(), diam)) {
+					double d =  -maxZ + offset + get_height_tool(X, Y, radius + offset, ballnose);
+					if (fabs(d - last_Z) > 0.1) {
+						line_to(input, last_X, last_Y, fmax(last_Z, d));
+						line_to(input, X, Y, fmax(last_Z, d));
+					}
+					line_to(input, X, Y, d);
+			}
 		}
 	}
 	if (!even) {
@@ -523,35 +551,50 @@ static void create_toolpath(class scene *scene, int tool, bool roughing, bool ha
 			prevY = Y;
 			while (Y < maxY) {
 				double d;
-				d = get_height_tool(X, Y, radius + offset, ballnose);
-				if (fabs(d - last_Z) > 1 && roughing) {
-					Y = prevY + stepover / 1.5;
-					d = get_height_tool(X, Y, radius + offset, ballnose);
+				d = get_height_tool(X, Y, radius + offset, ballnose) + offset - maxZ;
+				if (fabs(d - last_Z) > 0.5 && roughing) {
+					Y = prevY + stepover / 3;
+					d = get_height_tool(X, Y, radius + offset, ballnose) + offset - maxZ;
+					if (fabs(d - last_Z) > 0.5) {
+						line_to(input, last_X, last_Y, fmax(last_Z, d));
+						line_to(input, X, Y, fmax(last_Z, d));
+					}
 				}
 
 
-				if (!outside_area(X, Y, stl_image_X(), stl_image_Y(), diam))
-					line_to(input, X, Y, -maxZ + d + offset);
+				if (!outside_area(X, Y, stl_image_X(), stl_image_Y(), diam)) {
+					line_to(input, X, Y, d);
+				}
 				prevY = Y;
 				Y = Y + stepover;
 			}
 			print_progress(100.0 * X / maxX);
 			X = X + stepover;
 			Y = maxY;
-			if (!outside_area(X, Y, stl_image_X(), stl_image_Y(), diam) &&  (X < maxX))
-				line_to(input, X, Y, -maxZ + offset + get_height_tool(X, Y, radius + offset, ballnose));
+			if (!outside_area(X, Y, stl_image_X(), stl_image_Y(), diam) &&  (X < maxX)) {
+					double d =  -maxZ + offset + get_height_tool(X, Y, radius + offset, ballnose);
+					if (fabs(d - last_Z) > 0.1) {
+						line_to(input, last_X, last_Y, fmax(last_Z, d));
+						line_to(input, X, Y, fmax(last_Z, d));
+					}
+					line_to(input, X, Y, d);
+			}
 			prevY = Y;
 			while (Y > - overshoot) {
 				double d;
-				d = get_height_tool(X, Y, radius + offset, ballnose);
-				if (fabs(d - last_Z) > 1 && roughing) {
-					Y = prevY - stepover / 1.5;
-					d = get_height_tool(X, Y, radius + offset, ballnose);
+				d = get_height_tool(X, Y, radius + offset, ballnose) + offset - maxZ;
+				if (fabs(d - last_Z) > 0.5 && roughing) {
+					Y = prevY - stepover / 3;
+					d = get_height_tool(X, Y, radius + offset, ballnose) + offset - maxZ;
+					if (fabs(d - last_Z) > 0.5) {
+						line_to(input, last_X, last_Y, fmax(last_Z, d));
+						line_to(input, X, Y, fmax(last_Z, d));
+					}
 				}
 
 
 				if (!outside_area(X, Y, stl_image_X(), stl_image_Y(), diam))
-					line_to(input, X, Y, -maxZ + d + offset);
+					line_to(input, X, Y, d);
 				prevY = Y;
 				Y = Y - stepover;
 			}
@@ -559,8 +602,14 @@ static void create_toolpath(class scene *scene, int tool, bool roughing, bool ha
 			X = X + stepover;
 			Y = -overshoot;
 
-			if (!outside_area(X, Y, stl_image_X(), stl_image_Y(), diam) &&  (X < maxX))
-					line_to(input, X, Y, -maxZ + offset + get_height_tool(X, Y, radius + offset, ballnose));
+			if (!outside_area(X, Y, stl_image_X(), stl_image_Y(), diam) &&  (X < maxX)) {
+					double d =  -maxZ + offset + get_height_tool(X, Y, radius + offset, ballnose);
+					if (fabs(d - last_Z) > 0.1) {
+						line_to(input, last_X, last_Y, fmax(last_Z, d));
+						line_to(input, X, Y, fmax(last_Z, d));
+					}
+					line_to(input, X, Y, d);
+			}
 
 		}
 	}

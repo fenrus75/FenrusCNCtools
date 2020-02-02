@@ -175,6 +175,8 @@ void normalize_design_to_offset(double offsetpct)
 	double Zadj;
 
 	Zadj = ((100 - offsetpct) * minZ + offsetpct * maxZ) / 100;
+
+	printf("Zadj is %5.4f   minZ is %5.4f  maxZ is %5.4f\n", Zadj, minZ, maxZ);
 	for (i = 0; i < current; i++) {
 		triangles[i].vertex[0][0] -= minX;
 		triangles[i].vertex[1][0] -= minX;
@@ -241,13 +243,12 @@ void scale_design(double newsize)
 
 void scale_design_Z(double newheight, double z_offset)
 {
-	double factor, factor2 ;
+	double factor;
 	int i;
 
 	normalize_design_to_offset(100.0 * z_offset / newheight);
 
 	factor = (newheight) / (maxZ);
-	factor2 = factor;
 
 	
 	for (i = 0; i < current; i++) {
@@ -555,10 +556,10 @@ double get_height(double X, double Y)
 			}
 		}
 	}
-
+#if 0
 	if (value < 0)
 		value = 0;
-	
+#endif
 
 	return value;
 }
