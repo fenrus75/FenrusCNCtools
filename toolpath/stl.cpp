@@ -218,7 +218,7 @@ static inline double get_height_tool(double X, double Y, double R, bool ballnose
 	d = fmax(d, get_height(X - 0.7071 * R, Y - 0.7071 * R) + balloffset);
 	d = fmax(d, get_height(X + 0.7071 * R, Y - 0.7071 * R) + balloffset);
 
-#if 0
+#if 1
 	if (R < 0.6 && fabs(d-dorg) < 0.1)
 		return ceil(d*ACC)/ACC;
 #endif
@@ -483,7 +483,7 @@ static void create_toolpath(class scene *scene, int tool, bool roughing, bool ha
 				double d;
 				d = get_height_tool(X, Y, radius + offset, ballnose) + offset - maxZ;
 
-				if (fabs(d - last_Z) > 0.5) {
+				if (fabs(d - last_Z) > 0.5 && roughing) {
 					X = prevX + stepover / 3;
 					d = get_height_tool(X, Y, radius + offset, ballnose) + offset - maxZ;
 					if (fabs(d - last_Z) > 0.5) {
@@ -513,7 +513,7 @@ static void create_toolpath(class scene *scene, int tool, bool roughing, bool ha
 			while (X > -overshoot) {
 				double d;
 				d = get_height_tool(X, Y, radius + offset, ballnose) + offset - maxZ;
-				if (fabs(d - last_Z) > 0.5) {
+				if (fabs(d - last_Z) > 0.5 && roughing) {
 					X = prevX - stepover / 3;
 					d = get_height_tool(X, Y, radius + offset, ballnose) + offset - maxZ;
 					if (fabs(d - last_Z) > 0.5) {
@@ -554,7 +554,7 @@ static void create_toolpath(class scene *scene, int tool, bool roughing, bool ha
 			while (Y < maxY) {
 				double d;
 				d = get_height_tool(X, Y, radius + offset, ballnose) + offset - maxZ;
-				if (fabs(d - last_Z) > 0.5) {
+				if (fabs(d - last_Z) > 0.5 && roughing) {
 					Y = prevY + stepover / 3;
 					d = get_height_tool(X, Y, radius + offset, ballnose) + offset - maxZ;
 					if (fabs(d - last_Z) > 0.5) {
@@ -585,7 +585,7 @@ static void create_toolpath(class scene *scene, int tool, bool roughing, bool ha
 			while (Y > - overshoot) {
 				double d;
 				d = get_height_tool(X, Y, radius + offset, ballnose) + offset - maxZ;
-				if (fabs(d - last_Z) > 0.5) {
+				if (fabs(d - last_Z) > 0.5 && roughing) {
 					Y = prevY - stepover / 3;
 					d = get_height_tool(X, Y, radius + offset, ballnose) + offset - maxZ;
 					if (fabs(d - last_Z) > 0.5) {

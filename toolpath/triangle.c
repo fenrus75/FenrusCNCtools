@@ -334,10 +334,10 @@ void make_buckets(void)
 		if (bucketptr < BUCKETSIZE / 2)
 			slop = fmin(slop * 1.05, maxslop);
 
-		bucket->minX = Xmin;
-		bucket->minY = Ymin;
-		bucket->maxX = Xmax;
-		bucket->maxY = Ymax;
+		bucket->minX = Xmin - 0.001; /* subtract a little to cope with rounding */
+		bucket->minY = Ymin - 0.001;
+		bucket->maxX = Xmax + 0.001;
+		bucket->maxY = Ymax + 0.001;
 	}
 	printf("Created %i buckets\n", nrbuckets);
 	slop = fmax(stl_image_X(), stl_image_Y())/10;
@@ -378,11 +378,11 @@ void make_buckets(void)
 			}				
 		}
 
-		if (bucketptr >= BUCKETSIZE -5)
+		if (bucketptr >= L2BUCKETSIZE - 4)
 			slop = slop * 0.9;
-		if (bucketptr < BUCKETSIZE / 8)
+		if (bucketptr < L2BUCKETSIZE / 8)
 			slop = fmin(slop * 1.1, maxslop);
-		if (bucketptr < BUCKETSIZE / 2)
+		if (bucketptr < L2BUCKETSIZE / 2)
 			slop = fmin(slop * 1.05, maxslop);
 
 		l2bucket->minX = Xmin;
