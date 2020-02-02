@@ -18,6 +18,7 @@ static int maxtriangle = 0;
 static int maxbuckets = 0;
 static int maxl2buckets = 0;
 static int current = 0;
+static int nrvertical;
 static struct triangle *triangles;
 
 static struct bucket *buckets;
@@ -116,6 +117,7 @@ void push_triangle(float v1[3], float v2[3], float v3[3], float norm[3])
 
 	if (fabs(norm[2]) < 0.001 && fabs(norm[0])+fabs(norm[1]) > 0.01) {
 		triangles[current].vertical = 1;
+		nrvertical++;
 	}
 
 
@@ -176,7 +178,6 @@ void normalize_design_to_offset(double offsetpct)
 
 	Zadj = ((100 - offsetpct) * minZ + offsetpct * maxZ) / 100;
 
-	printf("Zadj is %5.4f   minZ is %5.4f  maxZ is %5.4f\n", Zadj, minZ, maxZ);
 	for (i = 0; i < current; i++) {
 		triangles[i].vertex[0][0] -= minX;
 		triangles[i].vertex[1][0] -= minX;
@@ -413,6 +414,7 @@ void print_triangle_stats(void)
 	int i;
 	double sum = 0;
 	printf("Number of triangles in file   : %i\n", current);
+	vprintf("      of which are vertical   : %i\n", nrvertical);
 /*
 	printf("Span of the design	      : (%5.1f, %5.1f, %5.1f) - (%5.1f, %5.1f, %5.1f) \n",
 			minX, minY, minZ, maxX, maxY, maxZ);
