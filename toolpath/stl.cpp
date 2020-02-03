@@ -682,7 +682,7 @@ static void process_vertical(class scene *scene, int tool, bool roughing)
 		}
 		do {
 			int j;
-			double l;
+			double l, d;
 			double lstep;
 			double vX,vY;
 			double X1,Y1,X2,Y2;
@@ -703,7 +703,7 @@ static void process_vertical(class scene *scene, int tool, bool roughing)
 			lstep = 0.1 / dist(X1,Y1,X2,Y2);
 //			printf("First  lstep %5.4f\n", lstep);
 			while (l <= 1) {
-				double X,Y, d;
+				double X,Y;
 				X = X1 + l * vX;
 				Y = Y1 + l * vY;
 				l = l + lstep;
@@ -718,6 +718,13 @@ static void process_vertical(class scene *scene, int tool, bool roughing)
 				line_to(input, X, Y, d);
 //				printf("line %5.4f %5.4f %5.4f\n", X, Y, d);
 			}
+			d = get_height_tool(X2, Y2, radius, false) + offset - maxZ;
+			if (fabs(d - last_Z) > 0.2 && !first && d <= 0) {
+					line_to(input, last_X, last_Y, fmax(last_Z, d));
+					line_to(input, X2, Y2, fmax(last_Z, d));
+			}
+			if (d < 0)
+				line_to(input, X2, Y2, d);
 			lines[i].valid = 0;
 			nexti = -1;
 			for (j = 0; j < maxlines && nexti == -1; j++ ) {
