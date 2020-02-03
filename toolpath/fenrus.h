@@ -29,6 +29,7 @@ struct line {
 	double X1, Y1, X2, Y2;
 	double nX, nY;
 	int valid;
+	int count;
 
 	int prev, next;
 };

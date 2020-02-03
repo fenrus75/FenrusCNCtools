@@ -581,8 +581,10 @@ static void push_line(double X1, double Y1, double X2, double Y2, double nX, dou
 {
 	int i;
 	for (i = 0; i < linecount; i++) {
-		if (approx4(X1, lines[i].X1) && approx4(X2, lines[i].X2) &&  approx4(Y1, lines[i].Y1) &&  approx4(Y2, lines[i].Y2))
+		if (approx4(X1, lines[i].X1) && approx4(X2, lines[i].X2) &&  approx4(Y1, lines[i].Y1) &&  approx4(Y2, lines[i].Y2)) {
+			lines[i].count++;
 			return;
+		}
 	}
 	double len;
 	len=sqrt(nX*nX+nY*nY);
@@ -597,6 +599,7 @@ static void push_line(double X1, double Y1, double X2, double Y2, double nX, dou
 	lines[linecount].nX = nX/len;
 	lines[linecount].nY = nY/len;
 	lines[linecount].valid = 1;
+	lines[linecount].count = 1;
 	linecount++;
 }
 
@@ -755,11 +758,36 @@ static void do_outlines(double distance)
 		outlines[i].X2 = mX + (l2) * vX;
 		outlines[i].Y1 = mY - (l1) * vY;
 		outlines[i].Y2 = mY + (l2) * vY;
+		outlines[i].count = lines[i].count;
 		if (l1 > 0 && l2 > 0) {
 			outlines[i].valid = 1;
 		} else {
 			outlines[i].valid = 0;
 		}
+	}
+}
+
+void cleanup_outlines(void)
+{
+	int i;
+	for (i = 0; i < linecount; i++) {
+		int p;
+		if (outlines[i].valid != 1)
+			continue;
+		if (outlines[i].count < 2)
+			continue;
+		p = outlines[i].prev;
+		if (outlines[p].valid == 1)
+			outlines[p].count++;
+		p = outlines[i].next;
+		if (outlines[p].valid == 1)
+			outlines[p].count++;
+	}
+	for (i = 0; i < linecount; i++) {
+		if (outlines[i].valid != 1)
+			continue;
+		if (outlines[i].count < 2)
+			outlines[i].valid = 0;
 	}
 }
 
@@ -818,6 +846,7 @@ struct line * stl_vertical_triangles(double radius)
 	}
 
 	do_outlines(radius);
+	cleanup_outlines();
 
 	if (verbose) {
 		output = fopen("lines.svg", "w");
