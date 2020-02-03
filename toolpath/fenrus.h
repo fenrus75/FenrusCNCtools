@@ -25,6 +25,14 @@ struct l2bucket {
 	struct bucket *buckets[L2BUCKETSIZE];
 };
 
+struct line {
+	double X1, Y1, X2, Y2;
+	double nX, nY;
+	int valid;
+
+	int prev, next;
+};
+
 extern void set_max_triangles(int count);
 extern void push_triangle(float v1[3], float v2[3], float v3[3], float norm[3]);
 extern void normalize_design_to_zero(void);
@@ -36,6 +44,6 @@ extern double stl_image_Y(void);
 extern double scale_Z(void);
 extern double get_height(double X, double Y);
 extern void reset_triangles(void);
-
+extern struct line * stl_vertical_triangles(double radius);
 
 #endif

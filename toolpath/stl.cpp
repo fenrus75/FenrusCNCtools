@@ -164,7 +164,7 @@ static void line_to(class inputshape *input, double X2, double Y2, double Z2)
 		p2->push_back(Point(X1, Y1));
 		p2->push_back(Point(X2, Y2));
 		input->tooldepths[depth]->toollevels[0]->add_poly_vcarve(p2, Z1, Z2);
-		
+
 		Z1 += tooldepth;
 		Z2 += tooldepth;
 
@@ -419,6 +419,7 @@ static bool outside_area(double X, double Y, double mX, double mY, double diam)
 
 }
 
+
 static void create_toolpath(class scene *scene, int tool, bool roughing, bool has_cutout, bool even)
 {
 	double X, Y = 0, maxX, maxY, stepover;
@@ -619,6 +620,135 @@ static void create_toolpath(class scene *scene, int tool, bool roughing, bool ha
 	printf("                                                          \r");
 }
 
+
+static void process_vertical(class scene *scene, int tool, bool roughing)
+{
+	double	radius = tool_diam(tool)/2 + 0.001;
+	double offset = 0;
+	struct line *lines;
+	int i, nexti;
+	int maxlines = 0;
+	class inputshape *input;
+	int loopi;
+
+	double maxZ = scene->get_cutout_depth();
+
+	toolnr = tool;
+	/* not doing tapered ballnoses */
+	if (tool_is_ballnose(toolnr))
+		return;
+
+	input = new(class inputshape);
+	input->set_name("STL vertical");
+	scene->shapes.push_back(input);
+
+	if (roughing) {
+		radius += scene->get_stock_to_leave();
+		offset = scene->get_stock_to_leave();
+	}
+
+
+
+	printf("Radius is %5.4f offset is %5.4f  maxZ is %5.4f\n",
+			radius, offset, maxZ);
+
+	lines = stl_vertical_triangles(radius);
+	if (!lines)
+		return;
+
+	i = 0;
+	do {
+		maxlines++;
+		if (lines[i].valid != 1) {
+			i++;
+			continue;
+		}	
+		i++;
+	} while (lines[i].valid >= 0);
+
+	for (loopi = 0; loopi < maxlines; loopi++) {
+		int q = 0, p;
+		i = loopi;
+		if (lines[i].valid != 1)
+			continue;
+		nexti = -1;
+		p = lines[i].prev;
+		first = true;
+
+		while (q < 150 && p >= 0 && lines[p].valid == 1) {
+			q++;
+			i = p;
+			p = lines[i].prev;
+		}
+		do {
+			int j;
+			double l;
+			double lstep;
+			double vX,vY;
+			double X1,Y1,X2,Y2;
+	
+			if (lines[i].valid != 1)
+				continue;
+
+			first = true;
+
+			X1 = lines[i].X1;
+			X2 = lines[i].X2;
+			Y1 = lines[i].Y1;
+			Y2 = lines[i].Y2;
+
+			vX = X2-X1;
+			vY = Y2-Y1;
+			l = 0;
+			lstep = 0.1 / dist(X1,Y1,X2,Y2);
+//			printf("First  lstep %5.4f\n", lstep);
+			while (l <= 1) {
+				double X,Y, d;
+				X = X1 + l * vX;
+				Y = Y1 + l * vY;
+				l = l + lstep;
+
+				d = get_height_tool(X, Y, radius, false) + offset - maxZ;
+				if (d > 0)
+					continue;
+				if (fabs(d - last_Z) > 0.2 && !first) {
+					line_to(input, last_X, last_Y, fmax(last_Z, d));
+					line_to(input, X, Y, fmax(last_Z, d));
+				}
+				line_to(input, X, Y, d);
+//				printf("line %5.4f %5.4f %5.4f\n", X, Y, d);
+			}
+			lines[i].valid = 0;
+			nexti = -1;
+			for (j = 0; j < maxlines && nexti == -1; j++ ) {
+				if (i == j || lines[j].valid != 1)
+					continue;
+
+
+				if (approx2(lines[i].X2, lines[j].X1) && approx2(lines[i].Y2, lines[j].Y1)) {
+					nexti = j;
+				}
+
+				if (approx2(lines[i].X2, lines[j].X2) && approx2(lines[i].Y2, lines[j].Y2)) {
+					nexti = j;
+
+					double x1,y1,x2,y2;
+					x1 = lines[j].X1;
+					x2 = lines[j].X2;
+					y1 = lines[j].Y1;
+					y2 = lines[j].Y2;
+					lines[j].X1 = x2;
+					lines[j].X2 = x1;
+					lines[j].Y1 = y2;
+					lines[j].Y2 = y1;
+				}
+
+			}
+			i = nexti;
+		} while (nexti >= 0);
+	}
+}
+
 void process_stl_file(class scene *scene, const char *filename, int flip)
 {
 	bool omit_cutout = false;
@@ -642,12 +772,14 @@ void process_stl_file(class scene *scene, const char *filename, int flip)
 
 		printf("Create toolpaths for tool %i \n", scene->get_tool_nr(i));
 
+		tooldepth = get_tool_maxdepth();
+
+		process_vertical(scene, scene->get_tool_nr(i), i < (int)scene->get_tool_count() - 1);
+
 		/* only for the first roughing tool do we need to honor the max tool depth */
-		if (i != 0) {
+		if (i != 0) 
 			tooldepth = 5000;
-		} else {
-			tooldepth = get_tool_maxdepth();
-		}
+
 		create_toolpath(scene, scene->get_tool_nr(i), i < (int)scene->get_tool_count() - 1, !omit_cutout, even);
 
 		even = !even;
@@ -656,6 +788,7 @@ void process_stl_file(class scene *scene, const char *filename, int flip)
 
 			even = !even;
 		}
+
 	}
 	if (!omit_cutout) { 
 		activate_tool(scene->get_tool_nr(0));

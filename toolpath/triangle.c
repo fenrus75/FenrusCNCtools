@@ -34,6 +34,12 @@ static float maxY = -100000;
 static float minZ = 100000;
 static float maxZ = -100000;
 
+
+static double dist(double X0, double Y0, double X1, double Y1)
+{
+  return sqrt((X1-X0)*(X1-X0) + (Y1-Y0)*(Y1-Y0));
+}
+
 void reset_triangles(void)
 {
 	free(triangles);
@@ -566,3 +572,269 @@ double get_height(double X, double Y)
 	return value;
 }
 
+
+static struct line *lines;
+static struct line *outlines;
+static int linecount = 0;
+
+static void push_line(double X1, double Y1, double X2, double Y2, double nX, double nY) 
+{
+	int i;
+	for (i = 0; i < linecount; i++) {
+		if (approx4(X1, lines[i].X1) && approx4(X2, lines[i].X2) &&  approx4(Y1, lines[i].Y1) &&  approx4(Y2, lines[i].Y2))
+			return;
+	}
+	double len;
+	len=sqrt(nX*nX+nY*nY);
+	if (fabs(len) < 0.0001)
+		return;
+
+	lines[linecount].X1 = X1;
+	lines[linecount].X2 = X2;
+	lines[linecount].Y1 = Y1;
+	lines[linecount].Y2 = Y2;
+	/* make sure nX/nY are normalized to 1 */
+	lines[linecount].nX = nX/len;
+	lines[linecount].nY = nY/len;
+	lines[linecount].valid = 1;
+	linecount++;
+}
+
+static void do_outlines(double distance)
+{
+	int i;
+	for (i = 0; i < linecount; i++) {
+		double mX, mY;
+		double vX,vY, len;
+		double l1,l2;
+		int match = 0;
+		int j;
+
+		if (lines[i].valid != 1)
+			continue;
+
+		mX = (lines[i].X1 + lines[i].X2)/2;
+		mY = (lines[i].Y1 + lines[i].Y2)/2;
+		vX = lines[i].X2 - mX;
+		vY = lines[i].Y2 - mY;
+		len = sqrt(vX*vX + vY*vY);
+		if (fabs(len) < 0.0000001)
+			continue;
+		vX = vX/len;
+		vY = vY/len;
+
+		l1 = dist(mX, mY, lines[i].X1, lines[i].Y1);
+		l2 = dist(mX, mY, lines[i].X2, lines[i].Y2);
+
+		mX = mX + distance * lines[i].nX;
+		mY = mY + distance * lines[i].nY;
+		double oldl1 = l1;
+
+		/* lets go find a match for X1/Y1 */
+		for (j = 0 ; j < linecount; j++) {
+			if (lines[j].valid != 1 || i == j)
+				continue;
+			if ( (approx3(lines[i].X1,lines[j].X1) || approx3(lines[i].X1,lines[j].X2)) && 			
+				 (approx3(lines[i].Y1,lines[j].Y1) || approx3(lines[i].Y1,lines[j].Y2))) {
+				double m2X, m2Y, v2X, v2Y;
+
+				outlines[i].prev = j;
+				
+				m2X = (lines[j].X1 + lines[j].X2)/2;
+				m2Y = (lines[j].Y1 + lines[j].Y2)/2;
+				v2X = lines[j].X2 - m2X;
+				v2Y = lines[j].Y2 - m2Y;
+				len = sqrt(v2X*v2X + v2Y*v2Y);
+				if (fabs(len) < 0.0000001)
+					continue;
+				v2X = v2X/len;
+				v2Y = v2Y/len;
+				m2X = m2X + distance * lines[j].nX;
+				m2Y = m2Y + distance * lines[j].nY;
+
+
+				/* solve for l1:
+					mX + l1 * vX == m2X + k1 * v2X
+					mY + l1 * vY == m2Y + k1 * v2Y
+
+					k1 = (mY + l1 * vY - m2Y)/v2Y
+					l1 * vX == m2X + (mY + l1 * vY - m2Y)/v2Y * v2X - mX
+					l1 (vX - vY/v2Y * v2X) == m2X + v2X * mY / v2Y - m2Y * v2X/v2Y - mX
+
+					or
+
+					k1 = (mX + l1 * vX - m2X)/v2X;
+					l1 (vY - vX/v2X * v2Y) == m2Y + v2Y * mX / v2X - m2X * v2Y/v2X - mY
+				
+				 */
+
+				if (fabs(v2Y) > 0.01 || fabs(v2X < 0.0001)) {
+					double left, right;
+					left = vX - vY/v2Y * v2X;
+					right = m2X + v2X * mY / v2Y - m2Y * v2X/v2Y - mX;
+					if (left != 0)
+						l1 = - right / left;
+				} else {
+					double left, right;
+					left = vY - vX/v2X * v2Y;
+					right = m2Y + v2Y * mX / v2X - m2X * v2Y/v2X - mY;
+					if (left != 0)
+						l1 = - right / left;
+				}
+				match++;
+//				printf("l1 %5.2f   oldl1 %5.2f\n", l1, oldl1);
+				if (l1/oldl1 > 3) {
+					l1 = - 10;
+				}
+			}
+		
+		}
+
+
+		double oldl2 = l2;
+
+		/* lets go find a match for X2/Y2 */
+		for (j = 0 ; j < linecount; j++) {
+			if (!lines[j].valid || i == j)
+				continue;
+			if ( (approx4(lines[i].X2,lines[j].X1) || approx4(lines[i].X2,lines[j].X2)) && 			
+				 (approx4(lines[i].Y2,lines[j].Y1) || approx4(lines[i].Y2,lines[j].Y2))) {
+				double m2X, m2Y, v2X, v2Y;
+
+				outlines[i].next = j;
+				
+				m2X = (lines[j].X1 + lines[j].X2)/2;
+				m2Y = (lines[j].Y1 + lines[j].Y2)/2;
+				v2X = lines[j].X2 - m2X;
+				v2Y = lines[j].Y2 - m2Y;
+				len = sqrt(v2X*v2X + v2Y*v2Y);
+				if (fabs(len) < 0.0000001)
+					continue;
+				v2X = v2X/len;
+				v2Y = v2Y/len;
+				m2X = m2X + distance * lines[j].nX;
+				m2Y = m2Y + distance * lines[j].nY;
+
+
+				/* solve for l1:
+					mX + l1 * vX == m2X + k1 * v2X
+					mY + l1 * vY == m2Y + k1 * v2Y
+
+					k1 = (mY + l1 * vY - m2Y)/v2Y
+					l1 * vX == m2X + (mY + l1 * vY - m2Y)/v2Y * v2X - mX
+					l1 (vX - vY/v2Y * v2X) == m2X + v2X * mY / v2Y - m2Y * v2X/v2Y - mX
+
+					or
+
+					k1 = (mX + l1 * vX - m2X)/v2X;
+					l1 (vY - vX/v2X * v2Y) == m2Y + v2Y * mX / v2X - m2X * v2Y/v2X - mY
+				
+				 */
+
+				if (fabs(v2Y) > 0.11 || fabs(v2X < 0.0001)) {
+					double left, right;
+					left = vX - vY/v2Y * v2X;
+					right = m2X + v2X * mY / v2Y - m2Y * v2X/v2Y - mX;
+					if (left != 0)
+						l2 = right / left;
+				} else {
+					double left, right;
+					left = vY - vX/v2X * v2Y;
+					right = m2Y + v2Y * mX / v2X - m2X * v2Y/v2X - mY;
+					if (left != 0)
+						l2 = right / left;
+				}
+				match++;
+				if (l2/oldl2 > 3) 
+					l2 = -10;
+			}
+		
+		}
+
+		outlines[i].X1 = mX - (l1) * vX;
+		outlines[i].X2 = mX + (l2) * vX;
+		outlines[i].Y1 = mY - (l1) * vY;
+		outlines[i].Y2 = mY + (l2) * vY;
+		if (l1 > 0 && l2 > 0) {
+			outlines[i].valid = 1;
+		} else {
+			outlines[i].valid = 0;
+		}
+	}
+}
+
+struct line * stl_vertical_triangles(double radius)
+{
+	int i;
+	FILE *output;
+	if (lines)
+		free(lines);
+
+	if (nrvertical == 0 || nrvertical > 20000)
+		return NULL;
+
+//	nrvertical += 4;
+	lines = calloc(sizeof(struct line), nrvertical + 5);
+	if (outlines)
+		free(outlines);
+	linecount = 0;
+
+	outlines = calloc(sizeof(struct line), nrvertical + 5);
+	for (i = 0; i < nrvertical + 1; i++) {
+		outlines[i].valid = -1;
+		outlines[i].prev = -1;
+		outlines[i].next = -1;
+	}
+#if 0
+	push_line(0, 0, 0, stl_image_Y(), 1, 0);
+	push_line(0, stl_image_Y(), stl_image_X(), stl_image_Y(), 0, -1);
+	push_line(stl_image_X(), stl_image_Y(), stl_image_X(), 0, -1, 0);
+	push_line(stl_image_X(), 0, 0, 0, 0, 1);
+#endif
+	for (i = 0; i < current; i++) {
+		double X1, Y1, X2, Y2;
+
+		if (!triangles[i].vertical)
+			continue;
+		X1 = triangles[i].minX;
+		Y1 = -1000000;
+		X2 = triangles[i].maxX;
+		Y2 = -1000000;
+		if (X1 == triangles[i].vertex[0][0])
+			Y1 = triangles[i].vertex[0][1];
+		else if (X2 == triangles[i].vertex[0][0])
+				Y2 = triangles[i].vertex[0][1];
+		if (X1 == triangles[i].vertex[1][0])
+			Y1 = triangles[i].vertex[1][1];
+		else if (X2 == triangles[i].vertex[1][0])
+			Y2 = triangles[i].vertex[1][1];
+		if (X1 == triangles[i].vertex[2][0])
+			Y1 = triangles[i].vertex[2][1];
+		else if (X2 == triangles[i].vertex[2][0])
+				Y2 = triangles[i].vertex[2][1];
+
+		if (Y1 != -1000000 && Y2 != -1000000) 
+			push_line(X1, Y1, X2, Y2, triangles[i].normal[0], triangles[i].normal[1]);
+	}
+
+	do_outlines(radius);
+
+	if (verbose) {
+		output = fopen("lines.svg", "w");
+		fprintf(output, "<?xml version=\"1.0\" encoding=\"UTF-8\" ?>\n");
+		fprintf(output, "<svg width=\"50px\" height=\"50px\" xmlns=\"http://www.w3.org/2000/svg\">\n");
+
+
+		for (i = 0; i < linecount; i++)
+			if (lines[i].valid == 1)
+				fprintf(output, "<line x1=\"%5.4f\" y1=\"%5.4f\" x2=\"%5.4f\" y2=\"%5.4f\"  stroke=\"purple\" stroke-width=\"0.3\"/>\n", lines[i].X1, lines[i].Y1, lines[i].X2, lines[i].Y2);
+		for (i = 0; i < linecount; i++)
+			if (outlines[i].valid == 1)
+				fprintf(output, "<line x1=\"%5.4f\" y1=\"%5.4f\" x2=\"%5.4f\" y2=\"%5.4f\"  stroke=\"green\" stroke-width=\"0.3\"/>\n", outlines[i].X1, outlines[i].Y1, outlines[i].X2, outlines[i].Y2);
+			else
+				fprintf(output, "<line x1=\"%5.4f\" y1=\"%5.4f\" x2=\"%5.4f\" y2=\"%5.4f\"  stroke=\"red\" stroke-width=\"0.3\"/>\n", outlines[i].X1, outlines[i].Y1, outlines[i].X2, outlines[i].Y2);
+		fprintf(output, "</svg>\n");
+		fclose(output);
+	}
+	return outlines;
+}
