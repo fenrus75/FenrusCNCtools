@@ -712,16 +712,16 @@ static void process_vertical(class scene *scene, int tool, bool roughing)
 				if (d > 0)
 					continue;
 				if (fabs(d - last_Z) > 0.2 && !first) {
-					line_to(input, last_X, last_Y, fmax(last_Z, d));
-					line_to(input, X, Y, fmax(last_Z, d));
+					line_to(input, last_X, last_Y, fmin(fmax(last_Z, d), 0.1));
+					line_to(input, X, Y, fmin(fmax(last_Z, d), 0.1));
 				}
 				line_to(input, X, Y, d);
 //				printf("line %5.4f %5.4f %5.4f\n", X, Y, d);
 			}
 			d = get_height_tool(X2, Y2, radius, false) + offset - maxZ;
 			if (fabs(d - last_Z) > 0.2 && !first && d <= 0) {
-					line_to(input, last_X, last_Y, fmax(last_Z, d));
-					line_to(input, X2, Y2, fmax(last_Z, d));
+					line_to(input, last_X, last_Y, fmin(fmax(last_Z, d), 0.1));
+					line_to(input, X2, Y2, fmin(fmax(last_Z, d), 0.1));
 			}
 			if (d < 0)
 				line_to(input, X2, Y2, d);

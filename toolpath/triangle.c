@@ -801,7 +801,7 @@ struct line * stl_vertical_triangles(double radius)
 	if (nrvertical == 0 || nrvertical > 20000)
 		return NULL;
 
-//	nrvertical += 4;
+	nrvertical += 8;
 	lines = calloc(sizeof(struct line), nrvertical + 5);
 	if (outlines)
 		free(outlines);
@@ -814,6 +814,10 @@ struct line * stl_vertical_triangles(double radius)
 		outlines[i].next = -1;
 	}
 #if 0
+	push_line(0, 0, 0, stl_image_Y(), 1, 0);
+	push_line(0, stl_image_Y(), stl_image_X(), stl_image_Y(), 0, -1);
+	push_line(stl_image_X(), stl_image_Y(), stl_image_X(), 0, -1, 0);
+	push_line(stl_image_X(), 0, 0, 0, 0, 1);
 	push_line(0, 0, 0, stl_image_Y(), 1, 0);
 	push_line(0, stl_image_Y(), stl_image_X(), stl_image_Y(), 0, -1);
 	push_line(stl_image_X(), stl_image_Y(), stl_image_X(), 0, -1, 0);
