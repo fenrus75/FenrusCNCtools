@@ -625,6 +625,9 @@ static Polygon_2 * optimize_bb(class scene *scene, Polygon_2 *boundingbox, bool 
 void scene::optimize_cutout(void) 
 {
 	Polygon_2 *boundingbox;
+
+	return;
+
 	boundingbox = cutout_clone_split(&cutout->poly, 1000);
 	unsigned int iter = 0;
 	double best_bb_length;
