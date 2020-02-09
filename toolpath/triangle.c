@@ -588,8 +588,9 @@ static void push_line(double X1, double Y1, double X2, double Y2, double nX, dou
 	}
 	double len;
 	len=sqrt(nX*nX+nY*nY);
-	if (fabs(len) < 0.0001)
+	if (fabs(len) < 0.01)
 		return;
+
 
 	lines[linecount].X1 = X1;
 	lines[linecount].X2 = X2;
@@ -621,7 +622,7 @@ static void do_outlines(double distance)
 		vX = lines[i].X2 - mX;
 		vY = lines[i].Y2 - mY;
 		len = sqrt(vX*vX + vY*vY);
-		if (fabs(len) < 0.0000001)
+		if (fabs(len) < 0.01)
 			continue;
 		vX = vX/len;
 		vY = vY/len;
@@ -810,6 +811,14 @@ struct line * stl_vertical_triangles(double radius)
 	outlines = calloc(sizeof(struct line), nrvertical + 5);
 	for (i = 0; i < nrvertical + 1; i++) {
 		outlines[i].valid = -1;
+		outlines[i].X1 = -4000;
+		outlines[i].Y1 = -4000;
+		outlines[i].X2 = -4000;
+		outlines[i].Y2 = -4000;
+		lines[i].X1 = -4000;
+		lines[i].Y1 = -4000;
+		lines[i].X2 = -4000;
+		lines[i].Y2 = -4000;
 		outlines[i].prev = -1;
 		outlines[i].next = -1;
 	}
@@ -845,7 +854,7 @@ struct line * stl_vertical_triangles(double radius)
 		else if (X2 == triangles[i].vertex[2][0])
 				Y2 = triangles[i].vertex[2][1];
 
-		if (Y1 != -1000000 && Y2 != -1000000) 
+		if (Y1 > -100000 && Y2 > -100000) 
 			push_line(X1, Y1, X2, Y2, triangles[i].normal[0], triangles[i].normal[1]);
 	}
 
