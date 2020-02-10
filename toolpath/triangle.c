@@ -672,7 +672,7 @@ static void do_outlines(double distance)
 				
 				 */
 
-				if (fabs(v2Y) > 0.01 || fabs(v2X < 0.0001)) {
+				if (fabs(v2Y) > 0.01 || fabs(v2X) < 0.0001) {
 					double left, right;
 					left = vX - vY/v2Y * v2X;
 					right = m2X + v2X * mY / v2Y - m2Y * v2X/v2Y - mX;
@@ -735,7 +735,7 @@ static void do_outlines(double distance)
 				
 				 */
 
-				if (fabs(v2Y) > 0.11 || fabs(v2X < 0.0001)) {
+				if (fabs(v2Y) > 0.11 || fabs(v2X) < 0.0001) {
 					double left, right;
 					left = vX - vY/v2Y * v2X;
 					right = m2X + v2X * mY / v2Y - m2Y * v2X/v2Y - mX;
