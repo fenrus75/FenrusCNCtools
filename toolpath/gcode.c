@@ -212,7 +212,7 @@ void gcode_mill_to(double X, double Y, double Z, double speedratio)
 
     fprintf(gcode, "G1");
     if (cX != X)
-        fprintf(gcode,"X%sf", double_to_str(X));
+        fprintf(gcode,"X%s", double_to_str(X));
     if (cY != Y)
         fprintf(gcode,"Y%s", double_to_str(Y));
     if (cZ != Z)
