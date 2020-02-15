@@ -174,12 +174,18 @@ int main(int argc, char **argv)
     set_retract_height_imperial(0.06);
     scene->set_default_tool(tool);
 
-    for(; optind < argc; optind++) {      
+   for(; optind < argc; optind++) {      
+		char outputfile[81920], *c;
+		strcpy(outputfile, argv[optind]);
+		c = outputfile;
 		if (strstr(argv[optind], ".csv")) {
 			parse_csv_file(scene, argv[optind], tool);
+			c = strstr(outputfile, ".csv");
 		} if (strstr(argv[optind], ".stl")) {
 			process_stl_file(scene, argv[optind], stl_flip);
+			c = strstr(outputfile, ".stl");
 		} else {
+			c = strstr(outputfile, ".svg");
 			parse_svg_file(scene, argv[optind]);
 			scene->set_filename(argv[optind]);
 
@@ -188,9 +194,12 @@ int main(int argc, char **argv)
 			scene->create_toolpaths();
 		}
 
+		if (c)
+			sprintf(c, ".nc");
+
 		if (verbose)		
 			scene->write_svg("output.svg");
-		scene->write_gcode("output.nc", "main design");
+		scene->write_gcode(outputfile, "main design");
 		if (scene->inlay_plug) {
 			if (verbose)
 				scene->inlay_plug->write_svg("inlay.svg");
