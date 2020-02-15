@@ -225,6 +225,7 @@ void read_tool_lib(const char *filename)
     file = fopen(filename, "r");
     if (!file) {
         printf("Cannot open tool file %s: %s\n", filename, strerror(errno));
+		return;
     }
     
     while (!feof(file)) {
