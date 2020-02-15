@@ -346,7 +346,7 @@ void make_buckets(void)
 		bucket->maxX = Xmax + 0.001;
 		bucket->maxY = Ymax + 0.001;
 	}
-	printf("Created %i buckets\n", nrbuckets);
+	qprintf("Created %i buckets\n", nrbuckets);
 	slop = fmax(stl_image_X(), stl_image_Y())/10;
 	maxslop = slop * 2;
 
@@ -397,7 +397,7 @@ void make_buckets(void)
 		l2bucket->maxX = Xmax;
 		l2bucket->maxY = Ymax;
 	}
-	printf("Created %i L2 buckets\n", nrl2buckets);
+	qprintf("Created %i L2 buckets\n", nrl2buckets);
 }
 
 double stl_image_X(void)
@@ -419,24 +419,24 @@ void print_triangle_stats(void)
 {
 	int i;
 	double sum = 0;
-	printf("Number of triangles in file   : %i\n", current);
+	qprintf("Number of triangles in file   : %i\n", current);
 	vprintf("      of which are vertical   : %i\n", nrvertical);
 /*
 	printf("Span of the design	      : (%5.1f, %5.1f, %5.1f) - (%5.1f, %5.1f, %5.1f) \n",
 			minX, minY, minZ, maxX, maxY, maxZ);
 */
-	printf("Image size                    : %5.2f  x %5.2f mm\n", stl_image_X(), stl_image_Y());
-	printf("Image size                    : %5.2f\" x %5.2f\"\n", mm_to_inch(stl_image_X()), mm_to_inch(stl_image_Y()));
+	qprintf("Image size                    : %5.2f  x %5.2f mm\n", stl_image_X(), stl_image_Y());
+	qprintf("Image size                    : %5.2f\" x %5.2f\"\n", mm_to_inch(stl_image_X()), mm_to_inch(stl_image_Y()));
 
 
 	if (current > 10000)
-		printf("Large number of triangles, this may take some time\n");
+		qprintf("Large number of triangles, this may take some time\n");
 	for (i = 0; i < current; i++) {
 		double size;
 		size = fmax(triangles[i].maxX-triangles[i].minX, triangles[i].maxY-triangles[i].minY);
 		sum += size;
 	}
-	printf("Average triangle size: %5.2f\n", sum / current);
+	qprintf("Average triangle size: %5.2f\n", sum / current);
 	make_buckets();
 }
 

@@ -289,7 +289,10 @@ static inline double get_height_tool(double X, double Y, double R, bool ballnose
 
 }
 
-static void print_progress(double pct) {
+static void print_progress(double pct) 
+{
+	if (quiet)
+		return;
 	char line[] = "----------------------------------------";
 	int i;
 	int len = strlen(line);
@@ -618,7 +621,7 @@ static void create_toolpath(class scene *scene, int tool, bool roughing, bool ha
 		}
 	}
 
-	printf("                                                          \r");
+	qprintf("                                                          \r");
 	first = true;
 }
 
@@ -781,7 +784,7 @@ void process_stl_file(class scene *scene, const char *filename, int flip)
 	for ( int i = scene->get_tool_count() - 1; i >= 0 ; i-- ) {
 		activate_tool(scene->get_tool_nr(i));
 
-		printf("Create toolpaths for tool %i \n", scene->get_tool_nr(i));
+		qprintf("Create toolpaths for tool %i \n", scene->get_tool_nr(i));
 
 		tooldepth = get_tool_maxdepth();
 

@@ -187,7 +187,7 @@ int main(int argc, char **argv)
 		if (strstr(argv[optind], ".csv")) {
 			parse_csv_file(scene, argv[optind], tool);
 			c = strstr(outputfile, ".csv");
-		} if (strstr(argv[optind], ".stl")) {
+		} else if (strstr(argv[optind], ".stl")) {
 			process_stl_file(scene, argv[optind], stl_flip);
 			c = strstr(outputfile, ".stl");
 		} else {
