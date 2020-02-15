@@ -17,6 +17,7 @@ extern "C" {
 }
 
 int verbose = 0;
+int quiet = 0;
 
 static int stl_flip = 0;
 
@@ -53,8 +54,9 @@ void usage(void)
 	printf("\t--stock-to-leave <mm> (-o)    how much stock to leave between roughing and finishing pass\n");
 	printf("\t--separate			(-x)	create one gcode (.nc) file per tool\n");
 	printf("\t--stepover <mm>       (-e)    stepover to use for the finishing pass\n");
-	printf("\t--stlYZflip			(-Y)	Show STL model from the front instead of the top\n");
+	printf("\t--stlYZflip <nr>      (-Y)	Show STL model from the front instead of the top\n");
 	printf("\t--stlZoffset <mm>		(-Z)	put a floor in the STL model\n");
+	printf("\t--quiet				(-q)	suppress non-error prints\n");
 	exit(EXIT_SUCCESS);
 }
 
@@ -62,6 +64,7 @@ static struct option long_options[] =
         {
           /* These options set a flag. */
           {"verbose", no_argument,       0, 'v'},
+          {"quiet", no_argument,       0, 'q'},
           {"finish-pass", no_argument,       0, 'f'},
           {"skeleton", no_argument,       0, 's'},
           {"inbetween", no_argument,       0, 'i'},
@@ -94,50 +97,53 @@ int main(int argc, char **argv)
     
     scene->set_depth(inch_to_mm(0.044));
 
-    while ((opt = getopt_long(argc, argv, "vfsil:t:d:D:xhY:c:o:Z:", long_options, &option_index)) != -1) {
+    while ((opt = getopt_long(argc, argv, "qavfsil:t:d:D:xhY:c:o:Z:", long_options, &option_index)) != -1) {
         switch (opt)
 		{
 			case 'v':
 				verbose = 1;
 				break;
+			case 'q':
+				quiet = 1;
+				break;
 			case 'f':
 				scene->enable_finishing_pass();
-				printf("Finishing pass enabled\n");
+				qprintf("Finishing pass enabled\n");
 				break;
 			case 's':
 				scene->enable_skeleton_paths();
-				printf("Skeleton path enabled\n");
+				qprintf("Skeleton path enabled\n");
 				break;
 			case 'i':
 				scene->enable_inbetween_paths();
-				printf("Inbetween paths enabled\n");
+				qprintf("Inbetween paths enabled\n");
 				break;
 			case 'n':
 				scene->enable_inlay();
-				printf("Creating inlay plug\n");
+				qprintf("Creating inlay plug\n");
 				break;
 			case 'l':
 				read_tool_lib(optarg);
 				break;	
 			case 'd': /* inch */
 				scene->set_depth(option_to_double_mm(optarg, false));
-				printf("Depth set to %5.2fmm\n", scene->get_depth());
+				qprintf("Depth set to %5.2fmm\n", scene->get_depth());
 				break;
 			case 'D': /* metric mm*/
 				scene->set_depth(option_to_double_mm(optarg, true));
-				printf("Depth set to %5.2fmm\n", scene->get_depth());
+				qprintf("Depth set to %5.2fmm\n", scene->get_depth());
 				break;
 			case 'e':
 				scene->set_finishing_pass_stepover(option_to_double_mm(optarg, true));
-				printf("Stepover for finishing pass set to %5.2fmm\n", scene->get_finishing_pass_stepover());
+				qprintf("Stepover for finishing pass set to %5.2fmm\n", scene->get_finishing_pass_stepover());
 				break;
 			case 'c': /* inch */
 				scene->set_cutout_depth(option_to_double_mm(optarg, false));
-				printf("Enabling cutout to depth %5.2fmm\n", scene->get_cutout_depth());
+				qprintf("Enabling cutout to depth %5.2fmm\n", scene->get_cutout_depth());
 				break;
 			case 'o': /* mm */
 				scene->set_stock_to_leave(option_to_double_mm(optarg, true));
-				printf("Setting stock to leave to  %5.2fmm\n", scene->get_stock_to_leave());
+				qprintf("Setting stock to leave to  %5.2fmm\n", scene->get_stock_to_leave());
 				break;
 			case 'x':
 				gcode_want_separate_files();

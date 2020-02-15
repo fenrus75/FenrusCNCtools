@@ -187,7 +187,7 @@ void scene::write_naked_gcode()
 
 void scene::write_gcode(const char *filename, const char *description)
 {
-  printf("Writing gcode for %s to %s\n", description, filename);
+  qprintf("Writing gcode for %s to %s\n", description, filename);
   gcode_reset_current();
   activate_tool(toollist[0]);
   write_gcode_header(filename);
@@ -268,7 +268,7 @@ void scene::create_toolpaths(void)
 
   depth = -fabs(depth);
 
-  printf("Creating toolpath for depth %5.2f with offset %5.2f\n", depth, z_offset);
+  qprintf("Creating toolpath for depth %5.2f with offset %5.2f\n", depth, z_offset);
 
   if (want_inlay()) {
 		inlay_plug = clone_scene(NULL, 1, maxX);

@@ -95,6 +95,7 @@ static inline double radius_to_depth(double r, double angle) { return -r / tan(a
 static inline double depth_to_radius(double d, double angle) { return fabs(d) * tan(angle/360.0 * M_PI); }
 
 extern int verbose;
+extern int quiet;
 
 static inline int approx1(double A, double B) { if (fabs(A-B) < 0.1) return 1; return 0; }
 static inline int approx2(double A, double B) { if (fabs(A-B) < 0.02) return 1; return 0; }
@@ -103,5 +104,6 @@ static inline int approx4(double A, double B) { if (fabs(A-B) < 0.0002) return 1
 static inline int approx5(double A, double B) { if (fabs(A-B) < 0.00002) return 1; return 0; }
 
 #define vprintf(...) do { if (verbose) printf(__VA_ARGS__); } while (0)
+#define qprintf(...) do { if (!quiet) printf(__VA_ARGS__); } while (0)
 
 #endif

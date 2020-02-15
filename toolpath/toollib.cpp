@@ -98,11 +98,11 @@ static void push_word(char *word, int level)
 static void print_tool(struct tool *current)
 {
 	if (!current->printed || verbose) {
-	    printf("Tool %i (%s)\n", current->number, current->name);
-	    printf("\tDiameter     : %5.3f\"  (%5.1f mm)\n", current->diameter_inch, inch_to_mm(current->diameter_inch));
-	    printf("\tDepth of cut : %5.3f\"  (%5.1f mm)\n", current->depth_inch, inch_to_mm(current->depth_inch));
-	    printf("\tFeedrate     : %5.0f ipm (%5.0f mmpm)\n", current->feedrate_ipm, ipm_to_metric(current->feedrate_ipm));
-	    printf("\tPlungerate   : %5.0f ipm (%5.0f mmpm)\n", current->plungerate_ipm, ipm_to_metric(current->plungerate_ipm));
+	    qprintf("Tool %i (%s)\n", current->number, current->name);
+	    qprintf("\tDiameter     : %5.3f\"  (%5.1f mm)\n", current->diameter_inch, inch_to_mm(current->diameter_inch));
+	    qprintf("\tDepth of cut : %5.3f\"  (%5.1f mm)\n", current->depth_inch, inch_to_mm(current->depth_inch));
+	    qprintf("\tFeedrate     : %5.0f ipm (%5.0f mmpm)\n", current->feedrate_ipm, ipm_to_metric(current->feedrate_ipm));
+	    qprintf("\tPlungerate   : %5.0f ipm (%5.0f mmpm)\n", current->plungerate_ipm, ipm_to_metric(current->plungerate_ipm));
 	}
 	current->printed = true;
 }
@@ -224,7 +224,8 @@ void read_tool_lib(const char *filename)
     
     file = fopen(filename, "r");
     if (!file) {
-        printf("Cannot open tool file %s: %s\n", filename, strerror(errno));
+		if (verbose)
+	        printf("Cannot open tool file %s: %s\n", filename, strerror(errno));
 		return;
     }
     
