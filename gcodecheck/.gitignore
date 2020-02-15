@@ -1,0 +1,16 @@
+*.o
+*.fo
+gcodecheck
+*~
+DEADJOE
+*.svg
+cgaltest
+*.nc
+*.c2d
+la_test
+toolpath-fine
+todo
+*.patch
+*.wo
+toolpath.exe
+*.stl
