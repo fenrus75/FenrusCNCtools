@@ -14,6 +14,12 @@ research not production
 Carbide 3D forum discussion at https://community.carbide3d.com/t/cutting-forces-with-carbide-create-and-how-i-got-derailed-a-bit/18097/
 
 
+# Example files
+
+git clone https://github.com/fenrus75/FenrusCNCtoolsData.git
+
+has several example files I use for regression testing
+
 # Requirements
 
 The tool is developed on Linux. The main external requirement is CGAL
