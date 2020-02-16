@@ -18,11 +18,13 @@
 int verbose = 0;
 int errorcode = 0;
 int quiet = 1;
+int nospeedcheck = 0;
 
 void usage(void)
 {
 	printf("Usage:\n\tgcodecheck [options] <file.nc>\n");
 	printf("\t--verbose         	(-v)    verbose output\n");
+	printf("\t--nospeed         	(-n)    don't make speed violations an error\n");
 	printf("\t--library <file>  	(-l)	load CC .csv tool file\n");
 	exit(EXIT_SUCCESS);
 }
@@ -31,6 +33,7 @@ static struct option long_options[] =
         {
           /* These options set a flag. */
           {"verbose", no_argument,       0, 'v'},
+          {"nospeed", no_argument,       0, 'n'},
           {"library",    required_argument, 0, 'l'},
           {0, 0, 0, 0}
         };
@@ -48,6 +51,9 @@ int main(int argc, char **argv)
 		{
 			case 'v':
 				verbose = 1;
+				break;
+			case 'n':
+				nospeedcheck = 1;
 				break;
 			case 'l':
 				read_tool_lib(optarg);

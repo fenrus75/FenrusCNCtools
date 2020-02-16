@@ -26,7 +26,7 @@ extern double distance_point_from_vector(double X1, double Y1, double X2, double
 
 extern int verbose;
 extern int errorcode;
-
+extern int nospeedcheck;
 #define vprintf(...) do { if (verbose) printf(__VA_ARGS__); } while (0)
 
 #define error(...) do { fprintf(stderr, __VA_ARGS__); errorcode++;} while (0)

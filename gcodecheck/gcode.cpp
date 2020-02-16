@@ -79,6 +79,9 @@ static void speed_check(double X1, double Y1, double Z1, double X2, double Y2, d
 	double t,w,h;
 	if (speed == 0 || d == 0 || warned > 0)
 		return;
+
+	if (nospeedcheck)
+		return;
 	t = d / speed;	
 	w = dist(X1,Y1,X2,Y2);
 	h = fabs(Z1-Z2);
