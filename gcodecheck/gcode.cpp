@@ -137,6 +137,12 @@ static void record_motion_XYZ(double fX, double fY, double fZ, double tX, double
 	point->Z1 = fZ;
 	point->Z2 = tZ;
 
+	point->minX = fmin(fX - radius_at_depth(fZ), tX - radius_at_depth(tZ));
+	point->maxX = fmax(fX + radius_at_depth(fZ), tX + radius_at_depth(tZ));
+	point->minY = fmin(fY - radius_at_depth(fZ), tY - radius_at_depth(tZ));
+	point->maxY = fmax(fY + radius_at_depth(fZ), tY + radius_at_depth(tZ));
+
+	point->tool = toolnr;
 	point->toolradius = diameter / 2;
 	point->toolangle = angle;
 
@@ -367,8 +373,53 @@ void read_gcode(const char *filename)
 	fclose(file);
 }
 
+double depth_at_XY(double X, double Y)
+{
+	double depth = maxZ;
+	unsigned int i;
+	
+	for (i = 0; i < lines.size(); i++) {
+		double d;
+		double l;
+		double baseZ;
+		double adjust = 0;
+		if (X < lines[i]->minX)
+			continue;
+		if (X > lines[i]->maxX)
+			continue;
+		if (Y < lines[i]->minY)
+			continue;
+		if (Y > lines[i]->maxY)
+			continue;
+
+		d = distance_point_from_vector(lines[i]->X1, lines[i]->Y1, lines[i]->X2, lines[i]->Y2, X, Y, &l);	
+
+		if (d  > lines[i]->toolradius)
+			continue;
+
+		baseZ = lines[i]->Z1 + l * (lines[i]->Z2 - lines[i]->Z1);
+
+		if (lines[i]->toolangle > 0.01) {
+			adjust -= radius_to_depth(d, lines[i]->toolangle);
+
+		}
+
+		vprintf("XY %5.4f %5.4f    line %5.4f,%5.4f -> %5.4f,%5.4f tool %i at dist %5.4f   est Z %5.4f + %5.4f = %5.4f\n",
+			X, Y, lines[i]->X1, lines[i]->Y1, lines[i]->X2, lines[i]->Y2, lines[i]->tool, d, baseZ, adjust, baseZ + adjust);
+
+		baseZ += adjust;
+		depth = fmin(depth, baseZ);
+	}
+
+	if (depth > 0)
+		depth = 0;
+
+	return depth;
+}
+
 void print_state(FILE *output)
 {
+	double X, Y;
 	fprintf(output, "minX\t%5.4f\n", minX);
 	fprintf(output, "maxX\t%5.4f\n", maxX);
 	fprintf(output, "minY\t%5.4f\n", minY);
@@ -382,6 +433,18 @@ void print_state(FILE *output)
 		fprintf(output, "homing\tyes\n");
 	else
 		fprintf(output, "homing\tno\n");
+
+	Y = minY;
+	while (Y <= maxY) {
+		X = minX;
+		while (X <= maxX) {
+
+			fprintf(output, "point\t%5.4f\t%5.4f\t%5.4f\n", X, Y, depth_at_XY(X, Y));
+
+			X += 1.0;
+		}
+		Y += 1.0;
+	}
 }
 
 
@@ -471,6 +534,8 @@ void verify_fingerprint(const char *filename)
 		c1++;
 		verify_line(line, c1);
 	}
+
+	printf("Depth at 30,30: %5.4f\n", depth_at_XY(30, 30));
 	fclose(file);
 }
 

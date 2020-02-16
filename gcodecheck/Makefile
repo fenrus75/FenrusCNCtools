@@ -1,7 +1,7 @@
 all: gcodecheck
 
 
-OBJS := main.o gcode.o ../toolpath/toollib.o
+OBJS := main.o gcode.o ../toolpath/toollib.o linalg.o
 
 
 
