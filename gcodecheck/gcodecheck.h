@@ -13,6 +13,8 @@ extern int errorcode;
 #define error(...) do { fprintf(stderr, __VA_ARGS__); errorcode++;} while (0)
 
 static inline double inch_to_mm(double inch) { return 25.4 * inch; };
+static inline double mm_to_inch(double inch) { return inch / 25.4; };
+
 static inline double ipm_to_metric(double inch) { return 25.4 * inch; };
 
 

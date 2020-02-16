@@ -19,6 +19,9 @@
 struct line {
 	double X1, Y1, Z1;
 	double X2, Y2, Z2;
+
+	double toolradius;
+	double toolangle;
 };
 
 struct point {
@@ -50,7 +53,7 @@ static bool spindle_running = false;
 
 static bool need_homing_switches = false;
 
-static int toolnr;
+static int toolnr = 0;
 static double diameter;
 static double angle;
 static double speedlimit, plungelimit;
@@ -65,12 +68,47 @@ static double to_mm(double x)
 
 static double radius_at_depth(double Z)
 {
+	double radius = diameter / 2;
 	if (angle == 0)
 		return diameter / 2;
-	return depth_to_radius(Z, angle);	
+	return fmin(depth_to_radius(Z, angle), radius);	
 }
 
-static void record_motion_XYZ(double fX, double fY, double fZ, double tX, double tY, double tZ)
+static double dist(double X0, double Y0, double X1, double Y1)
+{
+  return sqrt((X1-X0)*(X1-X0) + (Y1-Y0)*(Y1-Y0));
+}
+static double dist3(double X0, double Y0, double Z0, double X1, double Y1, double Z1)
+{
+  return sqrt((X1-X0)*(X1-X0) + (Y1-Y0)*(Y1-Y0) + (Z1-Z0)*(Z1-Z0));
+}
+
+
+static void speed_check(double X1, double Y1, double Z1, double X2, double Y2, double Z2, int line)
+{
+	static int warned = 0;
+	double d = dist3(X1,Y1,X1, X2,Y2,Z2);
+	double t,w,h;
+	if (speed == 0 || d == 0 || warned > 0)
+		return;
+	t = d / speed;	
+	w = dist(X1,Y1,X2,Y2);
+	h = fabs(Z1-Z2);
+
+	if (w/t > speedlimit) {
+		error("Gcode line %i: Feed limit exceed %5.4f > %5.4f mmpmin (%5.4f > %5.4f ipm) with tool %i\n",
+			line, w/t , speedlimit, mm_to_inch(w/t) , mm_to_inch(speedlimit), toolnr);
+		warned++;
+	}
+	if (h/t > plungelimit) {
+		error("Gcode line %i: Plunge limit exceed %5.4f > %5.4f mmpmin (%5.4f > %5.4f ipm) with tool %i\n",
+			line, h/t , plungelimit, mm_to_inch(h/t) , mm_to_inch(plungelimit), toolnr);
+		warned++;
+	}
+	
+}
+
+static void record_motion_XYZ(double fX, double fY, double fZ, double tX, double tY, double tZ, int line)
 {
 	struct line *point;
 
@@ -81,6 +119,9 @@ static void record_motion_XYZ(double fX, double fY, double fZ, double tX, double
 
 	if (!spindle_running)
 		error("Cutting without spindle on\n");
+
+	if (gcommand == 1)
+		speed_check(fX,fY,fZ, tX,tY,tZ, line);
 
 	if (speed > maxspeed)
 		maxspeed = speed;
@@ -108,11 +149,14 @@ static void record_motion_XYZ(double fX, double fY, double fZ, double tX, double
 	point->Z1 = fZ;
 	point->Z2 = tZ;
 
+	point->toolradius = diameter / 2;
+	point->toolangle = angle;
+
 	lines.push_back(point);
 //	printf("XYZ movement from %5.2f,%5.2f to %5.2f,%5.2f\n", currentX, currentY, X, Y);
 }
 
-static int xyzline(char *line)
+static int xyzline(char *line, int nr)
 {
 	char *c;
 	double X,Y,Z;
@@ -161,7 +205,7 @@ static int xyzline(char *line)
 	}
 
 	if (!first_coord)
-		record_motion_XYZ(currentX, currentY, currentZ, X, Y, Z);
+		record_motion_XYZ(currentX, currentY, currentZ, X, Y, Z, nr);
 
 	currentX = X;
 	currentY = Y;
@@ -171,7 +215,7 @@ static int xyzline(char *line)
 }
 
 
-static int gline(char *line)
+static int gline(char *line, int nr)
 {
 	int code;
 	int handled = 0;
@@ -180,12 +224,12 @@ static int gline(char *line)
 	if (code == 0 && line[1] == '0') {
 		gcommand = 0;
 		handled = 1;
-		xyzline(line + 2);
+		xyzline(line + 2, nr);
 	}
 	if (code == 1 && line[1] == '1') {
 		gcommand = 1;
 		handled = 1;
-		xyzline(line + 2);
+		xyzline(line + 2, nr);
 	}
 	
 	if (code == 20) {
@@ -273,7 +317,7 @@ static int mline(char *line)
 	return handled;
 }
 
-static void parse_line(char *line)
+static void parse_line(char *line, int nr)
 {
 	int handled = 0;
 	char *c;
@@ -286,22 +330,22 @@ static void parse_line(char *line)
 		return;
 
 	if (line[0] == 'G') {
-		handled += gline(line);
+		handled += gline(line, nr);
 	}
 	if (line[0] == 'M') {
 		handled += mline(line);
 	}
 	if (line[0] == 'X') {
-		handled += xyzline(line);
+		handled += xyzline(line, nr);
 	}
 	if (line[0] == 'Y') {
-		handled += xyzline(line);
+		handled += xyzline(line, nr);
 	}
 	if (line[0] == 'Z') {
-		handled += xyzline(line);
+		handled += xyzline(line, nr);
 	}
 	if (line[0] == 'F') {
-		handled += xyzline(line);
+		handled += xyzline(line, nr);
 	}
 
 
@@ -315,6 +359,7 @@ void read_gcode(const char *filename)
 {
 	char *line;
 	FILE *file;
+	int linenr = 0;
 
 	vprintf("Parsing %s\n", filename);
 	file = fopen(filename, "r");
@@ -326,8 +371,9 @@ void read_gcode(const char *filename)
 		line = NULL;
 		if (getline(&line, &ret, file) < 0)
 			break;
+		linenr++;
 		if (ret > 0 && line)
-			parse_line(line);
+			parse_line(line, linenr);
 		free(line);
 	}
 	fclose(file);
@@ -386,6 +432,29 @@ static void verify_line(const char *key, const char *value)
 			error("max Z deviates from reference  %5.4f vs %5.4f\n", valD, maxZ);
 		return;
 	}
+	if (strcmp(key, "minspeed") == 0) {
+		if (valD < 0.9 * minspeed)
+			error("Minimum speed deviates from reference  %5.4f vs %5.4f\n", valD, minspeed);
+		return;
+	}
+	if (strcmp(key, "maxspeed") == 0) {
+		if (valD > 1.01 * maxspeed)
+			error("Maximum speed deviates from reference  %5.4f vs %5.4f\n", valD, maxspeed);
+		return;
+	}
+	if (strcmp(key, "tools") == 0) {
+		if (strcmp(value, toollist) != 0)
+			error("Tool list deviates from reference  %s vs %s\n", value, toollist);
+		return;
+	}
+	if (strcmp(key, "homing") == 0) {
+		bool home = false;
+		if (strcmp(value, "yes") == 0)
+			home = true;
+		if (home != need_homing_switches)
+			error("Homing switches setting deviates from reference\n");
+		return;
+	}
 
 
 	printf("Unhandled key %s \n", key);
@@ -405,6 +474,8 @@ void verify_fingerprint(const char *filename)
 		char *c1;
 		line[0] = 0;
 		fgets(line, 4096, file);
+		c1 = strchr(line, '\n');
+		if (c1) *c1 = 0;
 		c1 = strchr(line, '\t');
 		if (!c1)
 			continue;
@@ -417,6 +488,7 @@ void verify_fingerprint(const char *filename)
 
 void set_tool_imperial(const char *name, int nr, double diameter_inch, double stepover_inch, double maxdepth_inch, double feedrate_ipm, double plungerate_ipm)
 {
+	vprintf("Switching to tool %i\n", nr);
 	toolnr = nr;
 	diameter = inch_to_mm(diameter_inch);
 	speedlimit = ipm_to_metric(feedrate_ipm);
