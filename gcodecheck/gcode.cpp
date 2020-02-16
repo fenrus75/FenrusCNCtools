@@ -448,7 +448,7 @@ void print_state(FILE *output)
 }
 
 
-static void verify_line(const char *key, const char *value)
+static void verify_line(const char *key, char *value)
 {
 	double valD = strtod(value, NULL);
 
@@ -506,6 +506,20 @@ static void verify_line(const char *key, const char *value)
 			error("Homing switches setting deviates from reference\n");
 		return;
 	}
+	if (strcmp(key, "point") == 0) {
+		char *c;
+		double X,Y,Z, Z2;
+		c = value;
+		X = strtod(c, &c);
+		Y = strtod(c, &c);
+		Z = strtod(c, &c);
+		Z2 = depth_at_XY(X, Y);
+		if (fabs(Z - Z2) > 0.01) {
+			error("Content failure, expected a depth of %5.4f at %5.4f,%5.4f but got %5.4f\n",
+				Z, X, Y, Z2);
+		}
+		return;
+	}
 
 
 	printf("Unhandled key %s \n", key);
@@ -535,7 +549,6 @@ void verify_fingerprint(const char *filename)
 		verify_line(line, c1);
 	}
 
-	printf("Depth at 30,30: %5.4f\n", depth_at_XY(30, 30));
 	fclose(file);
 }
 
