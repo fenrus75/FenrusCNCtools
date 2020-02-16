@@ -180,6 +180,10 @@ static void push_chunk(class scene *scene, char *chunk, char *line)
     if (c && strlen(c) > 0)
         arg6 = strtod(c, &c);
     switch (command) {
+		case 'l':
+            arg1 += last_X;
+            arg2 += last_Y;
+			/* fall through */
         case 'L':
 #if 0
             distance = sqrt((arg1 - last_X) * (arg1 - last_X) + (-arg2+last_Y) * (-arg2+last_Y));
@@ -209,16 +213,30 @@ static void push_chunk(class scene *scene, char *chunk, char *line)
             last_X = arg1;
             last_Y = arg2;
             break;
+		case 'h':
+            arg1 += last_X;
+			/* fall through */
         case 'H':
 //            printf("Start of poly: %5.2f %5.2f\n", arg1, arg2);
             scene->add_point_to_poly(px_to_mm(arg1), px_to_mm(svgheight-last_Y));
             last_X = arg1;
             break;
+		case 'v':
+			arg1 += last_Y;
+			/* fall through */
         case 'V':
 //            printf("Start of poly: %5.2f %5.2f\n", arg1, arg2);
             scene->add_point_to_poly(px_to_mm(last_X), px_to_mm(svgheight-arg1));
             last_Y = arg1;
             break;
+		case 'c':
+			arg1 += last_X;
+			arg2 += last_Y;
+			arg3 += last_X;
+			arg4 += last_Y;
+			arg5 += last_X;
+			arg6 += last_Y;
+			/* fall through */
         case 'C':
             cubic_bezier(scene, last_X, -last_Y, arg1, -arg2, arg3, -arg4, arg5, -arg6);
             last_X = arg5;
