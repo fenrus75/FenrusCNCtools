@@ -300,7 +300,7 @@ static bool parse_line(class scene *scene, class inputshape *inputshape, char *l
 			need_new_input = true;
             break;
         default:
-            printf("Unparsable line %s\n", line);
+            printf("Unparsable line %s with count %i\n", line, argcount);
     }
     return need_new_input;
 }

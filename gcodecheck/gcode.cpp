@@ -50,12 +50,24 @@ static bool spindle_running = false;
 
 static bool need_homing_switches = false;
 
+static int toolnr;
+static double diameter;
+static double angle;
+static double speedlimit, plungelimit;
+
 static double to_mm(double x)
 {
 	if (metric)
 		return x;
 	else
 		return x * 25.4;
+}
+
+static double radius_at_depth(double Z)
+{
+	if (angle == 0)
+		return diameter / 2;
+	return depth_to_radius(Z, angle);	
 }
 
 static void record_motion_XYZ(double fX, double fY, double fZ, double tX, double tY, double tZ)
@@ -75,30 +87,18 @@ static void record_motion_XYZ(double fX, double fY, double fZ, double tX, double
 	if (speed < minspeed)
 		minspeed = speed;
 
-	if (fX > maxX)
-		maxX = fX;
-	if (fX < minX)
-		minX = fX;
-	if (tX > maxX)
-		maxX = tX;
-	if (tX < minX)
-		minX = tX;
-	if (fY > maxY)
-		maxY = fY;
-	if (fY < minY)
-		minY = fY;
-	if (tY > maxY)
-		maxY = tY;
-	if (tY < minY)
-		minY = tY;
-	if (fZ > maxZ)
-		maxZ = fZ;
-	if (fZ < minZ)
-		minZ = fZ;
-	if (tZ > maxZ)
-		maxZ = tZ;
-	if (tZ < minZ)
-		minZ = tZ;
+	maxX = fmax(maxX, fX + radius_at_depth(fZ));
+	minX = fmin(minX, fX - radius_at_depth(fZ));
+	maxX = fmax(maxX, tX + radius_at_depth(tZ));
+	minX = fmin(minX, tX - radius_at_depth(tZ));
+	maxY = fmax(maxY, fY + radius_at_depth(fZ));
+	minY = fmin(minY, fY - radius_at_depth(fZ));
+	maxY = fmax(maxY, tY + radius_at_depth(tZ));
+	minY = fmin(minY, tY - radius_at_depth(tZ));
+	maxZ = fmax(maxZ, fZ);
+	minZ = fmin(minZ, fZ);
+	maxZ = fmax(maxZ, tZ);
+	minZ = fmin(minZ, tZ);
 
 	point = (struct line*)calloc(sizeof(struct line), 1);
 	point->X1 = fX;
@@ -249,10 +249,16 @@ static int mline(char *line)
 		handled = 1;
 	}
 	if (code == 6) {
+		char *c;
+		int t;
 		if (spindle_running)
 			error("Tool change with spindle running\n");
 		vprintf("Tool change: %s\n", line + 3);
 		strcat(toollist, line+3);
+		c = line + 3;
+		if (*c == 'T') c++;
+		t = strtoull(c, NULL, 10);
+		activate_tool(t);
 		handled = 1;
 	}
 	if (code == 30) {
@@ -407,4 +413,14 @@ void verify_fingerprint(const char *filename)
 		verify_line(line, c1);
 	}
 	fclose(file);
+}
+
+void set_tool_imperial(const char *name, int nr, double diameter_inch, double stepover_inch, double maxdepth_inch, double feedrate_ipm, double plungerate_ipm)
+{
+	toolnr = nr;
+	diameter = inch_to_mm(diameter_inch);
+	speedlimit = ipm_to_metric(feedrate_ipm);
+	plungelimit = ipm_to_metric(plungerate_ipm);
+	angle = get_tool_angle(toolnr);
+
 }

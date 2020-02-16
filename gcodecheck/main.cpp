@@ -17,12 +17,13 @@
 
 int verbose = 0;
 int errorcode = 0;
-
+int quiet = 1;
 
 void usage(void)
 {
 	printf("Usage:\n\tgcodecheck [options] <file.nc>\n");
 	printf("\t--verbose         	(-v)    verbose output\n");
+	printf("\t--library <file>  	(-l)	load CC .csv tool file\n");
 	exit(EXIT_SUCCESS);
 }
 
@@ -30,6 +31,7 @@ static struct option long_options[] =
         {
           /* These options set a flag. */
           {"verbose", no_argument,       0, 'v'},
+          {"library",    required_argument, 0, 'l'},
           {0, 0, 0, 0}
         };
 
@@ -37,13 +39,19 @@ int main(int argc, char **argv)
 {
     int opt;
 	int option_index;
-    
-    while ((opt = getopt_long(argc, argv, "vh", long_options, &option_index)) != -1) {
+
+	read_tool_lib("toollib.csv");
+
+
+    while ((opt = getopt_long(argc, argv, "vhl:", long_options, &option_index)) != -1) {
         switch (opt)
 		{
 			case 'v':
 				verbose = 1;
 				break;
+			case 'l':
+				read_tool_lib(optarg);
+				break;	
 			case 'h':
 			default:
 				usage();
