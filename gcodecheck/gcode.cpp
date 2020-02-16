@@ -16,18 +16,6 @@
 
 #include "gcodecheck.h"
 
-struct line {
-	double X1, Y1, Z1;
-	double X2, Y2, Z2;
-
-	double toolradius;
-	double toolangle;
-};
-
-struct point {
-	double X, Y, Z;
-};
-
 
 static std::vector<struct line *> lines;
 static int metric = 1;
@@ -486,8 +474,13 @@ void verify_fingerprint(const char *filename)
 	fclose(file);
 }
 
+#define unused(x)  do { if (x != x) exit(0); } while (0) 
 void set_tool_imperial(const char *name, int nr, double diameter_inch, double stepover_inch, double maxdepth_inch, double feedrate_ipm, double plungerate_ipm)
 {
+	unused(stepover_inch);
+	unused(name);
+	unused(maxdepth_inch);
+
 	vprintf("Switching to tool %i\n", nr);
 	toolnr = nr;
 	diameter = inch_to_mm(diameter_inch);

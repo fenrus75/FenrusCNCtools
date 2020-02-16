@@ -9,15 +9,15 @@ OBJS := main.o gcode.o ../toolpath/toollib.o
 	    @echo "Compiling: $< => $@"
 	    @gcc $(CFLAGS) -march=native  -ffunction-sections  -Wall -W -O3 -flto -g2 -c $< -o $@
 
-%.o : %.cpp gcodecheck.h print.h tool.h Makefile scene.h fenrus.h
+%.o : %.cpp gcodecheck.h Makefile
 	    @echo "Compiling: $< => $@"
 	    @g++ $(CFLAGS) -O3   -march=native -frounding-math -ffunction-sections -fno-common -Wno-address-of-packed-member -Wall -W -g2 -c $< -o $@
 
-%.wo : %.cpp gcodecheck.h print.h tool.h Makefile scene.h fenrus.h
+%.wo : %.cpp gcodecheck.h Makefile
 	    @echo "Compiling: $< => $@ (windows)"
 	    @x86_64-w64-mingw32-g++ -I/usr/mingw/include -march=westmere  -L/usr/mingw/lib -Wno-address-of-packed-member -Wall -W -O2 -g -c $< -o $@
 
-%.wo : %.c gcodecheck.h print.h tool.h Makefile scene.h fenrus.h
+%.wo : %.c gcodecheck.h Makefile
 	    @echo "Compiling: $< => $@ (windows)"
 	    @x86_64-w64-mingw32-gcc -I/usr/mingw/include -march=westmere  -L/usr/mingw/lib -Wno-address-of-packed-member -Wall -W -O2 -g -c $< -o $@
 
