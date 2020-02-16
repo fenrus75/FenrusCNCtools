@@ -14,6 +14,8 @@
 #include <math.h>
 #include <vector>
 
+#include "gcodecheck.h"
+
 struct line {
 	double X1, Y1, Z1;
 	double X2, Y2, Z2;
@@ -35,13 +37,18 @@ static double currentY;
 static double currentZ;
 
 static double minX = 1000, minY = 1000, minZ = 1000, maxX, maxY, maxZ;
-
+static double maxspeed = 0, minspeed = 500000;
 
 static double speed = 0;
 
 double cuttersize = 2;
 
+static char toollist[8192] = "";
+
 static bool first_coord = true;
+static bool spindle_running = false;
+
+static bool need_homing_switches = false;
 
 static double to_mm(double x)
 {
@@ -60,6 +67,14 @@ static void record_motion_XYZ(double fX, double fY, double fZ, double tX, double
 		return;
 	}
 
+	if (!spindle_running)
+		error("Cutting without spindle on\n");
+
+	if (speed > maxspeed)
+		maxspeed = speed;
+	if (speed < minspeed)
+		minspeed = speed;
+
 	if (fX > maxX)
 		maxX = fX;
 	if (fX < minX)
@@ -76,6 +91,14 @@ static void record_motion_XYZ(double fX, double fY, double fZ, double tX, double
 		maxY = tY;
 	if (tY < minY)
 		minY = tY;
+	if (fZ > maxZ)
+		maxZ = fZ;
+	if (fZ < minZ)
+		minZ = fZ;
+	if (tZ > maxZ)
+		maxZ = tZ;
+	if (tZ < minZ)
+		minZ = tZ;
 
 	point = (struct line*)calloc(sizeof(struct line), 1);
 	point->X1 = fX;
@@ -93,6 +116,9 @@ static int xyzline(char *line)
 {
 	char *c;
 	double X,Y,Z;
+
+	while (line[0] == ' ')
+		line++;
 
 	if (absolute == 1) {
 		X = currentX;
@@ -163,22 +189,22 @@ static int gline(char *line)
 	}
 	
 	if (code == 20) {
-		printf("Switching to imperial\n");
+		vprintf("Switching to imperial\n");
 		metric = 0;
 		handled = 1;
 	}
 	if (code == 21) {
-		printf("Switching to metric\n");
+		vprintf("Switching to metric\n");
 		metric = 1;
 		handled = 1;
 	}
 	if (code == 90) {
-		printf("Switching to absolute mode\n");
+		vprintf("Switching to absolute mode\n");
 		absolute = 1;
 		handled = 1;
 	}
 	if (code == 91) {
-		printf("Switching to relative mode\n");
+		vprintf("Switching to relative mode\n");
 		absolute = 0;
 		handled = 1;
 	}
@@ -186,6 +212,7 @@ static int gline(char *line)
 	if (code == 53) { /* G53 is "absolute move once line" which is for bit changes/etc */
 		handled = 1;
 		first_coord = true;
+		need_homing_switches = true;
 	}
 
 
@@ -203,27 +230,33 @@ static int mline(char *line)
 	code = strtoull(&line[1], NULL, 10);
 
 	if (code == 2) {
-		printf("Program end\n");
+		vprintf("Program end\n");
 		handled = 1;
 	}
 	if (code == 3) {
-		printf("Spindle Start\n");
+		vprintf("Spindle Start\n");
+		spindle_running = true;
 		handled = 1;
 	}
 	if (code == 4) {
-		printf("Spindle Start\n");
+		vprintf("Spindle Start\n");
+		spindle_running = true;
 		handled = 1;
 	}
 	if (code == 5) {
-		printf("Spindle Stop\n");
+		vprintf("Spindle Stop\n");
+		spindle_running = false;
 		handled = 1;
 	}
 	if (code == 6) {
-		printf("Tool change: %s\n", line + 3);
+		if (spindle_running)
+			error("Tool change with spindle running\n");
+		vprintf("Tool change: %s\n", line + 3);
+		strcat(toollist, line+3);
 		handled = 1;
 	}
 	if (code == 30) {
-		printf("Program end\n");
+		vprintf("Program end\n");
 		handled = 1;
 	}
 
@@ -277,10 +310,10 @@ void read_gcode(const char *filename)
 	char *line;
 	FILE *file;
 
-	printf("Parsing %s\n", filename);
+	vprintf("Parsing %s\n", filename);
 	file = fopen(filename, "r");
 	if (!file) {
-		printf("Error opening file: %s\n", strerror(errno));
+		error("Error opening file: %s\n", strerror(errno));
 	}
 	while (!feof(file)) {
 		size_t ret;
@@ -290,6 +323,88 @@ void read_gcode(const char *filename)
 		if (ret > 0 && line)
 			parse_line(line);
 		free(line);
+	}
+	fclose(file);
+}
+
+void print_state(FILE *output)
+{
+	fprintf(output, "minX\t%5.4f\n", minX);
+	fprintf(output, "maxX\t%5.4f\n", maxX);
+	fprintf(output, "minY\t%5.4f\n", minY);
+	fprintf(output, "maxY\t%5.4f\n", maxY);
+	fprintf(output, "minZ\t%5.4f\n", minZ);
+	fprintf(output, "maxZ\t%5.4f\n", maxZ);
+	fprintf(output, "tools\t%s\n", toollist);
+	fprintf(output, "minspeed\t%5.4f\n", minspeed);
+	fprintf(output, "maxspeed\t%5.4f\n", maxspeed);
+	if (need_homing_switches)
+		fprintf(output, "homing\tyes\n");
+	else
+		fprintf(output, "homing\tno\n");
+}
+
+
+static void verify_line(const char *key, const char *value)
+{
+	double valD = strtod(value, NULL);
+
+
+	if (strcmp(key, "minX") == 0) {
+		if (fabs(valD-minX) > 0.01)
+			error("min X deviates from reference  %5.4f vs %5.4f\n", valD, minX);
+		return;
+	}
+	if (strcmp(key, "maxX") == 0) {
+		if (fabs(valD-maxX) > 0.01)
+			error("max X deviates from reference  %5.4f vs %5.4f\n", valD, maxX);
+		return;
+	}
+	if (strcmp(key, "minY") == 0) {
+		if (fabs(valD-minY) > 0.01)
+			error("min Y deviates from reference  %5.4f vs %5.4f\n", valD, minY);
+		return;
+	}
+	if (strcmp(key, "maxY") == 0) {
+		if (fabs(valD-maxY) > 0.01)
+			error("max Y deviates from reference  %5.4f vs %5.4f\n", valD, maxY);
+		return;
+	}
+	if (strcmp(key, "minZ") == 0) {
+		if (fabs(valD-minZ) > 0.01)
+			error("min Z deviates from reference  %5.4f vs %5.4f\n", valD, minZ);
+		return;
+	}
+	if (strcmp(key, "maxZ") == 0) {
+		if (fabs(valD-maxZ) > 0.01)
+			error("max Z deviates from reference  %5.4f vs %5.4f\n", valD, maxZ);
+		return;
+	}
+
+
+	printf("Unhandled key %s \n", key);
+}
+
+void verify_fingerprint(const char *filename)
+{
+	FILE *file;
+	file = fopen(filename, "r");
+	if (!file) {
+		error("Error opening reference file %s", filename);
+		return;
+	}
+
+	while (!feof(file)) {
+		char line[4096];
+		char *c1;
+		line[0] = 0;
+		fgets(line, 4096, file);
+		c1 = strchr(line, '\t');
+		if (!c1)
+			continue;
+		*c1 = 0;
+		c1++;
+		verify_line(line, c1);
 	}
 	fclose(file);
 }
