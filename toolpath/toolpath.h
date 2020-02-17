@@ -46,6 +46,7 @@ extern double get_tool_stepover_gcode(void);
 extern double get_tool_maxdepth(void);
 extern void set_retract_height_imperial(double _rh_inch);
 extern void set_retract_height_metric(double _rh_mm);
+extern double get_retract_height_metric(void);
 extern void set_rippem(double _rippem);
 extern void write_gcode_header(const char *filename);
 extern void write_gcode_footer(void);

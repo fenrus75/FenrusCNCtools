@@ -124,6 +124,11 @@ static void line_to(class inputshape *input, double X2, double Y2, double Z2)
 	if (dist3(X1,Y1,Z1, X2,Y2,Z2) < 0.000001 && !first)
 		return;
 
+	if (approx4(X2, last_X) && approx4(Y2, last_Y)) {
+		if (Z2 > get_retract_height_metric())
+			Z2 = get_retract_height_metric();
+	}
+
 	last_X = X2;
 	last_Y = Y2;
 	last_Z = Z2;
@@ -139,6 +144,15 @@ static void line_to(class inputshape *input, double X2, double Y2, double Z2)
 	while (Z1 < -0.000001 || Z2 < -0.00001) {
 //		printf("at depth %i    %5.2f %5.2f %5.2f -> %5.2f %5.2f %5.2f\n", depth, X1, Y1, Z1, X2, Y2, Z2);
 		depth++;
+
+		if (approx4(X1, X2) && approx4(Y1, Y2)) {
+			if (Z2 > get_retract_height_metric())
+				Z2 = get_retract_height_metric();
+			if (Z1 > get_retract_height_metric())
+				Z1 = get_retract_height_metric();
+		}
+
+
 		while (input->tooldepths.size() <= depth) {
 				class tooldepth * td = new(class tooldepth);
 				td->depth = Z1;
@@ -773,7 +787,7 @@ void process_stl_file(class scene *scene, const char *filename, int flip)
 
 	if (scene->get_cutout_depth() < 0.01) {
 		scene->set_cutout_depth(scene->get_depth());
-		printf("Warning: No cutout depth set, using %5.2fmm for the model height\n", scene->get_cutout_depth());
+		printf("Warning: No depth set, using %5.2fmm for the model height\n", scene->get_cutout_depth());
 		omit_cutout = true;
 	}
 

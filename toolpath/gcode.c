@@ -126,6 +126,11 @@ void set_retract_height_metric(double _rh_mm)
     safe_retract_height = _rh_mm;
 }
 
+double get_retract_height_metric(void)
+{
+    return safe_retract_height;
+}
+
 static int iter = 0;
 void write_gcode_header(const char *filename)
 {
