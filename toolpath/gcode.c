@@ -238,7 +238,14 @@ void gcode_vmill_to(double X, double Y, double Z, double speedratio)
 {
 	double d;
 	double toolspeed;
-//    printf("Mill to %5.4f %5.4f %5.4f\n", X, Y, Z);
+	char command = '1';
+
+	/* if all we do is straight go up, we can use G0 instead of G1 for speed */
+	if (approx4(cX, X) && approx4(cY, Y) && (Z > cZ))
+		command = '0';
+
+
+//    printf("VMill to %5.4f %5.4f %5.4f\n", X, Y, Z);
 
 	/* slow start and stop for long distances */
 	if (speedratio == 1.0 && dist(cX,cY,X,Y) >= 1.5 * tool_diameter && approx4(cZ,Z)) {
@@ -255,7 +262,7 @@ void gcode_vmill_to(double X, double Y, double Z, double speedratio)
 		return;
 	} 
 
-    fprintf(gcode, "G1");
+    fprintf(gcode, "G%c", command);
     prevX1 = cX;
     prevY1 = cY;
     prevX2 = X;
@@ -284,13 +291,14 @@ void gcode_vmill_to(double X, double Y, double Z, double speedratio)
 
     if (cZ != Z)
         fprintf(gcode,"Z%s", double_to_str(Z));
-    if (cS != toolspeed)
+    if (cS != toolspeed && command == '1')
         fprintf(gcode, "F%i", (int)(toolspeed));
         
     prev_valid = 1;
 	has_current = 1;
     cZ = Z;
-    cS = toolspeed;
+	if (command == '1')
+	    cS = toolspeed;
     fprintf(gcode, "\n");
     mill_count++;
 }
