@@ -54,8 +54,9 @@ void usage(void)
 	printf("\t--stock-to-leave <mm> (-o)    how much stock to leave between roughing and finishing pass\n");
 	printf("\t--separate			(-x)	create one gcode (.nc) file per tool\n");
 	printf("\t--stepover <mm>       (-e)    stepover to use for the finishing pass\n");
-	printf("\t--stlYZflip <nr>      (-Y)	Show STL model from the front instead of the top\n");
-	printf("\t--stlZoffset <mm>		(-Z)	put a floor in the STL model\n");
+	printf("\t--Yflip				(-Y)	Show STL model from the front instead of the top\n");
+	printf("\t--Xflip				(-X)	Show STL model from the side instead of the top\n");
+	printf("\t--stlZoffset <pct>	(-Z)	Drop <pct> amount from the bottom of the STL model\n");
 	printf("\t--quiet				(-q)	suppress non-error prints\n");
 	exit(EXIT_SUCCESS);
 }
@@ -78,7 +79,8 @@ static struct option long_options[] =
 		  {"help",	no_argument, 0, 'h'},
 		  {"separate",	no_argument, 0, 'x'},
 		  {"stepover", required_argument, 0, 'e'},
-		  {"stlXYZflip",	required_argument, 0, 'Y'},
+		  {"Yfront",	required_argument, 0, 'Y'},
+		  {"Xfront",	required_argument, 0, 'X'},
 		  {"stlZoffset",	required_argument, 0, 'Z'},
           {0, 0, 0, 0}
         };
@@ -97,7 +99,7 @@ int main(int argc, char **argv)
     
     scene->set_depth(inch_to_mm(0.044));
 
-    while ((opt = getopt_long(argc, argv, "qavfsil:t:d:D:xhY:c:o:Z:", long_options, &option_index)) != -1) {
+    while ((opt = getopt_long(argc, argv, "qavfsil:t:d:D:xhYXc:o:Z:", long_options, &option_index)) != -1) {
         switch (opt)
 		{
 			case 'v':
@@ -149,10 +151,13 @@ int main(int argc, char **argv)
 				gcode_want_separate_files();
 				break;
 			case 'Y':
-				stl_flip = strtoull(optarg, NULL, 10);
+				stl_flip = 1;
+				break;
+			case 'X':
+				stl_flip = 2;
 				break;
 			case 'Z':
-				scene->set_z_offset(option_to_double_mm(optarg, true));
+				scene->set_z_offset(0.01  * strtod(optarg, NULL) * fmax(scene->get_cutout_depth(), scene->get_depth()) );
 				break;
 			case 't':
 				int arg;
