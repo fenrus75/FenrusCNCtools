@@ -12,7 +12,9 @@
 #include <errno.h>
 #include <math.h>
 
+extern "C" {
 #include "toolpath.h"
+}
 
 
 static const char *tool_name = "T201";
