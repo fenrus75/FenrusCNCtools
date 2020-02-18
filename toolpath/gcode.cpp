@@ -263,8 +263,8 @@ static double gcode_depth_at_XY(double X, double Y)
 
 		}
 
-		vprintf("XY %5.4f %5.4f    line %5.4f,%5.4f -> %5.4f,%5.4f tool %i at dist %5.4f   est Z %5.4f + %5.4f = %5.4f\n",
-			X, Y, lines[i]->X1, lines[i]->Y1, lines[i]->X2, lines[i]->Y2, lines[i]->tool, d, baseZ, adjust, baseZ + adjust);
+//		vprintf("XY %5.4f %5.4f    line %5.4f,%5.4f -> %5.4f,%5.4f tool %i at dist %5.4f   est Z %5.4f + %5.4f = %5.4f\n",
+//			X, Y, lines[i]->X1, lines[i]->Y1, lines[i]->X2, lines[i]->Y2, lines[i]->tool, d, baseZ, adjust, baseZ + adjust);
 
 		baseZ += adjust;
 		depth = fmin(depth, baseZ);
@@ -381,16 +381,16 @@ void gcode_mill_to(double X, double Y, double Z, double speedratio)
 	} 
 	if (want_adaptive) {
 		double load = gcode_area_load(cX, cY, cZ, X, Y, Z);
-		if (verbose) {
-			sprintf(comment, "Area load for next move is %5.4f", load);
-			gcode_write_comment(comment);
-		}
 		if (load > 0) {
 			speedratio = 1/(load * 2);
 			if (speedratio < 0.5)
 				speedratio = 0.5;
 			if (speedratio > 1.2)
 				speedratio = 1.2;
+		}
+		if (verbose) {
+			sprintf(comment, "Area load for next move is %5.4f with speed ratio %5.4f", load, speedratio);
+			gcode_write_comment(comment);
 		}
 	}
 	
