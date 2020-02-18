@@ -2,6 +2,7 @@ all: gcodecheck
 
 
 OBJS := main.o gcode.o ../toolpath/toollib.o linalg.o
+WOBJS := main.wo gcode.wo ../toolpath/toollib.wo linalg.wo
 
 
 

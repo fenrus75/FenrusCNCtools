@@ -354,7 +354,6 @@ static void parse_line(char *line, int nr)
 
 void read_gcode(const char *filename)
 {
-	char *line;
 	FILE *file;
 	int linenr = 0;
 
@@ -364,14 +363,13 @@ void read_gcode(const char *filename)
 		error("Error opening file: %s\n", strerror(errno));
 	}
 	while (!feof(file)) {
-		size_t ret;
-		line = NULL;
-		if (getline(&line, &ret, file) < 0)
+		char line[8192];
+		line[0] = 0;
+		if (!fgets(line, 8192, file))
 			break;
 		linenr++;
-		if (ret > 0 && line)
+		if (line[0] != 0)
 			parse_line(line, linenr);
-		free(line);
 	}
 	fclose(file);
 }
@@ -541,7 +539,8 @@ void verify_fingerprint(const char *filename)
 		char line[4096];
 		char *c1;
 		line[0] = 0;
-		fgets(line, 4096, file);
+		if (!fgets(line, 4096, file))
+			break;
 		c1 = strchr(line, '\n');
 		if (c1) *c1 = 0;
 		c1 = strchr(line, '\t');
