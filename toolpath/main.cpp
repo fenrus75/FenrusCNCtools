@@ -42,6 +42,7 @@ void usage(void)
 {
 	printf("Usage:\n\ttoolpath [options] <file.svg>\n");
 	printf("\t--verbose         	(-v)    verbose output\n");
+	printf("\t--adaptive			(-a)	use adaptive F&S for pocketing\n");
 	printf("\t--finish-pass     	(-f)	add a finishing pass\n");
 	printf("\t--skeleton        	(-s)    reduce slotting\n");
     printf("\t--inbetween       	(-i)    ensure no ridges left over\n");
@@ -68,6 +69,7 @@ static struct option long_options[] =
           {"quiet", no_argument,       0, 'q'},
           {"finish-pass", no_argument,       0, 'f'},
           {"skeleton", no_argument,       0, 's'},
+          {"adaptive", no_argument,       0, 'a'},
           {"inbetween", no_argument,       0, 'i'},
           {"inlay", no_argument,       0, 'n'},
           {"library",    required_argument, 0, 'l'},
@@ -107,6 +109,9 @@ int main(int argc, char **argv)
 				break;
 			case 'q':
 				quiet = 1;
+				break;
+			case 'a':
+				gcode_want_adaptive();
 				break;
 			case 'f':
 				scene->enable_finishing_pass();

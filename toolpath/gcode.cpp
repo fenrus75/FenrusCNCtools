@@ -11,12 +11,17 @@
 #include <string.h>
 #include <errno.h>
 #include <math.h>
+#include <vector>
 
 extern "C" {
 #include "toolpath.h"
 }
 
+#include "gcode.h"
 
+static bool want_adaptive = false;
+
+static std::vector<struct line *> lines;
 static const char *tool_name = "T201";
 static int current_tool_nr = -499;
 static double tool_diameter = 6;
@@ -24,6 +29,7 @@ static double tool_stepover = 3;
 static double tool_maxdepth = 1;
 static double tool_feedrate = 0;
 static double tool_plungerate = 0;
+static double tool_angle = 0;
 static int tool_nr = 0;
 static double rippem = 10000;
 static double safe_retract_height = 2;
@@ -50,6 +56,39 @@ static double dist(double X0, double Y0, double X1, double Y1)
 static double dist3(double X0, double Y0, double Z0, double X1, double Y1, double Z1)
 {
   return sqrt((X1-X0)*(X1-X0) + (Y1-Y0)*(Y1-Y0) + (Z1-Z0)*(Z1-Z0));
+}
+
+static double radius_at_depth(double Z)
+{
+	double radius = tool_diameter / 2;
+	if (tool_angle == 0)
+		return tool_diameter / 2;
+	return fmin(depth_to_radius(Z, tool_angle), radius);	
+}
+
+static void record_motion_XYZ(double fX, double fY, double fZ, double tX, double tY, double tZ)
+{
+	struct line *point;
+
+	point = (struct line*)calloc(sizeof(struct line), 1);
+	point->X1 = fX;
+	point->X2 = tX;
+	point->Y1 = fY;
+	point->Y2 = tY;
+	point->Z1 = fZ;
+	point->Z2 = tZ;
+
+	point->minX = fmin(fX - radius_at_depth(fZ), tX - radius_at_depth(tZ));
+	point->maxX = fmax(fX + radius_at_depth(fZ), tX + radius_at_depth(tZ));
+	point->minY = fmin(fY - radius_at_depth(fZ), tY - radius_at_depth(tZ));
+	point->maxY = fmax(fY + radius_at_depth(fZ), tY + radius_at_depth(tZ));
+
+	point->tool = current_tool_nr;
+	point->toolradius = tool_diameter / 2;
+	point->toolangle = tool_angle;
+
+	lines.push_back(point);
+//	printf("XYZ movement from %5.2f,%5.2f to %5.2f,%5.2f\n", currentX, currentY, X, Y);
 }
 
 static char *double_to_str(double X)
@@ -81,6 +120,7 @@ void set_tool_imperial(const char *name, int nr, double diameter_inch, double st
     tool_maxdepth = inch_to_mm(maxdepth_inch);
     tool_feedrate = ipm_to_metric(feedrate_ipm);
     tool_plungerate = ipm_to_metric(plungerate_ipm);
+	tool_angle = get_tool_angle(nr);
 	tool_nr = nr;
     prev_valid = 0;
 	has_current = 0;
@@ -94,6 +134,7 @@ void set_tool_metric(const char *name, int nr, double diameter_mm, double stepov
     tool_maxdepth = maxdepth_mm;
     tool_feedrate = feedrate_metric;
     tool_plungerate = plungerate_metric;
+	tool_angle = get_tool_angle(nr);
 	tool_nr = nr;
     prev_valid = 0;
 	has_current = 0;
@@ -191,15 +232,129 @@ void gcode_retract(void)
 	has_current = 1;
 }
 
+static double gcode_depth_at_XY(double X, double Y)
+{
+	double depth = 2;
+	unsigned int i;
+	
+	for (i = 0; i < lines.size(); i++) {
+		double d;
+		double l;
+		double baseZ;
+		double adjust = 0;
+		if (X < lines[i]->minX)
+			continue;
+		if (X > lines[i]->maxX)
+			continue;
+		if (Y < lines[i]->minY)
+			continue;
+		if (Y > lines[i]->maxY)
+			continue;
+
+		d = distance_point_from_vector_ll(lines[i]->X1, lines[i]->Y1, lines[i]->X2, lines[i]->Y2, X, Y, &l);	
+
+		if (d  > lines[i]->toolradius)
+			continue;
+
+		baseZ = lines[i]->Z1 + l * (lines[i]->Z2 - lines[i]->Z1);
+
+		if (lines[i]->toolangle > 0.01) {
+			adjust -= radius_to_depth(d, lines[i]->toolangle);
+
+		}
+
+		vprintf("XY %5.4f %5.4f    line %5.4f,%5.4f -> %5.4f,%5.4f tool %i at dist %5.4f   est Z %5.4f + %5.4f = %5.4f\n",
+			X, Y, lines[i]->X1, lines[i]->Y1, lines[i]->X2, lines[i]->Y2, lines[i]->tool, d, baseZ, adjust, baseZ + adjust);
+
+		baseZ += adjust;
+		depth = fmin(depth, baseZ);
+	}
+
+	if (depth > 0)
+		depth = 0;
+
+	return depth;
+}
+static double gcode_point_load(double X, double Y, double Z)
+{
+	double Z2;
+	double delta;
+
+	Z2 = gcode_depth_at_XY(X, Y);
+
+	if (Z2 <= Z)
+		return 0;
+	delta = fabs(Z2 - Z);
+	return delta / tool_maxdepth;
+}
+
+static double gcode_area_load(double X1, double Y1, double Z1, double X2, double Y2, double Z2)
+{
+	double vx, vy, vz;
+	double nx,ny;
+	double len;
+	double l = 0;
+	double maxl = dist3(X1,Y1,Z1,X2,Y2,Z2);
+	double sum = 0;
+	double count = 0;
+
+	#define SAMPLES 10
+	double sampleY[SAMPLES] = {0.995, 0.7778, 0.5556, 0.3333, 0.1111, -0.1111, -0.3333, -0.5556, -0.7778, -0.995};
+	double sampleX[SAMPLES] = {0.09991, 0.629, 0.832, 0.943, 0.994, 0.994, 0.943, 0.832, 0.629, 0.099911};
+	double R = tool_diameter / 2;
+
+	if (approx4(X1,X2) && approx4(Y1,Y2)) {
+		return 1;
+	};
+
+	vx = X2-X1;
+	vy = Y2-Y1;
+	vz = Z2-Z1;
+	len=sqrt(vx*vx+vy*vy+vz*vz);
+	vx = vx / len;
+	vy = vy / len;
+	vz = vz / len;
+
+	nx = -vy;
+	ny = vx;
+	len=sqrt(nx*nx+ny*ny);
+	nx = nx / len;
+	ny = ny / len;
+
+	do {
+		int i;
+		for (i = 0; i < SAMPLES; i++) {
+			sum += gcode_point_load(X1 + (l + R * sampleX[i]) * vx + R * sampleY[i] * nx, Y1 + (l + R * sampleX[i]) * vy + R * sampleY[i] * ny, Z1  + l * vz);
+			count += 1;
+		}
+
+		if (l < maxl - tool_stepover/2 || l == maxl) {
+		    l = l + tool_stepover/2;
+		} else { 
+			if (l != maxl)
+				l = maxl;
+			else
+				l = l + tool_stepover;
+		}
+	} while (l <= maxl);
+
+	if (count > 0)
+		sum = sum / count;
+
+	return sum;
+	
+}
+
+
 void gcode_mill_to(double X, double Y, double Z, double speedratio)
 {
-
+	char comment[4095];
     if (cZ != Z) {
         gcode_plunge_to(Z, speedratio);
 	}
 
 	/* slow start and stop for long distances */
-	if (speedratio == 1.0 && dist(cX,cY,X,Y) >= 1.5 * tool_diameter) {
+	if (speedratio == 1.0 && dist(cX,cY,X,Y) >= 3 * tool_diameter) {
 		double vX,vY, len;
 		vX = X - cX;
 		vY = Y - cY;
@@ -208,13 +363,40 @@ void gcode_mill_to(double X, double Y, double Z, double speedratio)
 		vY /= len;
 
 		gcode_mill_to(cX + vX * tool_diameter/2, cY + vY * tool_diameter/2, Z, 0.66);
+		if (want_adaptive) 
+			gcode_mill_to(cX + vX * tool_diameter, cY + vY * tool_diameter, Z, 0.66);
+		if (want_adaptive) 
+			gcode_mill_to(X - vX * tool_diameter, Y - vY * tool_diameter, Z, 1.01);
 		gcode_mill_to(X - vX * tool_diameter/2, Y - vY * tool_diameter/2, Z, 1.01);
+		if (want_adaptive) 
+			gcode_mill_to(X - vX * tool_diameter/4, Y - vY * tool_diameter/4, Z, 1.01);
 		gcode_mill_to(X, Y, Z, 0.66);
 		return;
 	} 
 
+	if (want_adaptive && dist(cX,cY,X,Y) >= 4) {
+		gcode_mill_to((cX + X)/2, (cY + Y)/2, Z, speedratio);
+		gcode_mill_to(X, Y, Z, speedratio);
+		return;
+	} 
+	if (want_adaptive) {
+		double load = gcode_area_load(cX, cY, cZ, X, Y, Z);
+		if (verbose) {
+			sprintf(comment, "Area load for next move is %5.4f", load);
+			gcode_write_comment(comment);
+		}
+		if (load > 0) {
+			speedratio = 1/(load * 2);
+			if (speedratio < 0.5)
+				speedratio = 0.5;
+			if (speedratio > 1.2)
+				speedratio = 1.2;
+		}
+	}
+	
+
 	/* slow down for round corners */
-	if (dist(cX,cY,X,Y) < 0.3 * tool_diameter && speedratio > 0.66)
+	if (dist(cX,cY,X,Y) < 0.3 * tool_diameter && speedratio > 0.66 && !want_adaptive)
 		speedratio = 0.66;
 
     fprintf(gcode, "G1");
@@ -223,9 +405,11 @@ void gcode_mill_to(double X, double Y, double Z, double speedratio)
     if (cY != Y)
         fprintf(gcode,"Y%s", double_to_str(Y));
     if (cZ != Z)
-        fprintf(gcode,"Z%s", double_to_str(Z));
-    if (cS != speedratio * tool_feedrate)
-        fprintf(gcode, "F%i", (int)(speedratio * tool_feedrate));
+		fprintf(gcode,"Z%s", double_to_str(Z));
+	if (cS != speedratio * tool_feedrate)
+		fprintf(gcode, "F%i", (int)(speedratio * tool_feedrate));
+
+	record_motion_XYZ(cX,cY,cZ, X,Y,Z);
     cX = X;
     cY = Y;
     cZ = Z;
@@ -277,6 +461,7 @@ void gcode_vmill_to(double X, double Y, double Z, double speedratio)
 	/* slow down for round corners */
 	if (dist(cX,cY,X,Y) < 0.5 * tool_diameter && speedratio > 0.7 && !am_roughing)
 		speedratio = 0.66;
+	record_motion_XYZ(cX,cY,cZ, X,Y,Z);
 
 
     if (cX != X) {
@@ -493,4 +678,9 @@ void gcode_set_roughing(int value)
 void gcode_want_separate_files(void)
 {
 	want_separate = 1;
+}
+
+void gcode_want_adaptive(void)
+{
+	want_adaptive = true;
 }
