@@ -138,6 +138,16 @@ X, Y, Z, R			cut a sphere a sphere with center X,Y,Z and radius R
 If all you want to do is turn that STL file you downloaded into a nice wood
 design... Toolpath can also do that... see the examples below
 
+key command line options
+
+-Y    show STL from the side instead of from the top
+-X    show STL from the front instead of from the top
+-Z <pct>  lower the STL <pct> percent and "cut of the back" 
+
+make sure to set a --depth or --cutout; the STL will be scaled to this
+depth keeping its original aspect ratio and the tool will print the
+dimensions of the work
+
 
 
 # Basic working assumptions
@@ -201,10 +211,6 @@ splitting the output in one file per tool
 
 * Proper rest machining
 
-* Support splitting gcode files per tool
-
-* The slotting toolpaths should likely be full speed at half depth instead
-	-- really should just implement more exact adaptive-style speeds
 
 
 
