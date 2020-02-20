@@ -70,6 +70,9 @@ static void record_motion_XYZ(double fX, double fY, double fZ, double tX, double
 {
 	struct line *point;
 
+	if (!want_adaptive)
+		return;
+
 	point = (struct line*)calloc(sizeof(struct line), 1);
 	point->X1 = fX;
 	point->X2 = tX;
@@ -288,20 +291,30 @@ static double gcode_point_load(double X, double Y, double Z)
 	return delta / tool_maxdepth;
 }
 
-static double gcode_area_load(double X1, double Y1, double Z1, double X2, double Y2, double Z2)
+static double gcode_area_load(double X1, double Y1, double Z1, double X2, double Y2, double Z2, double *lout)
 {
 	double vx, vy, vz;
 	double nx,ny;
 	double len;
-	double l = 0;
+	double l = 0, prevl = 0;
 	double maxl = dist3(X1,Y1,Z1,X2,Y2,Z2);
 	double sum = 0;
 	double count = 0;
+
+	double stepsize = tool_stepover / 2;
+
+	if (dist(X1,Y1,X2,Y2)/10 < stepsize)
+		stepsize = dist(X1, Y1, X2, Y2) / 10;
+
+	if (stepsize < 0.1)
+		stepsize = 0.1;
 
 	#define SAMPLES 10
 	double sampleY[SAMPLES] = {0.995, 0.7778, 0.5556, 0.3333, 0.1111, -0.1111, -0.3333, -0.5556, -0.7778, -0.995};
 	double sampleX[SAMPLES] = {0.09991, 0.629, 0.832, 0.943, 0.994, 0.994, 0.943, 0.832, 0.629, 0.099911};
 	double R = tool_diameter / 2;
+
+	*lout = 10000;
 
 	if (approx4(X1,X2) && approx4(Y1,Y2)) {
 		return 1;
@@ -323,23 +336,45 @@ static double gcode_area_load(double X1, double Y1, double Z1, double X2, double
 
 	do {
 		int i;
+		double local = 0;
 		for (i = 0; i < SAMPLES; i++) {
-			sum += gcode_point_load(X1 + (l + R * sampleX[i]) * vx + R * sampleY[i] * nx, Y1 + (l + R * sampleX[i]) * vy + R * sampleY[i] * ny, Z1  + l * vz);
-			count += 1;
+			local += gcode_point_load(X1 + (l + R * sampleX[i]) * vx + R * sampleY[i] * nx, Y1 + (l + R * sampleX[i]) * vy + R * sampleY[i] * ny, Z1  + l * vz);
 		}
 
-		if (l < maxl - tool_stepover/2 || l == maxl) {
-		    l = l + tool_stepover/2;
+		if (lout && count > 0 && prevl >= 0.01 && l != maxl) {
+			double avg1, avg2;
+			avg1 = sum / count;
+			avg2 = local / SAMPLES;
+
+//			printf("Avg1 %5.4f   avg2  %5.4f  l %5.4f  prevl %5.4f   X1 %5.4f  Y1 %5.4f  X2 %5.4f  Y2 %5.4f\n", avg1, avg2, l, prevl, X1, Y1, X2, Y2);
+
+			if (fabs(avg1-avg2) > 0.1) {
+				/* we're more than points% off... lets stop right here */
+				*lout = prevl;
+				return avg1;
+			}
+		}
+		
+		sum += local;
+		count += SAMPLES;
+
+
+		prevl = l;
+		if (l < maxl - stepsize || l == maxl) {
+		    l = l + stepsize;
 		} else { 
 			if (l != maxl)
 				l = maxl;
 			else
-				l = l + tool_stepover;
+				l = l + stepsize;
 		}
 	} while (l <= maxl);
 
 	if (count > 0)
 		sum = sum / count;
+
+	if (lout)
+		*lout = 10000;
 
 	return sum;
 	
@@ -354,7 +389,7 @@ void gcode_mill_to(double X, double Y, double Z, double speedratio)
 	}
 
 	/* slow start and stop for long distances */
-	if (speedratio == 1.0 && dist(cX,cY,X,Y) >= 3 * tool_diameter) {
+	if (speedratio == 1.0 && dist(cX,cY,X,Y) >= 3 * tool_diameter && !want_adaptive) {
 		double vX,vY, len;
 		vX = X - cX;
 		vY = Y - cY;
@@ -363,24 +398,27 @@ void gcode_mill_to(double X, double Y, double Z, double speedratio)
 		vY /= len;
 
 		gcode_mill_to(cX + vX * tool_diameter/2, cY + vY * tool_diameter/2, Z, 0.66);
-		if (want_adaptive) 
-			gcode_mill_to(cX + vX * tool_diameter, cY + vY * tool_diameter, Z, 0.66);
-		if (want_adaptive) 
-			gcode_mill_to(X - vX * tool_diameter, Y - vY * tool_diameter, Z, 1.01);
 		gcode_mill_to(X - vX * tool_diameter/2, Y - vY * tool_diameter/2, Z, 1.01);
-		if (want_adaptive) 
-			gcode_mill_to(X - vX * tool_diameter/4, Y - vY * tool_diameter/4, Z, 1.01);
 		gcode_mill_to(X, Y, Z, 0.66);
 		return;
 	} 
 
-	if (want_adaptive && dist(cX,cY,X,Y) >= 4) {
-		gcode_mill_to((cX + X)/2, (cY + Y)/2, Z, speedratio);
-		gcode_mill_to(X, Y, Z, speedratio);
-		return;
-	} 
 	if (want_adaptive) {
-		double load = gcode_area_load(cX, cY, cZ, X, Y, Z);
+		double vX,vY, len;
+		vX = X - cX;
+		vY = Y - cY;
+		len = sqrt(vX*vX + vY * vY);
+		vX /= len;
+		vY /= len;
+
+		double load = gcode_area_load(cX, cY, cZ, X, Y, Z, &len);
+
+		if (len != 10000) {
+			gcode_mill_to(cX + len * vX, cY + len * vY, Z, speedratio);
+			gcode_mill_to(X, Y, Z, speedratio);
+			return;
+		}
+		
 		if (load > 0) {
 			speedratio = 1/(load * 2);
 			if (speedratio < 0.5)
