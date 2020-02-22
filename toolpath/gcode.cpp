@@ -499,7 +499,7 @@ void gcode_vmill_to(double X, double Y, double Z, double speedratio)
 	/* slow down for round corners */
 	if (dist(cX,cY,X,Y) < 0.5 * tool_diameter && speedratio > 0.7 && !am_roughing)
 		speedratio = 0.66;
-	record_motion_XYZ(cX,cY,cZ, X,Y,Z);
+//	record_motion_XYZ(cX,cY,cZ, X,Y,Z);
 
 
     if (cX != X) {
