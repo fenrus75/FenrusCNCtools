@@ -3,7 +3,7 @@ all: toolpath
 
 OBJS := parse_csv.o linalg.o tooldepth.o toollib.o gcode.o toolpath.o inputshape.o main.o scene.o toollevel.o svg.o parse_svg.o stl.o triangle.o
 
-FOBJS := parse_csv.o linalg.o tooldepth.fo toollib.fo gcode.o toolpath.fo inputshape.fo main.fo scene.fo toollevel.fo svg.o parse_svg.fo stl.o triangle.o
+FOBJS := parse_csv.fo linalg.fo tooldepth.fo toollib.fo gcode.fo toolpath.fo inputshape.fo main.fo scene.fo toollevel.fo svg.fo parse_svg.fo stl.fo triangle.fo
 
 WOBJS := parse_csv.wo linalg.wo tooldepth.wo toollib.wo gcode.wo toolpath.wo inputshape.wo main.wo scene.wo toollevel.wo svg.wo parse_svg.wo stl.wo triangle.wo 
 
@@ -14,11 +14,12 @@ WOBJS := parse_csv.wo linalg.wo tooldepth.wo toollib.wo gcode.wo toolpath.wo inp
 
 %.o : %.cpp toolpath.h print.h tool.h Makefile scene.h fenrus.h
 	    @echo "Compiling: $< => $@"
-	    @g++ $(CFLAGS) -O3   -march=native -frounding-math -ffunction-sections -fno-common -Wno-address-of-packed-member -Wall -W -g2 -c $< -o $@
+	    @g++ $(CFLAGS) -O3  -flto  -march=native -frounding-math -ffunction-sections -fno-common -Wno-address-of-packed-member -Wall -W -g2 -c $< -o $@
 
-gcode.o : gcode.cpp toolpath.h print.h tool.h Makefile scene.h fenrus.h
-	    @echo "Kompiling: $< => $@"
-	    @g++ $(CFLAGS) -O3   -march=native -frounding-math -ffunction-sections -fno-common -Wno-address-of-packed-member -Wall -W -g2 -c $< -o $@
+%.fo : %.c toolpath.h Makefile
+	    @echo "Compiling: $< => $@"
+	    @gcc $(CFLAGS) -march=native  -ffunction-sections  -Wall -W -O3 -flto -g2 -c $< -o $@
+
 
 %.fo : %.cpp toolpath.h print.h tool.h Makefile scene.h fenrus.h
 	    @echo "Compiling: $< => $@ (fine)"
