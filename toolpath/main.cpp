@@ -20,6 +20,7 @@ int verbose = 0;
 int quiet = 0;
 
 static int stl_flip = 0;
+static int direct = 0;
 
 double option_to_double_mm(char *str, bool metric_default)
 {
@@ -58,6 +59,7 @@ void usage(void)
 	printf("\t--Yflip				(-Y)	Show STL model from the front instead of the top\n");
 	printf("\t--Xflip				(-X)	Show STL model from the side instead of the top\n");
 	printf("\t--stlZoffset <pct>	(-Z)	Drop <pct> amount from the bottom of the STL model\n");
+	printf("\t--direct			 	(-O)	Force direct toolpath mode\n");
 	printf("\t--quiet				(-q)	suppress non-error prints\n");
 	exit(EXIT_SUCCESS);
 }
@@ -80,6 +82,7 @@ static struct option long_options[] =
           {"Depth",    required_argument, 0, 'D'},
 		  {"help",	no_argument, 0, 'h'},
 		  {"separate",	no_argument, 0, 'x'},
+		  {"direct", no_argument, 0, 'O'},
 		  {"stepover", required_argument, 0, 'e'},
 		  {"Yfront",	required_argument, 0, 'Y'},
 		  {"Xfront",	required_argument, 0, 'X'},
@@ -101,7 +104,7 @@ int main(int argc, char **argv)
     
     scene->set_depth(inch_to_mm(0.044));
 
-    while ((opt = getopt_long(argc, argv, "qavfsil:t:d:D:xhYXc:o:Z:", long_options, &option_index)) != -1) {
+    while ((opt = getopt_long(argc, argv, "Oqavfsil:t:d:D:xhYXc:o:Z:", long_options, &option_index)) != -1) {
         switch (opt)
 		{
 			case 'v':
@@ -132,6 +135,9 @@ int main(int argc, char **argv)
 			case 'l':
 				read_tool_lib(optarg);
 				break;	
+			case 'O':
+				direct = 1;
+				break;
 			case 'd': /* inch */
 				scene->set_depth(option_to_double_mm(optarg, false));
 				qprintf("Depth set to %5.2fmm\n", scene->get_depth());
@@ -194,9 +200,11 @@ int main(int argc, char **argv)
 		char outputfile[81920], *c;
 		strcpy(outputfile, argv[optind]);
 		c = outputfile;
-		if (strstr(argv[optind], ".csv")) {
+		if (strstr(argv[optind], ".csv") || direct) {
 			parse_csv_file(scene, argv[optind], tool);
 			c = strstr(outputfile, ".csv");
+			if (!c)
+				c = strstr(outputfile, ".svg");
 		} else if (strstr(argv[optind], ".stl")) {
 			process_stl_file(scene, argv[optind], stl_flip);
 			c = strstr(outputfile, ".stl");

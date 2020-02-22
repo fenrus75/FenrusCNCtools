@@ -18,8 +18,12 @@ extern "C" {
 #include "toolpath.h"
 }
 
+static double pxratio = 25.4 / 96.0;
+static inline double px_to_mm2(double px) { return pxratio * px ; };
+
 /* we need to remember previous coordinates for bezier curves */
 static double last_X, last_Y, last_Z;
+static double start_X, start_Y, start_Z;
 static bool first = true;
 static double tooldepth = 0.1;
 static double prio = 0;
@@ -60,8 +64,11 @@ static void line_to(class inputshape *input, double X2, double Y2, double Z2)
 	last_Y = Y2;
 	last_Z = Z2;
 
+	printf("LINE %5.4f %5.4f %5.4f -> %5.4f %5.4f %5.4f\n", X1, Y1, Z1, X2, Y2, Z2);
+
 	if (first) {
 		first = false;
+		printf("FIRST\n");
 		return;
 	}
 
@@ -306,6 +313,268 @@ static bool parse_line(class scene *scene, class inputshape *inputshape, char *l
 }
 
 
+static double svgheight = 0;
+
+static inline double distance(double x0, double y0, double x1, double y1)
+{
+    return sqrt( (x1-x0) * (x1-x0) + (y1-y0) * (y1-y0));
+}
+
+
+/*
+<circle cx="440.422" cy="312.878" r="12" stroke="black" stroke-width="1" fill="none" />
+*/
+static void parse_circle(class inputshape *input, char *line, double depth)
+{
+    char *cx, *cy, *r;
+    double X,Y,R,phi;
+    cx = strstr(line, "cx=\"");
+    cy = strstr(line, "cy=\"");
+    r = strstr(line, "r=\"");
+    if (!cx || !cy || !r) {
+        printf("Failed to parse circle: %s\n", line);
+        return;
+    }
+    X = strtod(cx + 4, NULL);
+    Y = strtod(cy + 4, NULL);
+    R = strtod(r + 3, NULL);
+    phi = 0;
+	first = true;
+    while (phi < 360) {
+        double P;
+        P = phi / 360.0 * 2 * M_PI;
+		
+        line_to(input, px_to_mm2(X + R * cos(P)), px_to_mm2(svgheight -Y + R * sin(P)), depth);
+        phi = phi + 1;
+    }
+    last_X = X;
+    last_Y = Y;
+}
+
+static double get_depth_ratio(char *c) 
+{
+	int a;
+	printf("Depthratio -%s-\n", c);
+
+	if (strlen(c) < 6)
+		return 0;
+	c[7] = 0;
+
+	a = strtoull(c, NULL, 16);
+	a = a & 255;
+	a = 255 - a;
+	printf("ST a = %i\n",a);
+	return a / 255.0;		
+}
+
+static void push_chunk(class inputshape *input, char *chunk, char *line, double depth)
+{
+    char command;
+    char *c;
+	double Z;
+	double adder  = 0;
+
+    double arg1 = 0.0, arg2 = 0.0, arg3 = 0.0, arg4 = 0.0, arg5 = 0.0, arg6 = 0.0;
+    command = chunk[0];
+    c = &chunk[0];
+    c++;
+    arg1 = strtod(c, &c);
+    if (c && strlen(c) > 0)
+        arg2 = strtod(c, &c);
+    if (c && strlen(c) > 0)
+        arg3 = strtod(c, &c);
+    if (c && strlen(c) > 0)
+        arg4 = strtod(c, &c);
+    if (c && strlen(c) > 0)
+        arg5 = strtod(c, &c);
+    if (c && strlen(c) > 0)
+		arg6 = strtod(c, &c);
+
+	Z = depth;
+	printf("COMMAND %c last_Z %5.4f\n", command, last_Z);
+    switch (command) {
+#if 0
+		case 'l':
+            arg1 += last_X;
+            arg2 += last_Y;
+			/* fall through */
+#endif
+        case 'L':
+//            printf("Linee         : %5.2f %5.2f\n", arg1, arg2);
+
+			line_to(input, px_to_mm2(arg1), px_to_mm2(svgheight - arg2), Z);
+            break;
+        case 'M':
+//            printf("Start of poly: %5.2f %5.2f\n", arg1, arg2);
+            last_X = px_to_mm2(arg1);
+            last_Y = px_to_mm2(arg2);
+			last_Z = depth;
+			start_X = last_X;
+			start_Y = last_Y;
+			start_Z = last_Z;
+			first = false;
+            break;
+        case 'm':
+//            printf("Start of poly: %5.2f %5.2f\n", arg1, arg2);
+
+            last_X = px_to_mm2(arg1);
+            last_Y = px_to_mm2(svgheight - arg2) + last_Y;
+			last_Z = depth;
+			start_X = last_X;
+			start_Y = last_Y;
+			start_Z = last_Z;
+			first = false;
+            break;
+		case 'h':
+            adder = last_X;
+			/* fall through */
+        case 'H':
+//            printf("Start of poly: %5.2f %5.2f\n", arg1, arg2);
+			line_to(input, px_to_mm2(arg1) + adder, last_Y, Z);
+            break;
+		case 'v':
+			/* fall through */
+			adder = last_Y;
+        case 'V':
+//            printf("Start of poly: %5.2f %5.2f\n", arg1, arg2);
+			line_to(input, last_X, px_to_mm2(-arg1) + adder, Z);
+            break;
+#if 0
+		case 'c':
+			arg1 += last_X;
+			arg2 += last_Y;
+			arg3 += last_X;
+			arg4 += last_Y;
+			arg5 += last_X;
+			arg6 += last_Y;
+			/* fall through */
+#endif
+#if 0
+        case 'C':
+            cubic_bezier(input, last_X, -last_Y, arg1, -arg2, arg3, -arg4, arg5, -arg6);
+            last_X = arg5;
+            last_Y = arg6;
+            break;
+        case 'Q':
+            quadratic_bezier(input, last_X, -last_Y, px_to_mm2(arg1), -px_to_mm2(arg2), px_to_mm2(arg3), -px_to_mm2(arg4));
+            break;
+#endif
+        case 'Z':
+        case 'z':
+			line_to(input, start_X, start_Y, start_Z);
+            first = true;
+            break;
+        default:
+            printf("Unknown command in chunk: %s  (%s)\n", chunk, line);
+    }
+    
+}
+
+static const char *valid = "0123456789.eE- ";
+
+static void strip_str(char *line)
+{
+    while (strlen(line) > 0 && line[strlen(line)-1] == '\n')
+            line[strlen(line)-1] = 0;
+    while (strlen(line) > 0 && line[strlen(line)-1] == ' ')
+            line[strlen(line)-1] = 0;
+}
+
+static double depthratio = 1.0;
+
+static void parse_svg_line(class inputshape *input, char *line, double depth)
+{
+    char *c;
+    char chunk[4095];
+    double height;
+    
+    c = strstr(line, "height=\"");
+    if (c && svgheight == 0) {
+        height = strtod(c+8, NULL);
+//        scene->declare_minY(px_to_mm2(-height));
+        svgheight = height;
+		printf("SETTING HEIGHT TO %5.4f\n", svgheight);
+    }
+
+	if (strstr(line, "inkscape:document-units=\"mm\"") != NULL) {
+		pxratio = 1.0;
+		printf("Switching to mm\n");
+	}
+
+	c = strstr(line, "stroke:#");
+	if (c) {
+		printf("STROKE\n");
+		depthratio = get_depth_ratio(c + 8);
+	}
+		
+    /*
+    c = strstr(line, "width=\"");
+    if (c) {
+        width = strtod(c+7, NULL);
+        scene->declare_maxX(px_to_mm2(width));
+        printf("MAX X %5.2f\n", width);
+    }
+    */
+    
+    c = strstr(line,"<circle cx=");
+    if (c) {
+        parse_circle(input, line, depth * depthratio);
+    }
+    c = strstr(line, " d=\"");
+    if (c == NULL)
+        return;
+    c += 4;
+    chr_replace(c, '"', 0);
+    chr_replace(line, ',', ' ');
+//    printf("Line is %s\n", c);
+    chunk[0] = 0;
+    memset(chunk, 0, sizeof(chunk));
+    while (*c) {
+        if (strchr(valid, *c)) {
+            chunk[strlen(chunk)] = *c;            
+        } else {
+            strip_str(chunk);
+            if (strlen(chunk) > 0)
+                push_chunk(input, chunk, line, depth * depthratio);
+            memset(chunk, 0, sizeof(chunk));
+            chunk[strlen(chunk)] = *c;           
+        }
+        c++;
+    }
+    strip_str(chunk);
+    if (strlen(chunk) > 0)
+        push_chunk(input, chunk, line, depth * depthratio);
+}
+
+static void parse_direct_svg(class scene *scene, const char *filename, int tool)
+{
+	class inputshape *input;
+
+	input = new(class inputshape);
+	input->set_name("Manual path");
+	scene->shapes.push_back(input);
+
+    FILE *file;
+    
+    file = fopen(filename, "r");
+    if (!file) {
+        printf("Cannot open %s : %s\n", filename, strerror(errno));
+        return;
+    }
+
+	last_Z = -scene->get_depth();    
+    while (!feof(file)) {
+        char * ret;
+        char line[40960];
+        ret = fgets(&line[0], sizeof(line), file);
+        if (ret) {
+            parse_svg_line(input, line, -scene->get_depth());
+        }
+    }
+    fclose(file);
+
+	
+}
 
 void parse_csv_file(class scene *scene, const char *filename, int tool)
 {
@@ -315,6 +584,11 @@ void parse_csv_file(class scene *scene, const char *filename, int tool)
 	tooldepth = get_tool_maxdepth();
 
 	qprintf("Using tool %i with max depth of cut %5.2fmm\n", toolnr, tooldepth);
+
+	if (strstr(filename, ".svg") != NULL) {
+		parse_direct_svg(scene, filename, tool);
+		return;
+	}
 
 	class inputshape *input;
 
