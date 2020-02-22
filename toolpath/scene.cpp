@@ -49,6 +49,7 @@ void scene::new_poly(double X, double Y)
 
   shape = new(class inputshape);
   shape->parent = this;
+  shape->set_depth(get_depth());
   shape->set_z_offset(z_offset);
   shape->set_stock_to_leave(stock_to_leave);
   
@@ -60,6 +61,7 @@ void scene::set_poly_name(const char *n)
   if (!shape) {
     shape = new(class inputshape);
     shape->parent = this;
+	shape->set_depth(get_depth());
 	shape->set_z_offset(z_offset);
 	shape->set_stock_to_leave(stock_to_leave);
   }
@@ -71,6 +73,7 @@ void scene::add_point_to_poly(double X, double Y)
   if (!shape) { 
     shape = new(class inputshape);
     shape->parent = this;
+	shape->set_depth(get_depth());
 	shape->set_z_offset(z_offset);
 	shape->set_stock_to_leave(stock_to_leave);
   }
@@ -350,7 +353,7 @@ void scene::create_toolpaths(void)
 	    
 	    	/* we want courser tools to not get within the stepover of the finer tool */
 		    if (tool < (int)toollist.size() -1)
-	      start = get_tool_stepover(toollist[tool+1]);
+				start = get_tool_stepover(toollist[tool+1]);
     
 		    /* if tool 0 is a vcarve bit, tool 1 needs to start at radius at depth of cut */
 		    /* and all others need an offset */
@@ -362,8 +365,17 @@ void scene::create_toolpaths(void)
 		    }
 
 
-        for (auto i : shapes)
-          i->create_toolpaths(toolnr, currentdepth, finish, inbetween, start, end, _want_skeleton_paths);
+        for (auto i : shapes) {
+			double effectivedepth;
+			effectivedepth = currentdepth;
+			printf("shape depth is %5.4f current is %5.4f\n", i->get_depth(), effectivedepth);
+			if (effectivedepth + depthstep < i->get_depth())
+				continue;
+			if (effectivedepth < i->get_depth())
+				effectivedepth = i->get_depth();
+				
+			i->create_toolpaths(toolnr, effectivedepth, finish, inbetween, start, end, _want_skeleton_paths);
+		}
         currentdepth += depthstep;
         depthstep = get_tool_maxdepth();
         if (finish)

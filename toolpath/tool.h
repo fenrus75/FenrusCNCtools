@@ -199,6 +199,7 @@ public:
 		z_offset = 0.0;
 		stock_to_leave = 0.1;
 		cutout_offset = 0.0;
+		depth = 0.0;
     }
     void set_level(int _level);
     void add_child(class inputshape *child);
@@ -228,6 +229,9 @@ public:
 
 	void set_cutout_offset(double d) { cutout_offset = d; };
 	double get_cutout_offset(void) { return cutout_offset; };
+
+	void set_depth(double d) { depth = d; };
+	double get_depth(void) { return -fabs(depth); };
 
     double area;
     int level;
@@ -262,6 +266,7 @@ private:
 	double z_offset;
 	double cutout_offset;
 	double stock_to_leave;
+	double depth;
 };
     
 
