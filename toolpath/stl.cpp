@@ -93,7 +93,7 @@ static int read_stl_ascii_file(const char *filename, int flip)
 		fgets(line, 8191, file);
 		c = cleanline(line);
 
-		if (strncmp(line, "facet normal ", 12) != 0)
+		if (strncmp(c, "facet normal ", 12) != 0)
 			continue;
 
 		c += 12;
