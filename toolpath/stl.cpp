@@ -64,6 +64,111 @@ static void flip_triangle_XZ(float *R)
 	(R)[1] = y;
 	(R)[2] = -x;
 }
+
+static char * cleanline(char *line)
+{
+	char *c = line;
+	while (*c == ' ' || *c == '\t') c++;
+
+	return c;
+}
+
+static int read_stl_ascii_file(const char *filename, int flip)
+{
+	FILE *file;
+	char line[8192];
+	file = fopen(filename, "r");
+	if (!file)
+		return -1;
+
+	fgets(line, 8191, file); /* skip the header */
+	printf("Reading STL file %s\n", line + 6);
+
+	while (!feof(file)) {
+		struct stltriangle t;
+		char *c;
+
+		line[0] = 0;
+		memset(&t, 0, sizeof(t));
+		fgets(line, 8191, file);
+		c = cleanline(line);
+
+		if (strncmp(line, "facet normal ", 12) != 0)
+			continue;
+
+		c += 12;
+		t.normal[0] = strtod(c, &c);
+		t.normal[1] = strtod(c, &c);
+		t.normal[2] = strtod(c, &c);
+
+		fgets(line, 8191, file);
+		c = cleanline(line);
+		if (strncmp(c, "outer loop",10) != 0)
+			break;
+
+		fgets(line, 8191, file);
+		c = cleanline(line);
+		if (strncmp(c, "vertex ",7) != 0)
+			break;
+		c += 7;
+
+		t.vertex1[0] = strtod(c, &c);
+		t.vertex1[1] = strtod(c, &c);
+		t.vertex1[2] = strtod(c, &c);
+
+
+		fgets(line, 8191, file);
+		c = cleanline(line);
+		if (strncmp(c, "vertex ",7) != 0)
+			break;
+		c += 7;
+
+		t.vertex2[0] = strtod(c, &c);
+		t.vertex2[1] = strtod(c, &c);
+		t.vertex2[2] = strtod(c, &c);
+
+
+		fgets(line, 8191, file);
+		c = cleanline(line);
+		if (strncmp(c, "vertex ",7) != 0)
+			break;
+		c += 7;
+
+		t.vertex3[0] = strtod(c, &c);
+		t.vertex3[1] = strtod(c, &c);
+		t.vertex3[2] = strtod(c, &c);
+
+		fgets(line, 8191, file);
+		c = cleanline(line);
+		if (strncmp(c, "endloop",7) != 0)
+			break;
+
+		fgets(line, 8191, file);
+		c = cleanline(line);
+		if (strncmp(c, "endfacet",8) != 0)
+			break;
+
+
+		if (flip == 1) {
+			flip_triangle_YZ(&t.vertex1[0]);
+			flip_triangle_YZ(&t.vertex2[0]);
+			flip_triangle_YZ(&t.vertex3[0]);
+			flip_triangle_YZ(&t.normal[0]);
+		}
+		if (flip == 2) {
+			flip_triangle_XZ(&t.vertex1[0]);
+			flip_triangle_XZ(&t.vertex2[0]);
+			flip_triangle_XZ(&t.vertex3[0]);
+			flip_triangle_XZ(&t.normal[0]);
+		}
+		push_triangle(t.vertex1, t.vertex2, t.vertex3, t.normal);
+		
+	}
+	fclose(file);
+	return 0;
+}
+
+
 static int read_stl_file(const char *filename, int flip)
 {
 	FILE *file;
@@ -84,6 +189,12 @@ static int read_stl_file(const char *filename, int flip)
 		fclose(file);
 		return -1;
 	}
+
+	if (strncmp(header, "solid ", 6) == 0)  {
+		fclose(file);
+		return read_stl_ascii_file(filename, flip);
+	}
+
 	ret = fread(&trianglecount, 1, 4, file);
 	set_max_triangles(trianglecount);
 
