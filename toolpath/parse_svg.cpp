@@ -129,7 +129,7 @@ static void quadratic_bezier(class scene *scene,
 /*
 <circle cx="440.422" cy="312.878" r="12" stroke="black" stroke-width="1" fill="none" />
 */
-static void parse_circle(class scene *scene, char *line)
+static void parse_circle(class scene *scene, char *line, double depthratio)
 {
     char *cx, *cy, *r;
     double X,Y,R,phi;
@@ -142,6 +142,7 @@ static void parse_circle(class scene *scene, char *line)
     }
     scene->end_poly();
     scene->set_poly_name("circle");
+	scene->set_depth_ratio(depthratio);
     X = strtod(cx + 4, NULL);
     Y = strtod(cy + 4, NULL);
     R = strtod(r + 3, NULL);
@@ -157,7 +158,7 @@ static void parse_circle(class scene *scene, char *line)
     scene->end_poly();
 }
 
-static void push_chunk(class scene *scene, char *chunk, char *line)
+static void push_chunk(class scene *scene, char *chunk, char *line, double depthratio)
 {
     char command;
     char *c;
@@ -196,12 +197,14 @@ static void push_chunk(class scene *scene, char *chunk, char *line)
 #endif
 //            printf("Line         : %5.2f %5.2f\n", arg1, arg2);
             scene->add_point_to_poly(px_to_mm(arg1), px_to_mm(svgheight-arg2));
+			scene->set_depth_ratio(depthratio);
             last_X = arg1;
             last_Y = arg2;
             break;
         case 'M':
 //            printf("Start of poly: %5.2f %5.2f\n", arg1, arg2);
             scene->new_poly(px_to_mm(arg1), px_to_mm(svgheight-arg2));
+			scene->set_depth_ratio(depthratio);
             last_X = arg1;
             last_Y = arg2;
             break;
@@ -210,6 +213,7 @@ static void push_chunk(class scene *scene, char *chunk, char *line)
             arg1 += last_X;
             arg2 += last_Y;
             scene->new_poly(px_to_mm(arg1), px_to_mm(svgheight-arg2));
+			scene->set_depth_ratio(depthratio);
             last_X = arg1;
             last_Y = arg2;
             break;
@@ -249,6 +253,7 @@ static void push_chunk(class scene *scene, char *chunk, char *line)
             break;
         case 'Z':
         case 'z':
+			scene->set_depth_ratio(depthratio);
             scene->end_poly();
             break;
         default:
@@ -267,11 +272,44 @@ static void strip_str(char *line)
             line[strlen(line)-1] = 0;
 }
 
+static double parse_fill_to_depth(char *line)
+{
+	double ratio = 1.0;
+	char *c = strdup(line);
+	char *c2;
+	c2 = strchr(c, ';');
+	if (c2)
+		*c2 = 0;
+	c2 =c;
+	while (*c2 == ' ')
+		c2++;
+	vprintf("Parse fill : -%s-\n", c2);
+
+	if (strncmp(c2, "rgb(", 4) == 0 && strchr(c2, '%') != NULL) {
+		c2 += 4;
+		ratio = 1.0 - strtod(c2, NULL) / 100;
+	}
+
+
+	if (strstr(c2, "none"))
+		ratio = 1.0;
+	free(c);
+	vprintf("Found depth ratio %5.4f\n", ratio);
+	return ratio;
+	
+}
+
 static void parse_line(class scene *scene, char *line)
 {
     char *c;
     char chunk[4095];
     double height;
+	double depthratio = 1.0;
+
+	c = strstr(line, "style=\"fill:");
+	if (c) {
+		depthratio = parse_fill_to_depth(c + 12);
+	}
     
     c = strstr(line, "height=\"");
     if (c) {
@@ -290,7 +328,7 @@ static void parse_line(class scene *scene, char *line)
     
     c = strstr(line,"<circle cx=");
     if (c) {
-        parse_circle(scene, line);
+        parse_circle(scene, line, depthratio);
     }
     c = strstr(line, " d=\"");
     if (c == NULL)
@@ -307,7 +345,7 @@ static void parse_line(class scene *scene, char *line)
         } else {
             strip_str(chunk);
             if (strlen(chunk) > 0)
-                push_chunk(scene, chunk, line);
+                push_chunk(scene, chunk, line, depthratio);
             memset(chunk, 0, sizeof(chunk));
             chunk[strlen(chunk)] = *c;           
         }
@@ -315,13 +353,54 @@ static void parse_line(class scene *scene, char *line)
     }
     strip_str(chunk);
     if (strlen(chunk) > 0)
-        push_chunk(scene, chunk, line);
+        push_chunk(scene, chunk, line, depthratio);
     scene->end_poly();
+}
+
+
+static int count_char(char *string, char c)
+{
+	int count = 0;
+	char *l;
+	l = string;
+	while (*l != 0) {
+		if (*l == c)
+			count++;
+		l++;
+	}
+	return count;
+}
+
+
+static char *str_append(char *str, char *append)
+{
+	int newlen = strlen(append);
+	char *c;
+	char *newstr;
+	if (str)
+		newlen += strlen(str);
+
+	newstr = (char *)calloc(newlen + 1, 1);
+	if (str)
+		strcat(newstr, str);
+	if (append)
+		strcat(newstr, append);
+
+	c = strchr(newstr, '\n');
+	if (c)
+		*c = ' ';
+	c = strchr(newstr, '\n');
+	if (c)
+		*c = ' ';
+	if (str)
+		free(str);
+	return newstr;
 }
 
 void parse_svg_file(class scene *scene, const char *filename)
 {
     FILE *file;
+	char *l = NULL;
     
     file = fopen(filename, "r");
     if (!file) {
@@ -333,9 +412,21 @@ void parse_svg_file(class scene *scene, const char *filename)
         char * ret;
         char line[40960];
         ret = fgets(&line[0], sizeof(line), file);
-        if (ret) {
-            parse_line(scene, line);
+		if (!ret)
+			continue;
+
+		l = str_append(l, line);
+
+        if (count_char(l, '<') == count_char(l, '>') || feof(file)) {
+            parse_line(scene, l);
+			free(l);
+			l = NULL;
         }
     }
+	if (l) {
+		parse_line(scene, l);
+		free(l);
+		l = NULL;
+	}
     fclose(file);
 }

@@ -54,6 +54,7 @@ public:
         void new_poly(double X, double Y);
         void set_poly_name(const char *n);
         void add_point_to_poly(double X, double Y);
+		void set_depth_ratio(double ratio);
         void end_poly(void);
         
         void push_tool(int toolnr);

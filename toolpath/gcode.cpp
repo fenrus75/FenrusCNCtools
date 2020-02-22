@@ -19,7 +19,7 @@ extern "C" {
 
 #include "gcode.h"
 
-static bool want_adaptive = true;
+static bool want_adaptive = false;
 
 static std::vector<struct gline *> lines;
 static const char *tool_name = "T201";

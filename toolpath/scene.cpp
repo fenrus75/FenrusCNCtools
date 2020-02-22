@@ -56,6 +56,12 @@ void scene::new_poly(double X, double Y)
   add_point_to_poly(X, Y);
 }
 
+void scene::set_depth_ratio(double ratio)
+{
+	shape->set_depth(get_depth() * ratio);
+}
+
+
 void scene::set_poly_name(const char *n)
 {
   if (!shape) {

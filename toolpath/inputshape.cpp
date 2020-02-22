@@ -56,6 +56,7 @@ void inputshape::update_stats(void)
 void inputshape::print_as_svg(void)
 {
     const char *color = "black";
+	
     if (level == 1)
         color = "green";
     if (level == 2)
@@ -173,6 +174,16 @@ void inputshape::create_toolpaths(int toolnr, double depth, int finish_pass, int
 			polyhole = NULL;
 			return;
 		}
+#if 0
+		static char filename[]="shapeA.svg";
+	  set_svg_bounding_box(0, 0, 100, 100);
+	  write_svg_header(filename, 1.0);
+
+	  print_as_svg();
+	  write_svg_footer();
+	  printf("SHape %s has depth %5.4f\n", filename, get_depth());
+	  filename[5]++;
+#endif
     }
     
     if (!iss) {
