@@ -407,7 +407,7 @@ static void push_chunk(class inputshape *input, char *chunk, char *line, double 
         case 'M':
 //            printf("Start of poly: %5.2f %5.2f\n", arg1, arg2);
             last_X = px_to_mm2(arg1);
-            last_Y = px_to_mm2(arg2);
+            last_Y = px_to_mm2(svgheight - arg2);
 			last_Z = depth;
 			start_X = last_X;
 			start_Y = last_Y;
@@ -417,8 +417,8 @@ static void push_chunk(class inputshape *input, char *chunk, char *line, double 
         case 'm':
 //            printf("Start of poly: %5.2f %5.2f\n", arg1, arg2);
 
-            last_X = px_to_mm2(arg1);
-            last_Y = px_to_mm2(svgheight - arg2) + last_Y;
+            last_X = px_to_mm2(arg1) + last_X;
+            last_Y = - arg2 + last_Y;
 			last_Z = depth;
 			start_X = last_X;
 			start_Y = last_Y;
@@ -434,10 +434,10 @@ static void push_chunk(class inputshape *input, char *chunk, char *line, double 
             break;
 		case 'v':
 			/* fall through */
-			adder = last_Y;
+			adder = last_Y - px_to_mm2(svgheight);
         case 'V':
 //            printf("Start of poly: %5.2f %5.2f\n", arg1, arg2);
-			line_to(input, last_X, px_to_mm2(-arg1) + adder, Z);
+			line_to(input, last_X, px_to_mm2(svgheight-arg1) + adder, Z);
             break;
 #if 0
 		case 'c':
