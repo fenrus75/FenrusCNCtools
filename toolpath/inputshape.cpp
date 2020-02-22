@@ -161,9 +161,18 @@ void inputshape::create_toolpaths(int toolnr, double depth, int finish_pass, int
     
     
     if (!polyhole) {
+		double mainarea;
+		mainarea = poly.area();
         polyhole = new PolygonWithHoles(poly);
-        for (auto i : children)
-          polyhole->add_hole(i->poly);
+        for (auto i : children) {
+			mainarea += i->poly.area();
+			polyhole->add_hole(i->poly);
+		}
+		if (mainarea < 0.1) {
+			printf("SKIPPING NULL SHAPE\n");
+			polyhole = NULL;
+			return;
+		}
     }
     
     if (!iss) {
@@ -193,6 +202,7 @@ void inputshape::create_toolpaths(int toolnr, double depth, int finish_pass, int
         class toollevel *tool = new(class toollevel);
         int added = 0;
         int had_exception = 1;
+		int exceptioncount = 0;
         
         tool->level = level;
         tool->offset = inset;
@@ -211,9 +221,12 @@ void inputshape::create_toolpaths(int toolnr, double depth, int finish_pass, int
 
         while (had_exception) {
             had_exception = 0;
+			if (exceptioncount > 5)
+                offset_polygons = arrange_offset_polygons_2(CGAL::create_offset_polygons_2<Polygon_2>(inset,*iss) );
+
             try {
                 offset_polygons = arrange_offset_polygons_2(CGAL::create_offset_polygons_2<Polygon_2>(inset,*iss) );
-            } catch (...) { had_exception = 1;};
+            } catch (...) { had_exception = 1; exceptioncount++;};
             
             if (had_exception)
                 inset = inset + 0.00001;
