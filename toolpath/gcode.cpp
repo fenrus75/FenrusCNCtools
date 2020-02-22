@@ -21,7 +21,7 @@ extern "C" {
 
 static bool want_adaptive = false;
 
-static std::vector<struct line *> lines;
+static std::vector<struct gline *> lines;
 static const char *tool_name = "T201";
 static int current_tool_nr = -499;
 static double tool_diameter = 6;
@@ -68,12 +68,12 @@ static double radius_at_depth(double Z)
 
 static void record_motion_XYZ(double fX, double fY, double fZ, double tX, double tY, double tZ)
 {
-	struct line *point;
+	struct gline *point;
 
 	if (!want_adaptive)
 		return;
 
-	point = (struct line*)calloc(sizeof(struct line), 1);
+	point = (struct gline*)calloc(sizeof(struct gline), 1);
 	point->X1 = fX;
 	point->X2 = tX;
 	point->Y1 = fY;
