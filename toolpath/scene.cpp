@@ -163,7 +163,7 @@ void scene::write_naked_gcode()
   unsigned int j;
   unsigned int start = 0;
 
-  if (tool_is_vcarve(toollist[0])) {
+  if (tool_is_vcarve(toollist[0]) && toollist.size() > 1) {
 	  gcode_tool_change(toollist[1]);
 	  start = 1;
   } else {
@@ -185,7 +185,7 @@ void scene::write_naked_gcode()
     
   }
 
-  if (tool_is_vcarve(toollist[0])) {
+  if (tool_is_vcarve(toollist[0]) && toollist.size() > 1) {
       gcode_tool_change(toollist[0]);
       for (auto i : shapes) {
         i->output_gcode(toollist[0]);
