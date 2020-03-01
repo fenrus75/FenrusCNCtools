@@ -558,8 +558,8 @@ static void process_vcarve(class toollevel *tool, double X1, double Y1, double X
 		return;
     }
 
-	d1 = mill->geometry_at_distance(parent->distance_from_edge(X1, Y1, false));
-	d2 = mill->geometry_at_distance(parent->distance_from_edge(X2, Y2, false));
+	d1 = -mill->geometry_at_distance(parent->distance_from_edge(X1, Y1, false));
+	d2 = -mill->geometry_at_distance(parent->distance_from_edge(X2, Y2, false));
 
 	if (fabs(d2-d1) > 0.4 && is_inner_bisector) {
 		process_vcarve(tool, X1, Y1, (X1 + X2)/2, (Y1 + Y2)/2, is_inner_bisector, is_bisector, mill, parent, maxdepth, shape,  z_offset);
