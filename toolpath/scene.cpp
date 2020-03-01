@@ -13,6 +13,7 @@ extern "C" {
   #include "toolpath.h"
 }
 
+#include "endmill.h"
 
 static inline double dist(double X0, double Y0, double X1, double Y1)
 {
@@ -300,9 +301,11 @@ void scene::create_toolpaths(void)
     double start, end;
     currentdepth = depth;
     toolnr = toollist[tool];  
+	class endmill *mill;
     activate_tool(toolnr);
+	mill = get_endmill(toolnr);
   
-    depthstep = get_tool_maxdepth();
+    depthstep = mill->get_depth_of_cut();
 
     int rounds = (int)ceilf(-depth / depthstep);
     surplus = rounds * depthstep + depth;
@@ -328,27 +331,30 @@ void scene::create_toolpaths(void)
     
     /* if tool 0 is a vcarve bit, tool 1 needs to start at radius at depth of cut */
     /* and all others need an offset */
-    if (tool > 0 and tool_is_vcarve(toollist[0])) {
+    if (tool > 0 && tool_is_vcarve(toollist[0])) {
       double angle = get_tool_angle(toollist[0]);
       if (tool == 1)
         start = 0;
       start += depth_to_radius(depth, angle); 
     }
       
-    if (tool > 0)
-      end = tool_diam(toollist[tool-1])/2 + 0.2;
+    if (tool > 0) {
+		class endmill *prevmill;
+		prevmill = get_endmill(toollist[tool-1]);
+		end = prevmill->get_diameter()/2 + 0.2;
+	}
       
     if (tool == 1 && tool_is_vcarve(toollist[0]))
       end = 600000000;
       
       
-    if (tool_is_vcarve(toolnr) && tool == 0) {
+    if (mill->is_vbit() && tool == 0) {
 		double stock_to_leave = 0;
 		while (currentdepth <= -z_offset) {
           	for (auto i : shapes)
             	i->create_toolpaths_vcarve(toolnr, currentdepth, stock_to_leave);
 			currentdepth += depthstep;
-			depthstep = get_tool_maxdepth();
+			depthstep = mill->get_depth_of_cut();
 			if (want_finishing_pass())
 				stock_to_leave = 0.1;
         }
@@ -383,7 +389,7 @@ void scene::create_toolpaths(void)
 			i->create_toolpaths(toolnr, effectivedepth, finish, inbetween, start, end, _want_skeleton_paths);
 		}
         currentdepth += depthstep;
-        depthstep = get_tool_maxdepth();
+        depthstep = mill->get_depth_of_cut();
         if (finish)
           finish = -1;
 		inbetween = false;

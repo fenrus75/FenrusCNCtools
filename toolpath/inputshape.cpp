@@ -7,6 +7,8 @@
  */
 #include "tool.h"
 
+#include "endmill.h"
+
 /* todo: get rid of this addiction to print.h */
 #include "print.h"
 
@@ -147,17 +149,22 @@ bool inputshape::fits_inside(class inputshape *shape)
 void inputshape::create_toolpaths(int toolnr, double depth, int finish_pass, int want_optional, double start_inset, double end_inset, bool want_skeleton_path)
 {
     int level = 0;
-    double diameter = get_tool_diameter();
+	class endmill *mill;
+    double diameter;
     double stepover;
     double inset;
     bool reverse = false;
+
+	mill = get_endmill(toolnr);
+
+	diameter = mill->get_diameter();
     
     if (toolnr < 0) {
         reverse = true;
         toolnr = abs(toolnr);
     }
     
-    stepover = get_tool_stepover(toolnr);
+    stepover = mill->get_stepover();
     
     
     
@@ -323,6 +330,8 @@ void inputshape::create_toolpaths_cutout(int toolnr, double depth, bool finish_p
 	auto bbox = poly.bbox();
     Polygon_2 *boxpoly = new(Polygon_2);
 
+	class endmill *mill = get_endmill(toolnr);
+
 #if 0
     K k;
 	auto out = compute_outer_frame_margin(poly.vertices_begin(), poly.vertices_end(), tool_diam(toolnr), k);
@@ -330,7 +339,7 @@ void inputshape::create_toolpaths_cutout(int toolnr, double depth, bool finish_p
 		outset += CGAL::to_double(*out);
 	}
 #endif
-	outset += 4 * tool_diam(toolnr);
+	outset += 4 * mill->get_diameter();
 	outset += 40 + cutout_offset;
 
 	vprintf("Cutout Outset is %5.2f mm\n", outset);
@@ -353,7 +362,7 @@ void inputshape::create_toolpaths_cutout(int toolnr, double depth, bool finish_p
 	/* Step 4: Inset the ISS by tool radius */
 	PolygonWithHolesPtrVector  offset_polygons;
 
-	offset_polygons = arrange_offset_polygons_2(CGAL::create_offset_polygons_2<Polygon_2>(get_tool_diameter()/2 + cutout_offset, *ciss) );
+	offset_polygons = arrange_offset_polygons_2(CGAL::create_offset_polygons_2<Polygon_2>(mill->get_diameter()/2 + cutout_offset, *ciss) );
 
 
 	/* Step 5: The hole perimiter is now our path for the tool */
@@ -375,11 +384,11 @@ void inputshape::create_toolpaths_cutout(int toolnr, double depth, bool finish_p
 					tooldepths.push_back(td);
 					td->depth = currentdepth;
 					td->toolnr = toolnr;
-					td->diameter = get_tool_diameter();
+					td->diameter = mill->get_diameter();
 					class toollevel *tool = new(class toollevel);
 					tool->level = 0;
-					tool->offset = get_tool_diameter();
-					tool->diameter = get_tool_diameter();
+					tool->offset = mill->get_diameter();
+					tool->diameter = mill->get_diameter();
 					tool->depth = currentdepth;
 					tool->toolnr = toolnr;
 					tool->minY = minY;
@@ -402,7 +411,7 @@ void inputshape::create_toolpaths_cutout(int toolnr, double depth, bool finish_p
 		}
 
 	if (finish_pass) {
-		offset_polygons = arrange_offset_polygons_2(CGAL::create_offset_polygons_2<Polygon_2>(get_tool_diameter()/2 + stock_to_leave, *ciss) );
+		offset_polygons = arrange_offset_polygons_2(CGAL::create_offset_polygons_2<Polygon_2>(mill->get_diameter()/2 + stock_to_leave, *ciss) );
 	}
 
 
@@ -428,7 +437,7 @@ void inputshape::create_toolpaths_cutout(int toolnr, double depth, bool finish_p
 	vprintf("Circumfence is %5.2f mm\n", circumfence);
 	if (circumfence == 0)
 		return;
-	gradient = fabs(get_tool_maxdepth()) / circumfence;
+	gradient = fabs(mill->get_depth_of_cut()) / circumfence;
 	/*     walk the gradient up until we break the surface */
 	while (currentdepth < 0) {
 		for (auto ply : offset_polygons) {        
@@ -451,11 +460,11 @@ void inputshape::create_toolpaths_cutout(int toolnr, double depth, bool finish_p
 					tooldepths.push_back(td);
 					td->depth = currentdepth;
 					td->toolnr = toolnr;
-					td->diameter = get_tool_diameter();
+					td->diameter = mill->get_diameter();
 					class toollevel *tool = new(class toollevel);
 					tool->level = 0;
-					tool->offset = get_tool_diameter();
-					tool->diameter = get_tool_diameter();
+					tool->offset = mill->get_diameter();
+					tool->diameter = mill->get_diameter();
 					tool->depth = currentdepth;
 					tool->toolnr = toolnr;
 					tool->minY = minY;
@@ -718,7 +727,8 @@ static void process_vcarve(class toollevel *tool, double X1, double Y1, double X
 
 void inputshape::create_toolpaths_vcarve(int toolnr, double maxdepth, double stock_to_leave)
 {
-    double angle = get_tool_angle(toolnr);
+	class endmill *mill = get_endmill(toolnr);
+    double angle = mill->get_angle();
     if (!polyhole) {
         polyhole = new PolygonWithHoles(poly);
         for (auto i : children)

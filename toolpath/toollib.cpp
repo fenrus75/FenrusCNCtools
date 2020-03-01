@@ -18,6 +18,7 @@ static int colornr;
 
 using namespace std;
 
+/* we need this temporary information holder since we don't know what kind of class (normal/vbit/ball) to create until the end */
 struct tool {
     int number;
     const char *name;
@@ -152,13 +153,22 @@ const char * tool_svgcolor(int toolnr)
     return "black";
 }
 
-double tool_diam(int toolnr)
+static double tool_diam(int toolnr)
 {
     toolnr = abs(toolnr);
     for (auto endmill : endmills)
         if (endmill->get_tool_nr() == toolnr)
             return endmill->get_diameter();
     return 0;
+}
+
+class endmill *get_endmill(int toolnr)
+{
+    toolnr = abs(toolnr);
+    for (auto endmill : endmills)
+        if (endmill->get_tool_nr() == toolnr)
+            return endmill;
+    return NULL;
 }
 
 

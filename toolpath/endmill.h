@@ -77,3 +77,6 @@ public:
 	virtual bool is_ballnose(void)		{ return true; };
 };
 
+
+
+class endmill *get_endmill(int toolnr);

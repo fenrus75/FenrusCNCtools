@@ -18,6 +18,7 @@ extern "C" {
 #include "toolpath.h"
 }
 #include "scene.h"
+#include "endmill.h"
 
 struct stltriangle {
 	float normal[3];
@@ -27,7 +28,6 @@ struct stltriangle {
 	uint16_t attribute;
 } __attribute__((packed));
 
-static int toolnr;
 static double tooldepth = 0.1;
 
 
@@ -227,7 +227,7 @@ static double last_X,  last_Y, last_Z;
 static double cur_X, cur_Y, cur_Z;
 static bool first;
 
-static void line_to(class inputshape *input, double X2, double Y2, double Z2)
+static void line_to(class inputshape *input, class endmill *mill, double X2, double Y2, double Z2)
 {
 	double X1 = last_X, Y1 = last_Y, Z1 = last_Z;
 	unsigned int depth = 0;
@@ -267,18 +267,18 @@ static void line_to(class inputshape *input, double X2, double Y2, double Z2)
 		while (input->tooldepths.size() <= depth) {
 				class tooldepth * td = new(class tooldepth);
 				td->depth = Z1;
-				td->toolnr = toolnr;
-				td->diameter = get_tool_diameter();
+				td->toolnr = mill->get_tool_nr();
+				td->diameter = mill->get_diameter();
 				input->tooldepths.push_back(td);				
 		}
 
 		if (input->tooldepths[depth]->toollevels.size() < 1) {
 					class toollevel *tool = new(class toollevel);
 					tool->level = 0;
-					tool->offset = get_tool_diameter();
-					tool->diameter = get_tool_diameter();
+					tool->offset = mill->get_diameter();
+					tool->diameter = mill->get_diameter();
 					tool->depth = Z1;
-					tool->toolnr = toolnr;
+					tool->toolnr = mill->get_tool_nr();
 					tool->minY = 0;
 					tool->name = "Manual toolpath";
 					tool->no_sort = true;
@@ -445,10 +445,10 @@ static void print_progress(double pct)
 	fflush(stdout);
 }
 
-static void create_cutout(class scene *scene, int tool)
+static void create_cutout(class scene *scene, class endmill *mill)
 {
 	Polygon_2 *p;
-	double diam = tool_diam(tool);;
+	double diam = mill->get_diameter();
 	double gradient = 0, circumfence = 0;
 	double currentdepth = -scene->get_cutout_depth();
 	class inputshape *input;
@@ -471,15 +471,15 @@ static void create_cutout(class scene *scene, int tool)
 		class tooldepth * td = new(class tooldepth);
 		input->tooldepths.push_back(td);
 		td->depth = currentdepth;
-		td->toolnr = toolnr;
-		td->diameter = get_tool_diameter();
+		td->toolnr = mill->get_tool_nr();
+		td->diameter = mill->get_diameter();
 		
 		class toollevel *tool = new(class toollevel);
 		tool->level = 0;
-		tool->offset = get_tool_diameter();
-		tool->diameter = get_tool_diameter();
+		tool->offset = mill->get_diameter();
+		tool->diameter = mill->get_diameter();
 		tool->depth = currentdepth;
-		tool->toolnr = toolnr;
+		tool->toolnr = mill->get_tool_nr();
 		tool->minY = 0;
 		tool->name = "Cutout";
 		td->toollevels.push_back(tool);
@@ -506,7 +506,7 @@ static void create_cutout(class scene *scene, int tool)
 	if (circumfence == 0)
 		return;
 
-	gradient = fabs(get_tool_maxdepth()) / circumfence;
+	gradient = fabs(mill->get_depth_of_cut()) / circumfence;
 	/*     walk the gradient up until we break the surface */
 	while (currentdepth < 0) {
 		for (unsigned int i = 0; i < p->size(); i++) {
@@ -520,14 +520,14 @@ static void create_cutout(class scene *scene, int tool)
 			class tooldepth * td = new(class tooldepth);
 			input->tooldepths.push_back(td);
 			td->depth = currentdepth;
-			td->toolnr = toolnr;
+			td->toolnr = mill->get_tool_nr();
 			td->diameter = get_tool_diameter();
 			class toollevel *tool = new(class toollevel);
 			tool->level = 0;
-			tool->offset = get_tool_diameter();
-			tool->diameter = get_tool_diameter();
+			tool->offset = mill->get_diameter();
+			tool->diameter = mill->get_diameter();
 			tool->depth = currentdepth;
-			tool->toolnr = toolnr;
+			tool->toolnr = mill->get_tool_nr();
 			tool->minY = 0;
 			tool->name = NULL;
 			td->toollevels.push_back(tool);
@@ -572,12 +572,12 @@ static void create_toolpath(class scene *scene, int tool, bool roughing, bool ha
 	bool ballnose = false;
 	bool vbit = false;
 	double angle = 0.0;
+	class endmill *mill = get_endmill(tool);
 
 	double overshoot;
 
 	class inputshape *input;
-	toolnr = tool;
-	diam = tool_diam(tool);
+	diam = mill->get_diameter();
 	maxZ = scene->get_cutout_depth();
 
 
@@ -599,29 +599,26 @@ static void create_toolpath(class scene *scene, int tool, bool roughing, bool ha
 	maxX = stl_image_X() + overshoot;
 	maxY = stl_image_Y() + overshoot;
 
-	stepover = get_tool_stepover(toolnr);
+	stepover = mill->get_stepover();
 
 	if (!roughing && stepover > 0.2)
 		stepover = stepover / 1.42;
 
-	if (tool_is_ballnose(tool)) {
-		ballnose = true;
-	}
-	if (tool_is_vcarve(tool)) {
-		vbit = true;
-		angle = get_tool_angle(tool);
-		printf("ANGLE is %5.4f for tool %i \n", angle, tool);
+	ballnose = mill->is_ballnose();
+	vbit = mill->is_vbit();
+	
+	if (vbit) {
+		angle = mill->get_angle();
 	}
 
-	if (!roughing && tool_is_ballnose(tool)) { 
+	if (!roughing && ballnose) { 
 		stepover = stepover / 2;
-		ballnose = true;
 		if (scene->get_finishing_pass_stepover() > 0) {
 			stepover = scene->get_finishing_pass_stepover();
 		}
 	}
 
-	if (!roughing && tool_is_vcarve(tool)) { 
+	if (!roughing && vbit) { 
 		stepover = stepover / 2;
 		if (scene->get_finishing_pass_stepover() > 0) {
 			stepover = scene->get_finishing_pass_stepover();
@@ -652,13 +649,13 @@ static void create_toolpath(class scene *scene, int tool, bool roughing, bool ha
 					X = prevX + stepover / 3;
 					d = get_height_tool(X, Y, radius + offset, ballnose, vbit, angle) + offset - maxZ;
 					if (fabs(d - last_Z) > 0.5) {
-						line_to(input, last_X, last_Y, fmax(last_Z, d));
-						line_to(input, X, Y, fmax(last_Z, d));
+						line_to(input, mill,  last_X, last_Y, fmax(last_Z, d));
+						line_to(input, mill,  X, Y, fmax(last_Z, d));
 					}
 				}
 
 				if (!outside_area(X, Y, stl_image_X(), stl_image_Y(), diam))
-					line_to(input, X, Y, d);
+					line_to(input, mill,  X, Y, d);
 
 				prevX = X;
 				X = X + stepover;
@@ -669,10 +666,10 @@ static void create_toolpath(class scene *scene, int tool, bool roughing, bool ha
 			if (!outside_area(X, Y, stl_image_X(), stl_image_Y(), diam)) {
 				double d =  -maxZ + offset + get_height_tool(X, Y, radius + offset, ballnose, vbit, angle);
 				if (fabs(d - last_Z) > 0.1 && !first) {
-					line_to(input, last_X, last_Y, fmax(last_Z, d));
-					line_to(input, X, Y, fmax(last_Z, d));
+					line_to(input, mill,  last_X, last_Y, fmax(last_Z, d));
+					line_to(input, mill,  X, Y, fmax(last_Z, d));
 				}
-				line_to(input, X, Y, d);
+				line_to(input, mill,  X, Y, d);
 			}
 			prevX = X;
 			while (X > -overshoot) {
@@ -682,12 +679,12 @@ static void create_toolpath(class scene *scene, int tool, bool roughing, bool ha
 					X = prevX - stepover / 3;
 					d = get_height_tool(X, Y, radius + offset, ballnose, vbit, angle) + offset - maxZ;
 					if (fabs(d - last_Z) > 0.5) {
-						line_to(input, last_X, last_Y, fmax(last_Z, d));
-						line_to(input, X, Y, fmax(last_Z, d));
+						line_to(input, mill,  last_X, last_Y, fmax(last_Z, d));
+						line_to(input, mill,  X, Y, fmax(last_Z, d));
 					}
 				}
 
-				line_to(input, X, Y, d);
+				line_to(input, mill,  X, Y, d);
 
 				prevX = X;
 				X = X - stepover;
@@ -699,10 +696,10 @@ static void create_toolpath(class scene *scene, int tool, bool roughing, bool ha
 			if (Y < maxY && !outside_area(X, Y, stl_image_X(), stl_image_Y(), diam)) {
 					double d =  -maxZ + offset + get_height_tool(X, Y, radius + offset, ballnose, vbit, angle);
 					if (fabs(d - last_Z) > 0.1 && !first) {
-						line_to(input, last_X, last_Y, fmax(last_Z, d));
-						line_to(input, X, Y, fmax(last_Z, d));
+						line_to(input, mill,  last_X, last_Y, fmax(last_Z, d));
+						line_to(input, mill,  X, Y, fmax(last_Z, d));
 					}
-					line_to(input, X, Y, d);
+					line_to(input, mill,  X, Y, d);
 			}
 		}
 	}
@@ -724,14 +721,14 @@ static void create_toolpath(class scene *scene, int tool, bool roughing, bool ha
 					Y = prevY + stepover / 3;
 					d = get_height_tool(X, Y, radius + offset, ballnose, vbit, angle) + offset - maxZ;
 					if (fabs(d - last_Z) > 0.5) {
-						line_to(input, last_X, last_Y, fmax(last_Z, d));
-						line_to(input, X, Y, fmax(last_Z, d));
+						line_to(input, mill,  last_X, last_Y, fmax(last_Z, d));
+						line_to(input, mill,  X, Y, fmax(last_Z, d));
 					}
 				}
 
 
 				if (!outside_area(X, Y, stl_image_X(), stl_image_Y(), diam)) {
-					line_to(input, X, Y, d);
+					line_to(input, mill,  X, Y, d);
 				}
 				prevY = Y;
 				Y = Y + stepover;
@@ -742,10 +739,10 @@ static void create_toolpath(class scene *scene, int tool, bool roughing, bool ha
 			if (!outside_area(X, Y, stl_image_X(), stl_image_Y(), diam) &&  (X < maxX)) {
 					double d =  -maxZ + offset + get_height_tool(X, Y, radius + offset, ballnose, vbit, angle);
 					if (fabs(d - last_Z) > 0.1 && !first) {
-						line_to(input, last_X, last_Y, fmax(last_Z, d));
-						line_to(input, X, Y, fmax(last_Z, d));
+						line_to(input, mill,  last_X, last_Y, fmax(last_Z, d));
+						line_to(input, mill,  X, Y, fmax(last_Z, d));
 					}
-					line_to(input, X, Y, d);
+					line_to(input, mill,  X, Y, d);
 			}
 			prevY = Y;
 			while (Y > - overshoot) {
@@ -755,14 +752,14 @@ static void create_toolpath(class scene *scene, int tool, bool roughing, bool ha
 					Y = prevY - stepover / 3;
 					d = get_height_tool(X, Y, radius + offset, ballnose, vbit, angle) + offset - maxZ;
 					if (fabs(d - last_Z) > 0.5) {
-						line_to(input, last_X, last_Y, fmax(last_Z, d));
-						line_to(input, X, Y, fmax(last_Z, d));
+						line_to(input, mill,  last_X, last_Y, fmax(last_Z, d));
+						line_to(input, mill,  X, Y, fmax(last_Z, d));
 					}
 				}
 
 
 				if (!outside_area(X, Y, stl_image_X(), stl_image_Y(), diam))
-					line_to(input, X, Y, d);
+					line_to(input, mill,  X, Y, d);
 				prevY = Y;
 				Y = Y - stepover;
 			}
@@ -773,10 +770,10 @@ static void create_toolpath(class scene *scene, int tool, bool roughing, bool ha
 			if (!outside_area(X, Y, stl_image_X(), stl_image_Y(), diam) &&  (X < maxX)) {
 					double d =  -maxZ + offset + get_height_tool(X, Y, radius + offset, ballnose, vbit, angle);
 					if (fabs(d - last_Z) > 0.1 && !first) {
-						line_to(input, last_X, last_Y, fmax(last_Z, d));
-						line_to(input, X, Y, fmax(last_Z, d));
+						line_to(input, mill,  last_X, last_Y, fmax(last_Z, d));
+						line_to(input, mill,  X, Y, fmax(last_Z, d));
 					}
-					line_to(input, X, Y, d);
+					line_to(input, mill,  X, Y, d);
 			}
 
 		}
@@ -787,9 +784,9 @@ static void create_toolpath(class scene *scene, int tool, bool roughing, bool ha
 }
 
 
-static void process_vertical(class scene *scene, int tool, bool roughing)
+static void process_vertical(class scene *scene, class endmill *mill, bool roughing)
 {
-	double	radius = tool_diam(tool)/2 + 0.001;
+	double	radius = mill->get_diameter()/2 + 0.001;
 	double offset = 0;
 	struct line *lines;
 	int i, nexti;
@@ -799,9 +796,10 @@ static void process_vertical(class scene *scene, int tool, bool roughing)
 
 	double maxZ = scene->get_cutout_depth();
 
-	toolnr = tool;
-	/* not doing tapered ballnoses */
-	if (tool_is_ballnose(toolnr))
+	/* not doing tapered ballnoses or vbits */
+	if (mill->is_ballnose())
+		return;
+	if (mill->is_vbit())
 		return;
 
 	input = new(class inputshape);
@@ -877,20 +875,20 @@ static void process_vertical(class scene *scene, int tool, bool roughing)
 				if (d > 0)
 					continue;
 				if (fabs(d - last_Z) > 0.2 && !first) {
-					line_to(input, last_X, last_Y, fmin(fmax(last_Z, d), 0.1));
-					line_to(input, X, Y, fmin(fmax(last_Z, d), 0.1));
+					line_to(input, mill,  last_X, last_Y, fmin(fmax(last_Z, d), 0.1));
+					line_to(input, mill,  X, Y, fmin(fmax(last_Z, d), 0.1));
 				}
-				line_to(input, X, Y, d);
+				line_to(input, mill,  X, Y, d);
 //				printf("line %5.4f %5.4f %5.4f\n", X, Y, d);
 			}
 #if 1
 			d = get_height_tool(X2, Y2, radius, false, false, 0) + offset - maxZ;
 			if (fabs(d - last_Z) > 0.2 && !first && d <= 0) {
-					line_to(input, last_X, last_Y, fmin(fmax(last_Z, d), 0.1));
-					line_to(input, X2, Y2, fmin(fmax(last_Z, d), 0.1));
+					line_to(input, mill,  last_X, last_Y, fmin(fmax(last_Z, d), 0.1));
+					line_to(input, mill,  X2, Y2, fmin(fmax(last_Z, d), 0.1));
 			}
 			if (d < 0 && !first)
-				line_to(input, X2, Y2, d);
+				line_to(input, mill,  X2, Y2, d);
 #endif
 			lines[i].valid = 0;
 			nexti = -1;
@@ -949,7 +947,7 @@ void process_stl_file(class scene *scene, const char *filename, int flip)
 
 		tooldepth = get_tool_maxdepth();
 
-		process_vertical(scene, scene->get_tool_nr(i), i < (int)scene->get_tool_count() - 1);
+		process_vertical(scene, get_endmill(scene->get_tool_nr(i)), i < (int)scene->get_tool_count() - 1);
 
 		/* only for the first roughing tool do we need to honor the max tool depth */
 		if (i != 0) 
@@ -967,7 +965,7 @@ void process_stl_file(class scene *scene, const char *filename, int flip)
 	}
 	if (!omit_cutout) { 
 		activate_tool(scene->get_tool_nr(0));
-		create_cutout(scene, scene->get_tool_nr(0));
+		create_cutout(scene, get_endmill(scene->get_tool_nr(0)));
 	}
 }
 
