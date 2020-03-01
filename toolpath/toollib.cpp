@@ -32,7 +32,6 @@ struct tool {
 	bool printed;
 };
 
-static vector<struct tool *> tools;
 static vector<class endmill *> endmills;
 
 static struct tool * current;
@@ -97,27 +96,6 @@ static void push_word(char *word, int level)
         current->plungerate_ipm = strtod(word, NULL);
 }
 
-static void print_tool(struct tool *current)
-{
-	if (!current->printed || verbose) {
-	    qprintf("Tool %i (%s)\n", current->number, current->name);
-	    qprintf("\tDiameter     : %5.3f\"  (%5.1f mm)\n", current->diameter_inch, inch_to_mm(current->diameter_inch));
-	    qprintf("\tDepth of cut : %5.3f\"  (%5.1f mm)\n", current->depth_inch, inch_to_mm(current->depth_inch));
-	    qprintf("\tFeedrate     : %5.0f ipm (%5.0f mmpm)\n", current->feedrate_ipm, ipm_to_metric(current->feedrate_ipm));
-	    qprintf("\tPlungerate   : %5.0f ipm (%5.0f mmpm)\n", current->plungerate_ipm, ipm_to_metric(current->plungerate_ipm));
-	}
-	current->printed = true;
-}
-
-static bool compare_tools(struct tool *A, struct tool *B)
-{
-	if (A->diameter_inch > B->diameter_inch)
-		return true;
-	if (A->diameter_inch < B->diameter_inch)
-		return false;
-	return (A->number < B->number);
-}
-
 static bool compare_endmills(class endmill *A, class endmill *B)
 {
 	if (A->get_diameter() > B->get_diameter())
@@ -129,20 +107,16 @@ static bool compare_endmills(class endmill *A, class endmill *B)
 
 void print_tools(void)
 {
-    for (auto tool : tools)
-        print_tool(tool);
+    for (auto endmill : endmills)
+        endmill->print();
 }
 
 static void finish_tool(void)
 {
 	class endmill *mill;
     current->svgcolor = colors[colornr++];
-    if (colornr >= 8)
-        colornr = 0;
-    tools.push_back(current);
-    if (verbose) {
-        print_tool(current);
-    }
+	if (colornr >= 8)
+		colornr = 0;
 
 	if (current->is_vcarve) {
 		mill = new(class endmill_vbit);
@@ -162,24 +136,28 @@ static void finish_tool(void)
 
 	endmills.push_back(mill);
 
+    if (verbose) {
+        mill->print();
+    }
+	free(current);
     current = NULL;
 }
 
 const char * tool_svgcolor(int toolnr)
 {
     toolnr = abs(toolnr);
-    for (auto tool : tools)
-        if (tool->number == toolnr)
-            return tool->svgcolor;
+    for (auto endmill : endmills)
+        if (endmill->get_tool_nr() == toolnr)
+            return endmill->get_svgcolor();
     return "black";
 }
 
 double tool_diam(int toolnr)
 {
     toolnr = abs(toolnr);
-    for (auto tool : tools)
-        if (tool->number == toolnr)
-            return inch_to_mm(tool->diameter_inch);
+    for (auto endmill : endmills)
+        if (endmill->get_tool_nr() == toolnr)
+            return endmill->get_diameter();
     return 0;
 }
 
@@ -187,36 +165,36 @@ double tool_diam(int toolnr)
 double get_tool_stepover(int toolnr)
 {
     toolnr = abs(toolnr);
-    for (auto tool : tools)
-        if (tool->number == toolnr)
-            return inch_to_mm( tool->diameter_inch/2);
+    for (auto endmill : endmills)
+        if (endmill->get_tool_nr() == toolnr)
+            return endmill->get_stepover();
     return 0.125;
 }
 
 int tool_is_vcarve(int toolnr)
 {
     toolnr = abs(toolnr);
-    for (auto tool : tools)
-        if (tool->number == toolnr && tool->is_vcarve)
-            return 1;
+    for (auto endmill : endmills)
+        if (endmill->get_tool_nr() == toolnr)
+			return endmill->is_vbit();
     return 0;
 }
 
 int tool_is_ballnose(int toolnr)
 {
     toolnr = abs(toolnr);
-    for (auto tool : tools)
-        if (tool->number == toolnr && tool->is_ballnose)
-            return 1;
+    for (auto endmill : endmills)
+        if (endmill->get_tool_nr() == toolnr)
+			return endmill->is_ballnose();
     return 0;
 }
 
 double get_tool_angle(int toolnr)
 {
     toolnr = abs(toolnr);
-    for (auto tool : tools)
-        if (tool->number == toolnr)
-            return tool->angle;
+    for (auto endmill : endmills)
+        if (endmill->get_tool_nr() == toolnr)
+            return endmill->get_angle();
     return 0;
 }
 
@@ -271,15 +249,14 @@ void read_tool_lib(const char *filename)
         linenr++;
     }
     fclose(file);
-	sort(tools.begin(), tools.end()  , compare_tools);    
 	sort(endmills.begin(), endmills.end()  , compare_endmills);    
 }
 
 int have_tool(int nr)
 {
     nr = abs(nr);
-    for (auto tool : tools)
-        if (tool->number == nr)
+    for (auto endmill : endmills)
+        if (endmill->get_tool_nr() == nr)
             return 1;
     return 0;
 }
@@ -288,16 +265,16 @@ int have_tool(int nr)
 const char * get_tool_name(int nr)
 {
     nr = abs(nr);
-    for (auto tool : tools)
-        if (tool->number == nr)
-            return tool->name;
+    for (auto endmill : endmills)
+        if (endmill->get_tool_nr() == nr)
+            return endmill->get_tool_name();
     return "<none>";
 }
 
 int first_tool(void)
 {
-    for (auto tool : tools)
-		return tool->number;
+    for (auto endmill : endmills)
+		return endmill->get_tool_nr();
     return -1;
 }
 
@@ -306,10 +283,10 @@ int next_tool(int nr)
 {
 	bool prevhit = false;
     nr = abs(nr);
-    for (auto tool : tools) {
+    for (auto endmill : endmills) {
 		if (prevhit)
-			return tool->number;
-        if (tool->number == nr)
+			return endmill->get_tool_nr();
+        if (endmill->get_tool_nr() == nr)
             prevhit = true;
 	}
     return -1;
@@ -319,11 +296,12 @@ void activate_tool(int nr)
 {
     char toolnr[32];
     nr = abs(nr);
-    for (auto tool : tools)
-        if (tool->number == nr) {
-            sprintf(toolnr, "T%i", tool->number);
-            print_tool(tool);
-            set_tool_imperial(toolnr, nr, tool->diameter_inch, tool->diameter_inch/2, tool->depth_inch, tool->feedrate_ipm, tool->plungerate_ipm);
+    for (auto endmill : endmills)
+        if (endmill->get_tool_nr() == nr) {
+            sprintf(toolnr, "T%i", endmill->get_tool_nr());
+            endmill->print();
+            set_tool_metric(toolnr, nr, endmill->get_diameter(), endmill->get_stepover(), endmill->get_depth_of_cut(), endmill->get_feedrate(), 
+				endmill->get_plungerate());
         }
 }
 

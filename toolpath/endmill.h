@@ -44,6 +44,7 @@ public:
 
 	int get_tool_nr(void)			{ return toolnr; };
 	const char *get_tool_name(void)	{ return name; };
+	const char *get_svgcolor(void)  { return svgcolor; };
 
 
 /* virtual methods that differ per endmill type */
