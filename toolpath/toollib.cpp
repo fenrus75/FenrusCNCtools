@@ -6,6 +6,7 @@
 
 #include <algorithm>
 
+#include "endmill.h"
 extern "C" {
     #include "toolpath.h"
 }
@@ -32,6 +33,7 @@ struct tool {
 };
 
 static vector<struct tool *> tools;
+static vector<class endmill *> endmills;
 
 static struct tool * current;
 
@@ -116,6 +118,15 @@ static bool compare_tools(struct tool *A, struct tool *B)
 	return (A->number < B->number);
 }
 
+static bool compare_endmills(class endmill *A, class endmill *B)
+{
+	if (A->get_diameter() > B->get_diameter())
+		return true;
+	if (A->get_diameter() < B->get_diameter())
+		return false;
+	return (A->get_tool_nr() < B->get_tool_nr());
+}
+
 void print_tools(void)
 {
     for (auto tool : tools)
@@ -124,6 +135,7 @@ void print_tools(void)
 
 static void finish_tool(void)
 {
+	class endmill *mill;
     current->svgcolor = colors[colornr++];
     if (colornr >= 8)
         colornr = 0;
@@ -131,6 +143,25 @@ static void finish_tool(void)
     if (verbose) {
         print_tool(current);
     }
+
+	if (current->is_vcarve) {
+		mill = new(class endmill_vbit);
+	} else if (current->is_ballnose) {
+		mill = new(class endmill_ballnose);
+	} else {
+		mill = new(class endmill);
+	}
+
+	mill->set_tool_nr(current->number);
+	mill->set_name(current->name);
+	mill->set_diameter_inch(current->diameter_inch);
+	mill->set_depth_inch(current->depth_inch);
+	mill->set_feedrate_ipm(current->feedrate_ipm);
+	mill->set_plungerate_ipm(current->plungerate_ipm);
+	mill->set_angle(current->angle);
+
+	endmills.push_back(mill);
+
     current = NULL;
 }
 
@@ -241,6 +272,7 @@ void read_tool_lib(const char *filename)
     }
     fclose(file);
 	sort(tools.begin(), tools.end()  , compare_tools);    
+	sort(endmills.begin(), endmills.end()  , compare_endmills);    
 }
 
 int have_tool(int nr)
