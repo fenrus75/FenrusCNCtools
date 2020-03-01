@@ -302,6 +302,7 @@ void scene::create_toolpaths(void)
     currentdepth = depth;
     toolnr = toollist[tool];  
 	class endmill *mill;
+	class endmill *mill0 = get_endmill(toollist[0]);
     activate_tool(toolnr);
 	mill = get_endmill(toolnr);
   
@@ -314,7 +315,7 @@ void scene::create_toolpaths(void)
     depthstep = depthstep - surplus / 2;
 
 
-    if (want_finishing_pass() && !tool_is_vcarve(toollist[tool])) {
+    if (want_finishing_pass() && !mill->is_vbit()) {
       /* finishing rules: deepest cut is small, 2x stock_to_leave */
       depthstep = fmin(depthstep, stock_to_leave * 2);
       finish  = 1;
@@ -331,11 +332,10 @@ void scene::create_toolpaths(void)
     
     /* if tool 0 is a vcarve bit, tool 1 needs to start at radius at depth of cut */
     /* and all others need an offset */
-    if (tool > 0 && tool_is_vcarve(toollist[0])) {
-      double angle = get_tool_angle(toollist[0]);
-      if (tool == 1)
-        start = 0;
-      start += depth_to_radius(depth, angle); 
+    if (tool > 0 && mill0->is_vbit()) {
+		if (tool == 1)
+			start = 0;
+		start += mill0->distance_of_geometry(depth);
     }
       
     if (tool > 0) {
@@ -344,7 +344,7 @@ void scene::create_toolpaths(void)
 		end = prevmill->get_diameter()/2 + 0.2;
 	}
       
-    if (tool == 1 && tool_is_vcarve(toollist[0]))
+    if (tool == 1 && mill0->is_vbit())
       end = 600000000;
       
       
@@ -371,11 +371,10 @@ void scene::create_toolpaths(void)
     
 		    /* if tool 0 is a vcarve bit, tool 1 needs to start at radius at depth of cut */
 		    /* and all others need an offset */
-		    if (tool > 0 and tool_is_vcarve(toollist[0])) {
-		      double angle = get_tool_angle(toollist[0]);
+		    if (tool > 0 && mill0->is_vbit()) {
 		      if (tool == 1)
 		        start = 0;
-		      start += depth_to_radius(currentdepth, angle);
+		      start += mill0->distance_of_geometry(currentdepth);
 		    }
 
 
