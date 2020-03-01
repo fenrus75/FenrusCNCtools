@@ -548,22 +548,22 @@ static bool should_vcarve(class inputshape *shape, double X1, double Y1, double 
 	return false;
 }
 
-static void process_vcarve(class toollevel *tool, double X1, double Y1, double X2, double Y2, bool is_inner_bisector, bool is_bisector, double angle, class scene *parent, double maxdepth, class inputshape *shape, double z_offset)
+static void process_vcarve(class toollevel *tool, double X1, double Y1, double X2, double Y2, bool is_inner_bisector, bool is_bisector, class endmill *mill, class scene *parent, double maxdepth, class inputshape *shape, double z_offset)
 {
 	double d1, d2;
 
 	if (dist(X1, Y1, X2, Y2) > 1 && is_inner_bisector) {
-		process_vcarve(tool, X1, Y1, (X1 + X2)/2, (Y1 + Y2)/2, is_inner_bisector, is_bisector, angle, parent, maxdepth, shape,  z_offset);
-		process_vcarve(tool, (X1 + X2)/2, (Y1 + Y2)/2, X2, Y2, is_inner_bisector, is_bisector, angle, parent, maxdepth, shape,  z_offset);
+		process_vcarve(tool, X1, Y1, (X1 + X2)/2, (Y1 + Y2)/2, is_inner_bisector, is_bisector, mill, parent, maxdepth, shape,  z_offset);
+		process_vcarve(tool, (X1 + X2)/2, (Y1 + Y2)/2, X2, Y2, is_inner_bisector, is_bisector, mill, parent, maxdepth, shape,  z_offset);
 		return;
     }
 
-	d1 = radius_to_depth(parent->distance_from_edge(X1, Y1, false), angle);
-    d2 = radius_to_depth(parent->distance_from_edge(X2, Y2, false), angle);
+	d1 = mill->geometry_at_distance(parent->distance_from_edge(X1, Y1, false));
+	d2 = mill->geometry_at_distance(parent->distance_from_edge(X2, Y2, false));
 
 	if (fabs(d2-d1) > 0.4 && is_inner_bisector) {
-		process_vcarve(tool, X1, Y1, (X1 + X2)/2, (Y1 + Y2)/2, is_inner_bisector, is_bisector, angle, parent, maxdepth, shape,  z_offset);
-		process_vcarve(tool, (X1 + X2)/2, (Y1 + Y2)/2, X2, Y2, is_inner_bisector, is_bisector, angle, parent, maxdepth, shape,  z_offset);
+		process_vcarve(tool, X1, Y1, (X1 + X2)/2, (Y1 + Y2)/2, is_inner_bisector, is_bisector, mill, parent, maxdepth, shape,  z_offset);
+		process_vcarve(tool, (X1 + X2)/2, (Y1 + Y2)/2, X2, Y2, is_inner_bisector, is_bisector, mill, parent, maxdepth, shape,  z_offset);
 		return;
 	}
 
@@ -591,8 +591,8 @@ static void process_vcarve(class toollevel *tool, double X1, double Y1, double X
                     double x1,y1,x2,y2,x3,y3,x4,y4;
                     double r1, r2;
                     
-                    r1 = depth_to_radius(fabs(maxdepth) - fabs(d1), angle);
-                    r2 = depth_to_radius(fabs(maxdepth) - fabs(d2), angle); 
+                    r1 = mill->distance_of_geometry(fabs(maxdepth) - fabs(d1));
+                    r2 = mill->distance_of_geometry(fabs(maxdepth) - fabs(d2)); 
                     
 //                    printf("D2R1  %5.2f   ->   %5.2f    %5.3f, %5.3f \n", depth_to_radius(d1, angle), r1,X1,Y1);
 //                    printf("D2R2  %5.2f   ->   %5.2f    %5.3f, %5.3f \n", depth_to_radius(d2, angle), r2,X2,Y2);
@@ -613,7 +613,7 @@ static void process_vcarve(class toollevel *tool, double X1, double Y1, double X
                       if (isnan(x1) || isnan(x2) || isnan(y1) || isnan(y2)) {
                         printf("%5.5f,%5.5f   -> %5.5f,%5.5f\n", X1, Y1, X2, Y2);
                         printf("d1 %5.2f   d2 %5.2f\n", d1, d2);
-                        printf("d2r %5.5f  %5.5f\n", depth_to_radius(fabs(d1) - fabs(maxdepth),angle), depth_to_radius(fabs(d2) - fabs(maxdepth), angle));
+//                        printf("d2r %5.5f  %5.5f\n", depth_to_radius(fabs(d1) - fabs(maxdepth),angle), depth_to_radius(fabs(d2) - fabs(maxdepth), angle));
                         printf("x1 %5.2f y1 %5.2f   x2 %5.2f  y2 %5.2f\n", x1, y1, x2, y2);
                         printf("x3 %5.2f y3 %5.2f   x4 %5.2f  y4 %5.2f\n", x3, y3, x4, y4);
                       }
@@ -622,13 +622,13 @@ static void process_vcarve(class toollevel *tool, double X1, double Y1, double X
 
 					  p->push_back(Point(x1, y1));
     	              p->push_back(Point(x2, y2));
-                      tool->diameter = depth_to_radius(maxdepth, angle) * 2;
+                      tool->diameter = mill->distance_of_geometry(maxdepth) * 2;
                       tool->add_poly_vcarve(p, maxdepth + z_offset, maxdepth + z_offset, 0, "cyan");
                     
                       Polygon_2 *p2 = new(Polygon_2);
 					  p2->push_back(Point(x3, y3));
         	          p2->push_back(Point(x4, y4));
-                      tool->diameter = depth_to_radius(maxdepth, angle) * 2;
+                      tool->diameter = mill->distance_of_geometry(maxdepth) * 2;
                       tool->add_poly_vcarve(p2, maxdepth + z_offset, maxdepth + z_offset, 0, "purple");
                     }
                 
@@ -728,7 +728,6 @@ static void process_vcarve(class toollevel *tool, double X1, double Y1, double X
 void inputshape::create_toolpaths_vcarve(int toolnr, double maxdepth, double stock_to_leave)
 {
 	class endmill *mill = get_endmill(toolnr);
-    double angle = mill->get_angle();
     if (!polyhole) {
         polyhole = new PolygonWithHoles(poly);
         for (auto i : children)
@@ -746,7 +745,7 @@ void inputshape::create_toolpaths_vcarve(int toolnr, double maxdepth, double sto
 		double diameter;
 	    class tooldepth * td = new(class tooldepth);
 
-		diameter = depth_to_radius(maxdepth, angle);
+		diameter = mill->distance_of_geometry(maxdepth);
 
 	    tooldepths.push_back(td);
 		td->depth = maxdepth + z_offset;
@@ -830,7 +829,7 @@ void inputshape::create_toolpaths_vcarve(int toolnr, double maxdepth, double sto
             X2 = point_snap2(CGAL::to_double(x->opposite()->vertex()->point().x()));
             Y2 = point_snap2(CGAL::to_double(x->opposite()->vertex()->point().y()));
             
-			process_vcarve(tool, X1, Y1, X2, Y2, x->is_inner_bisector(), x->is_bisector(), angle, parent, maxdepth, this, z_offset + stock_to_leave);
+			process_vcarve(tool, X1, Y1, X2, Y2, x->is_inner_bisector(), x->is_bisector(), mill, parent, maxdepth, this, z_offset + stock_to_leave);
     }
 }
 

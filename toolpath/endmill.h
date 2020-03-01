@@ -53,6 +53,9 @@ public:
 	virtual bool is_vbit(void)			{ return false; };
 	virtual bool is_ballnose(void)		{ return false; };
 	virtual void print(void);
+
+	virtual double geometry_at_distance(double R);
+	virtual double distance_of_geometry(double H);
 private:
 	int toolnr;
 	double diameter;
@@ -69,12 +72,16 @@ private:
 class endmill_vbit : public endmill {
 public:
 	virtual bool is_vbit(void)			{ return true; };
+	virtual double geometry_at_distance(double R);
+	virtual double distance_of_geometry(double H);
 	
 };
 
 class endmill_ballnose : public endmill {
 public:
 	virtual bool is_ballnose(void)		{ return true; };
+	virtual double geometry_at_distance(double R);
+	virtual double distance_of_geometry(double H);
 };
 
 
