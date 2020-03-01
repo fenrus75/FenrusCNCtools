@@ -68,7 +68,6 @@ extern const char * get_tool_name(int nr);
 extern void activate_tool(int nr);
 extern void print_tools(void);
 extern const char * tool_svgcolor(int toolnr);
-extern double get_tool_stepover(int toolnr);
 extern void gcode_tool_change(int toolnr);
 extern double get_tool_angle(int toolnr);
 extern int tool_is_vcarve(int toolnr);

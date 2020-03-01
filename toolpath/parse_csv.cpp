@@ -17,6 +17,7 @@
 extern "C" {
 #include "toolpath.h"
 }
+#include "endmill.h"
 
 static double pxratio = 25.4 / 96.0;
 static inline double px_to_mm2(double px) { return pxratio * px ; };
@@ -55,7 +56,7 @@ static void chr_replace(char *line, char a, char r)
     } while (c);
 }
 
-static void line_to(class inputshape *input, double X2, double Y2, double Z2)
+static void line_to(class inputshape *input, class endmill *mill, double X2, double Y2, double Z2)
 {
 	double X1 = last_X, Y1 = last_Y, Z1 = last_Z;
 	unsigned int depth = 0;
@@ -78,18 +79,18 @@ static void line_to(class inputshape *input, double X2, double Y2, double Z2)
 		while (input->tooldepths.size() <= depth) {
 				class tooldepth * td = new(class tooldepth);
 				td->depth = Z1;
-				td->toolnr = toolnr;
-				td->diameter = get_tool_diameter();
+				td->toolnr = mill->get_tool_nr();
+				td->diameter = mill->get_diameter();
 				input->tooldepths.push_back(td);				
 		}
 
 		if (input->tooldepths[depth]->toollevels.size() < 1) {
 					class toollevel *tool = new(class toollevel);
 					tool->level = 0;
-					tool->offset = get_tool_diameter();
-					tool->diameter = get_tool_diameter();
+					tool->offset = mill->get_diameter();
+					tool->diameter = mill->get_diameter();
 					tool->depth = Z1;
-					tool->toolnr = toolnr;
+					tool->toolnr = mill->get_tool_nr();
 					tool->minY = 0;
 					tool->name = "Manual toolpath";
 					input->tooldepths[depth]->toollevels.push_back(tool);
@@ -106,7 +107,7 @@ static void line_to(class inputshape *input, double X2, double Y2, double Z2)
 }
 
 
-static void circle(class inputshape *input, double X, double Y, double Z, double R)
+static void circle(class inputshape *input, class endmill *mill, double X, double Y, double Z, double R)
 {
     double phi;
 	first = true;
@@ -116,17 +117,17 @@ static void circle(class inputshape *input, double X, double Y, double Z, double
         double P;
         P = phi / 360.0 * 2 * M_PI;
 		if (first || dist(X + R * cos(P), Y + R * sin(P), last_X, last_Y) > 0.2 || phi >= 359)
-			line_to(input, X + R * cos(P), Y + R * sin(P), Z );
+			line_to(input, mill, X + R * cos(P), Y + R * sin(P), Z );
         phi = phi + 1;
     }
 	first = true;
 	prio = 0;
 }
 
-static void sphere(class scene *scene, double X, double Y, double Z, double R)
+static void sphere(class scene *scene, class endmill *mill, double X, double Y, double Z, double R)
 {
 	double z = - R;
-	double so = get_tool_stepover(toolnr);
+	double so = mill->get_stepover();
 	double maxz;
 
 	class inputshape *input;
@@ -145,7 +146,7 @@ static void sphere(class scene *scene, double X, double Y, double Z, double R)
 
 		r  = sqrt(R * R - z * z);
 
-		circle(input, X, Y, Z + z, r);
+		circle(input, mill, X, Y, Z + z, r);
 		r += so;
 		if (r > R)
 			r = R;
@@ -164,7 +165,7 @@ static void sphere(class scene *scene, double X, double Y, double Z, double R)
 }
 
 
-static void cubic_bezier(class inputshape *inputshape,
+static void cubic_bezier(class inputshape *inputshape, class endmill *mill,
                          double x0, double y0, double z0,
                          double x1, double y1, double z1,
                          double x2, double y2, double z2,
@@ -196,7 +197,7 @@ static void cubic_bezier(class inputshape *inputshape,
         nY = (1-t)*(1-t)*(1-t)*y0 + 3*(1-t)*(1-t)*t*y1 + 3 * (1-t)*t*t*y2 + t*t*t*y3;
         nZ = (1-t)*(1-t)*(1-t)*z0 + 3*(1-t)*(1-t)*t*z1 + 3 * (1-t)*t*t*z2 + t*t*t*z3;
         if (dist3(lX,lY,lZ,nX,nY,nZ) >= detail_threshold) {
-            line_to(inputshape, nX, nY, nZ);
+            line_to(inputshape, mill, nX, nY, nZ);
             lX = nX;
             lY = nY;
 			lZ = nZ;
@@ -204,10 +205,10 @@ static void cubic_bezier(class inputshape *inputshape,
         t = t + delta;
     }
 
-	line_to(inputshape, x3, y3, z3);
+	line_to(inputshape, mill, x3, y3, z3);
 }                    
 
-static void quadratic_bezier(class inputshape *inputshape,
+static void quadratic_bezier(class inputshape *inputshape, class endmill *mill,
                          double x0, double y0, double z0,
                          double x1, double y1, double z1,
                          double x3, double y3, double z3)
@@ -239,17 +240,17 @@ static void quadratic_bezier(class inputshape *inputshape,
         nY = (1-t)*(1-t)*y0 + 2*(1-t)*t*y1 + t*t*y3;
         nZ = (1-t)*(1-t)*z0 + 2*(1-t)*t*z1 + t*t*z3;
         if (dist3(lX,lY,lZ, nX,nY,nZ) >= detail_threshold) {
-            line_to(inputshape, nX, nY, nZ);
+            line_to(inputshape, mill, nX, nY, nZ);
             lX = nX;
             lY = nY;
 			lZ = nZ;
         }
         t = t + delta;
     }
-	line_to(inputshape, x3, y3, z3);
+	line_to(inputshape, mill, x3, y3, z3);
 }                    
 
-static bool parse_line(class scene *scene, class inputshape *inputshape, char *line)
+static bool parse_line(class scene *scene, class inputshape *inputshape, class endmill *mill, char *line)
 {
     char *c;
 
@@ -290,17 +291,17 @@ static bool parse_line(class scene *scene, class inputshape *inputshape, char *l
 
     switch (argcount) {
         case 3:
-			line_to(inputshape, arg1, arg2, arg3);
+			line_to(inputshape, mill, arg1, arg2, arg3);
             break;
 		case 4:
-			sphere(scene, arg1, arg2, arg3, arg4);
+			sphere(scene, mill, arg1, arg2, arg3, arg4);
 			need_new_input = true;
 			break;
         case 9:
-            cubic_bezier(inputshape, last_X, last_Y, last_Z, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9);
+            cubic_bezier(inputshape, mill, last_X, last_Y, last_Z, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9);
             break;
         case 6:
-            quadratic_bezier(inputshape, last_X, last_Y, last_Z, arg1, arg2, arg3, arg4, arg5, arg6);
+            quadratic_bezier(inputshape, mill, last_X, last_Y, last_Z, arg1, arg2, arg3, arg4, arg5, arg6);
             break;
 		case 0:
             first = true;
@@ -324,7 +325,7 @@ static inline double distance(double x0, double y0, double x1, double y1)
 /*
 <circle cx="440.422" cy="312.878" r="12" stroke="black" stroke-width="1" fill="none" />
 */
-static void parse_circle(class inputshape *input, char *line, double depth)
+static void parse_circle(class inputshape *input, class endmill *mill, char *line, double depth)
 {
     char *cx, *cy, *r;
     double X,Y,R,phi;
@@ -344,7 +345,7 @@ static void parse_circle(class inputshape *input, char *line, double depth)
         double P;
         P = phi / 360.0 * 2 * M_PI;
 		
-        line_to(input, px_to_mm2(X + R * cos(P)), px_to_mm2(svgheight -Y + R * sin(P)), depth);
+        line_to(input, mill, px_to_mm2(X + R * cos(P)), px_to_mm2(svgheight -Y + R * sin(P)), depth);
         phi = phi + 1;
     }
     last_X = X;
@@ -367,7 +368,7 @@ static double get_depth_ratio(char *c)
 	return a / 255.0;		
 }
 
-static void push_chunk(class inputshape *input, char *chunk, char *line, double depth)
+static void push_chunk(class inputshape *input, class endmill *mill, char *chunk, char *line, double depth)
 {
     char command;
     char *c;
@@ -402,7 +403,7 @@ static void push_chunk(class inputshape *input, char *chunk, char *line, double 
         case 'L':
 //            printf("Linee         : %5.2f %5.2f\n", arg1, arg2);
 
-			line_to(input, px_to_mm2(arg1), px_to_mm2(svgheight - arg2), Z);
+			line_to(input, mill, px_to_mm2(arg1), px_to_mm2(svgheight - arg2), Z);
             break;
         case 'M':
 //            printf("Start of poly: %5.2f %5.2f\n", arg1, arg2);
@@ -430,14 +431,14 @@ static void push_chunk(class inputshape *input, char *chunk, char *line, double 
 			/* fall through */
         case 'H':
 //            printf("Start of poly: %5.2f %5.2f\n", arg1, arg2);
-			line_to(input, px_to_mm2(arg1) + adder, last_Y, Z);
+			line_to(input, mill, px_to_mm2(arg1) + adder, last_Y, Z);
             break;
 		case 'v':
 			/* fall through */
 			adder = last_Y - px_to_mm2(svgheight);
         case 'V':
 //            printf("Start of poly: %5.2f %5.2f\n", arg1, arg2);
-			line_to(input, last_X, px_to_mm2(svgheight-arg1) + adder, Z);
+			line_to(input, mill, last_X, px_to_mm2(svgheight-arg1) + adder, Z);
             break;
 #if 0
 		case 'c':
@@ -451,17 +452,17 @@ static void push_chunk(class inputshape *input, char *chunk, char *line, double 
 #endif
 #if 0
         case 'C':
-            cubic_bezier(input, last_X, -last_Y, arg1, -arg2, arg3, -arg4, arg5, -arg6);
+            cubic_bezier(input, mill, last_X, -last_Y, arg1, -arg2, arg3, -arg4, arg5, -arg6);
             last_X = arg5;
             last_Y = arg6;
             break;
         case 'Q':
-            quadratic_bezier(input, last_X, -last_Y, px_to_mm2(arg1), -px_to_mm2(arg2), px_to_mm2(arg3), -px_to_mm2(arg4));
+            quadratic_bezier(input, mill, last_X, -last_Y, px_to_mm2(arg1), -px_to_mm2(arg2), px_to_mm2(arg3), -px_to_mm2(arg4));
             break;
 #endif
         case 'Z':
         case 'z':
-			line_to(input, start_X, start_Y, start_Z);
+			line_to(input, mill, start_X, start_Y, start_Z);
             first = true;
             break;
         default:
@@ -482,7 +483,7 @@ static void strip_str(char *line)
 
 static double depthratio = 1.0;
 
-static void parse_svg_line(class inputshape *input, char *line, double depth)
+static void parse_svg_line(class inputshape *input, class endmill *mill, char *line, double depth)
 {
     char *c;
     char chunk[4095];
@@ -518,7 +519,7 @@ static void parse_svg_line(class inputshape *input, char *line, double depth)
     
     c = strstr(line,"<circle cx=");
     if (c) {
-        parse_circle(input, line, depth * depthratio);
+        parse_circle(input, mill, line, depth * depthratio);
     }
     c = strstr(line, " d=\"");
     if (c == NULL)
@@ -535,7 +536,7 @@ static void parse_svg_line(class inputshape *input, char *line, double depth)
         } else {
             strip_str(chunk);
             if (strlen(chunk) > 0)
-                push_chunk(input, chunk, line, depth * depthratio);
+                push_chunk(input, mill, chunk, line, depth * depthratio);
             memset(chunk, 0, sizeof(chunk));
             chunk[strlen(chunk)] = *c;           
         }
@@ -543,10 +544,10 @@ static void parse_svg_line(class inputshape *input, char *line, double depth)
     }
     strip_str(chunk);
     if (strlen(chunk) > 0)
-        push_chunk(input, chunk, line, depth * depthratio);
+        push_chunk(input, mill, chunk, line, depth * depthratio);
 }
 
-static void parse_direct_svg(class scene *scene, const char *filename, int tool)
+static void parse_direct_svg(class scene *scene, const char *filename, class endmill *mill)
 {
 	class inputshape *input;
 
@@ -568,7 +569,7 @@ static void parse_direct_svg(class scene *scene, const char *filename, int tool)
         char line[40960];
         ret = fgets(&line[0], sizeof(line), file);
         if (ret) {
-            parse_svg_line(input, line, -scene->get_depth());
+            parse_svg_line(input, mill, line, -scene->get_depth());
         }
     }
     fclose(file);
@@ -579,14 +580,16 @@ static void parse_direct_svg(class scene *scene, const char *filename, int tool)
 void parse_csv_file(class scene *scene, const char *filename, int tool)
 {
     FILE *file;
+	class endmill *mill;
 
-	toolnr = tool;
-	tooldepth = get_tool_maxdepth();
+	mill = get_endmill(tool);
+
+	tooldepth = mill->get_depth_of_cut();
 
 	qprintf("Using tool %i with max depth of cut %5.2fmm\n", toolnr, tooldepth);
 
 	if (strstr(filename, ".svg") != NULL) {
-		parse_direct_svg(scene, filename, tool);
+		parse_direct_svg(scene, filename, mill);
 		return;
 	}
 
@@ -609,7 +612,7 @@ void parse_csv_file(class scene *scene, const char *filename, int tool)
         char line[40960];
 	ret = fgets(line, sizeof(line), file);
         if (ret) {
-			if (parse_line(scene, input, line)) {
+			if (parse_line(scene, input, mill, line)) {
 				input = new(class inputshape);
 				input->set_name("Manual path");
 				scene->shapes.push_back(input);

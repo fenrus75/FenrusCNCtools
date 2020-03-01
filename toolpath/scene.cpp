@@ -364,8 +364,10 @@ void scene::create_toolpaths(void)
       while (currentdepth < - z_offset - 0.00000001) {
 	    
 	    	/* we want courser tools to not get within the stepover of the finer tool */
-		    if (tool < (int)toollist.size() -1)
-				start = get_tool_stepover(toollist[tool+1]);
+		    if (tool < (int)toollist.size() -1) {
+				class endmill *nextmill = get_endmill(toollist[tool+1]);
+				start = nextmill->get_stepover();
+			}
     
 		    /* if tool 0 is a vcarve bit, tool 1 needs to start at radius at depth of cut */
 		    /* and all others need an offset */

@@ -153,15 +153,6 @@ const char * tool_svgcolor(int toolnr)
     return "black";
 }
 
-static double tool_diam(int toolnr)
-{
-    toolnr = abs(toolnr);
-    for (auto endmill : endmills)
-        if (endmill->get_tool_nr() == toolnr)
-            return endmill->get_diameter();
-    return 0;
-}
-
 class endmill *get_endmill(int toolnr)
 {
     toolnr = abs(toolnr);
@@ -171,15 +162,6 @@ class endmill *get_endmill(int toolnr)
     return NULL;
 }
 
-
-double get_tool_stepover(int toolnr)
-{
-    toolnr = abs(toolnr);
-    for (auto endmill : endmills)
-        if (endmill->get_tool_nr() == toolnr)
-            return endmill->get_stepover();
-    return 0.125;
-}
 
 int tool_is_vcarve(int toolnr)
 {
