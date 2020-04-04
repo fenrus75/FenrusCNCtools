@@ -94,6 +94,7 @@ function Triangle(data, offset)
 
 let triangles = []
 let buckets = []
+let l2buckets = []
 
 function normalize_design_to_zero()
 {	
@@ -230,6 +231,17 @@ function Bucket(lead_triangle)
     this.status = 0;
 }
 
+function L2Bucket(lead_triangle)
+{
+    this.minX = global_maxX;
+    this.maxX = 0;
+    this.minY = global_maxY;
+    this.maxY = 0;
+    
+    this.buckets = []
+    this.status = 0;
+}
+
 
 function make_buckets()
 {
@@ -291,18 +303,88 @@ function make_buckets()
 		buckets.push(bucket);
 	}
 	console.log("Made " + buckets.length + " buckets\n");
+	
+	slop = Math.max(global_maxX, global_maxY)/10;
+	maxslop = slop * 2;
+
+	let nrbuckets = buckets.length
+	for (i = 0; i < nrbuckets; i++) {
+		let j;
+		let Xmax, Ymax, Xmin, Ymin;
+		let rXmax, rYmax, rXmin, rYmin;
+		let bucketptr = 0;
+		let l2bucket;
+
+		if (buckets[i].status > 0)
+			continue;
+
+		l2bucket = new L2Bucket();
+		Xmax = buckets[i].maxX;
+		Xmin = buckets[i].minX;
+		Ymax = buckets[i].maxY;
+		Ymin = buckets[i].minY;
+
+		rXmax = Xmax + slop;
+		rYmax = Ymax + slop;
+		rXmin = Xmin - slop;
+		rYmin = Ymin - slop;
+
+                l2bucket.buckets.push(buckets[i]);
+		buckets[i].status = 1;
+	
+		for (j = i + 1; j < nrbuckets && l2bucket.buckets.length < 64; j++)	{
+			if (buckets[j].status == 0 && buckets[j].maxX <= rXmax && buckets[j].maxY <= rYmax && buckets[j].minY >= rYmin &&  buckets[j].minX >= rXmin) {
+				Xmax = Math.max(Xmax, buckets[j].maxX);
+				Ymax = Math.max(Ymax, buckets[j].maxY);
+				Xmin = Math.min(Xmin, buckets[j].minX);
+				Ymin = Math.min(Ymin, buckets[j].minY);
+				l2bucket.buckets.push(buckets[j]);
+				buckets[j].status = 1;				
+			}				
+		}
+
+		if (bucketptr >= 64 - 4)
+			slop = slop * 0.9;
+		if (bucketptr < 64 / 8)
+			slop = Math.min(slop * 1.1, maxslop);
+		if (bucketptr < 64 / 2)
+			slop = Math.min(slop * 1.05, maxslop);
+
+		l2bucket.minX = Xmin;
+		l2bucket.minY = Ymin;
+		l2bucket.maxX = Xmax;
+		l2bucket.maxY = Ymax;
+		l2buckets.push(l2bucket);
+	}
+	console.log("Created " + l2buckets.length + " L2 buckets\n");
+	
 }
 
 function get_height(X, Y)
 {
 	let value = 0;
 	let i;
+	let k;
 	
-	let bl = buckets.length;
+	let l2bl = l2buckets.length;
+	
+	for (k = 0; k < l2bl; k++) {
+	
+	let bl = l2buckets[k].buckets.length;
+	l2bucket = l2buckets[k];
 	let j;
+	if (l2bucket.minX > X)
+		        continue;
+        if (l2bucket.minY > Y)
+                        continue;
+        if (l2bucket.maxX < X)
+            		continue;
+        if (l2bucket.maxY < Y)
+                        continue;
+
 	
 	for (j =0 ; j < bl; j++) {
-	        bucket = buckets[j];
+	        bucket = l2bucket.buckets[j];
         	let len = bucket.triangles.length;
 
                 if (bucket.minX > X)
@@ -342,6 +424,7 @@ function get_height(X, Y)
             		value = Math.max(newZ, value);
                 }
         }
+        }
 	return value;
 }
 
@@ -357,6 +440,7 @@ function process_data(data)
     
     triangles = [];
     buckets = [];
+    l2buckets = [];
     global_minX = 600000000;
     global_minY = 600000000;
     global_minZ = 600000000;
@@ -386,7 +470,7 @@ function process_data(data)
 
     console.log("End of parsing at " + (Date.now() - start));
 
-    scale_design(512);    
+    scale_design(1024);    
     make_buckets();
     console.log("End of buckets at " + (Date.now() - start));
 
