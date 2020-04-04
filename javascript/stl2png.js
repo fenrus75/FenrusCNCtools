@@ -1,0 +1,355 @@
+/*
+    Copyright (C) 2020 -- Arjan van de Ven
+    
+    Licensed under the terms of the GPL-3.0 license
+*/
+
+
+function data_f32_to_number(data, offset)
+{
+    let u32value = (data.charCodeAt(offset + 0)    )  + (data.charCodeAt(offset + 1)<<8) + 
+                   (data.charCodeAt(offset + 2)<<16)  + (data.charCodeAt(offset + 3)<<24);     
+    let sign = (u32value & 0x80000000)?-1:1;
+    let mant = (u32value & 0x7FFFFF);
+    let exp  = (u32value >> 23) & 0xFF;
+    
+//    console.log("sign " + sign + " mant " + mant + " exp " + exp + "\n");
+//    console.log("u32value " + u32value.toString(16));
+    
+    let value = 0.0;
+    switch (exp) {
+        case 0:
+            break;
+        case 0xFF:
+            value = NaN;
+            break;
+        default:
+            exp = exp - 127; /* minus the bias */
+            mant += 0x800000; /* silent leading 1 */
+            value = sign * (mant / 8388608.0) * Math.pow(2, exp);
+            break;
+            
+    }
+    return value;
+}
+
+
+let global_minX = 600000000;
+let global_minY = 600000000;
+let global_minZ = 600000000;
+let global_maxX = -600000000;
+let global_maxY = -600000000;
+let global_maxZ = -600000000;
+function Triangle(data, offset)
+{
+    this.vertex = new Array(3);
+    this.vertex[0] = new Array(3);
+    this.vertex[1] = new Array(3);
+    this.vertex[2] = new Array(3);
+    this.minX = 6000000000;
+    this.minY = 6000000000;
+    this.maxX = -6000000000;
+    this.maxY = -6000000000;
+    this.status = 0;
+    
+    this.vertex[0][0] = data_f32_to_number(data, offset + 12);
+    this.vertex[0][1] = data_f32_to_number(data, offset + 16);
+    this.vertex[0][2] = data_f32_to_number(data, offset + 20);
+
+    this.vertex[1][0] = data_f32_to_number(data, offset + 24);
+    this.vertex[1][1] = data_f32_to_number(data, offset + 28);
+    this.vertex[1][2] = data_f32_to_number(data, offset + 32);
+
+    this.vertex[2][0] = data_f32_to_number(data, offset + 36);
+    this.vertex[2][1] = data_f32_to_number(data, offset + 40);
+    this.vertex[2][2] = data_f32_to_number(data, offset + 44);
+   
+    this.minX = Math.min(this.vertex[0][0], this.vertex[1][0]); 
+    this.minX = Math.min(this.minX,         this.vertex[2][0]); 
+    
+    this.minY = Math.min(this.vertex[0][1], this.vertex[1][1]); 
+    this.minY = Math.min(this.minY,         this.vertex[2][1]); 
+
+    this.minZ = Math.min(this.vertex[0][2], this.vertex[1][2]); 
+    this.minZ = Math.min(this.minZ,         this.vertex[2][2]); 
+    
+    this.maxX = Math.max(this.vertex[0][0], this.vertex[1][0]); 
+    this.maxX = Math.max(this.maxX,         this.vertex[2][0]); 
+    
+    this.maxY = Math.max(this.vertex[0][1], this.vertex[1][1]); 
+    this.maxY = Math.max(this.maxY,         this.vertex[2][1]); 
+    
+    this.maxZ = Math.max(this.vertex[0][2], this.vertex[1][2]); 
+    this.maxZ = Math.max(this.maxZ,         this.vertex[2][2]); 
+    
+    global_minX = Math.min(global_minX, this.minX);
+    global_minY = Math.min(global_minY, this.minY);
+    global_minZ = Math.min(global_minZ, this.minZ);
+    global_maxX = Math.max(global_maxX, this.maxX);
+    global_maxY = Math.max(global_maxY, this.maxY);
+    global_maxZ = Math.max(global_maxZ, this.maxZ);
+    
+}
+
+
+let triangles = []
+
+function normalize_design_to_zero()
+{	
+    let len = triangles.length;
+    
+    for (let i = 0; i < len; i++) {
+        t = triangles[i];
+        t.vertex[0][0] -= global_minX;
+        t.vertex[1][0] -= global_minX;
+        t.vertex[2][0] -= global_minX;
+
+        t.vertex[0][1] -= global_minY;
+        t.vertex[1][1] -= global_minY;
+        t.vertex[2][1] -= global_minY;
+
+
+        t.vertex[0][2] -= global_minZ;
+        t.vertex[1][2] -= global_minZ;
+        t.vertex[2][2] -= global_minZ;
+    }
+
+    global_maxX -= global_minX;    
+    global_maxY -= global_minY;   
+    global_maxZ -= global_minZ;    
+    global_minX = 0;
+    global_minY = 0;
+    global_minZ = 0;
+}
+
+function scale_design(newsize)
+{	
+    let len = triangles.length;
+    
+    let factor = 1;
+    
+    normalize_design_to_zero();
+    
+    if (global_maxX < 0.1)
+        alert(global_maxX);
+    if (global_maxY < 0.1)
+        alert(global_maxY);
+    factor = newsize / global_maxX;
+    factor = Math.min(factor, newsize / global_maxY);
+    
+    
+    for (let i = 0; i < len; i++) {
+        t = triangles[i];
+        t.vertex[0][0] *= factor;
+        t.vertex[0][1] *= factor;
+        t.vertex[0][2] *= factor;
+
+        t.vertex[1][0] *= factor;
+        t.vertex[1][1] *= factor;
+        t.vertex[1][2] *= factor;
+
+        t.vertex[2][0] *= factor;
+        t.vertex[2][1] *= factor;
+        t.vertex[2][2] *= factor;
+
+        t.minX = Math.min(t.vertex[0][0], t.vertex[1][0]); 
+        t.minX = Math.min(t.minX, 	  t.vertex[2][0]); 
+        t.minY = Math.min(t.vertex[0][1], t.vertex[1][1]); 
+        t.minY = Math.min(t.minY, 	  t.vertex[2][1]); 
+        t.minZ = Math.min(t.vertex[0][2], t.vertex[1][2]); 
+        t.minZ = Math.min(t.minZ, 	  t.vertex[2][2]); 
+    
+        t.maxX = Math.max(t.vertex[0][0], t.vertex[1][0]); 
+        t.maxX = Math.max(t.maxX, 	  t.vertex[2][0]); 
+        t.maxY = Math.max(t.vertex[0][1], t.vertex[1][1]); 
+        t.maxY = Math.max(t.maxY, 	  t.vertex[2][1]); 
+    }
+
+    global_maxX *= factor;    
+    global_maxY *= factor;   
+    global_maxZ *= factor;    
+}
+
+function  point_to_the_left(X, Y, AX, AY, BX, BY)
+{
+	return (BX-AX)*(Y-AY) - (BY-AY)*(X-AX);
+}
+
+
+function within_triangle(X, Y, i)
+{
+	let det1, det2, det3;
+
+	let has_pos = 0, has_neg = 0;
+	
+	t = triangles[i];
+
+	det1 = point_to_the_left(X, Y, t.vertex[0][0], t.vertex[0][1], t.vertex[1][0], t.vertex[1][1]);
+	det2 = point_to_the_left(X, Y, t.vertex[1][0], t.vertex[1][1], t.vertex[2][0], t.vertex[2][1]);
+	det3 = point_to_the_left(X, Y, t.vertex[2][0], t.vertex[2][1], t.vertex[0][0], t.vertex[0][1]);
+
+//	has_neg = (det1 < 0) || (det2 < 0) || (det3 < 0);
+        if (det1 < 0) { has_neg = 1; };
+        if (det2 < 0) { has_neg = 1; };
+        if (det3 < 0) { has_neg = 1; };
+//	has_pos = (det1 > 0) || (det2 > 0) || (det3 > 0);
+        if (det1 > 0) { has_pos = 1; };
+        if (det2 > 0) { has_pos = 1; };
+        if (det3 > 0) { has_pos = 1; };
+        
+        if (has_neg && has_pos)
+            return 0;
+        return 1;
+
+	return !(has_neg && has_pos);
+
+}
+
+
+function calc_Z(X, Y, index)
+{
+	let det = (triangles[index].vertex[1][1] - triangles[index].vertex[2][1]) * 
+		    (triangles[index].vertex[0][0] - triangles[index].vertex[2][0]) + 
+                    (triangles[index].vertex[2][0] - triangles[index].vertex[1][0]) * 
+		    (triangles[index].vertex[0][1] - triangles[index].vertex[2][1]);
+
+	let l1 = ((triangles[index].vertex[1][1] - triangles[index].vertex[2][1]) * (X - triangles[index].vertex[2][0]) + (triangles[index].vertex[2][0] - triangles[index].vertex[1][0]) * (Y - triangles[index].vertex[2][1])) / det;
+	let l2 = ((triangles[index].vertex[2][1] - triangles[index].vertex[0][1]) * (X - triangles[index].vertex[2][0]) + (triangles[index].vertex[0][0] - triangles[index].vertex[2][0]) * (Y - triangles[index].vertex[2][1])) / det;
+	let l3 = 1.0 - l1 - l2;
+
+	return l1 * triangles[index].vertex[0][2] + l2 * triangles[index].vertex[1][2] + l3 * triangles[index].vertex[2][2];
+}
+
+function get_height(X, Y)
+{
+	let value = 0;
+	let i;
+	let len = triangles.length;
+	
+	for (i = 0; i < len; i++) {
+		let newZ;
+
+
+		// first a few quick bounding box checks 
+		if (triangles[i].minX > X)
+			continue;
+		if (triangles[i].minY > Y)
+			continue;
+
+		if (triangles[i].maxX < X)
+			continue;
+			
+		if (triangles[i].maxY < Y)
+			continue;
+
+
+		/* then a more expensive detailed triangle test */
+		if (!within_triangle(X, Y, i)) {
+			continue;
+                }
+		/* now calculate the Z height within the triangle */
+		newZ = calc_Z(X, Y, i);
+
+//                console.log("X " + X + " Y " + Y + " i = " + i + " newZ" + newZ);
+
+		value = Math.max(newZ, value);
+	}
+	return value;
+}
+
+
+
+function process_data(data)
+{
+    let len = data.length;
+    
+    var start;
+    
+    start = Date.now();
+    
+    if (len < 84) {
+        document.getElementById('list').innerHTML = "STL file too short";
+        return; 
+    }
+    
+    let total_triangles = (data.charCodeAt(80)) + (data.charCodeAt(81)<<8) + (data.charCodeAt(82)<<16) + (data.charCodeAt(83)<<24); 
+    
+    if (84 + total_triangles * 50  != data.length) {
+        document.getElementById('list').innerHTML  = "Length mismatch " + data.length + " " + total_triangles;
+        return;
+    }
+    document.getElementById('list').innerHTML  = "Parsing STL file";
+    
+    console.log("Start of parsing at " + (Date.now() - start));
+    
+    for (let i = 0; i < total_triangles; i++) {
+        T = new Triangle(data, 84 + i * 50);
+        triangles.push(T);
+    }
+
+    console.log("End of parsing at " + (Date.now() - start));
+
+    scale_design(512);    
+
+    console.log("Scale " + (Date.now() - start));
+    
+    document.getElementById('list').innerHTML  = "Number of triangles " + total_triangles + "mX " + global_maxX + " mY " + global_maxY;
+}
+
+
+async function calculate_image() 
+{
+    var canvas = document.querySelector('canvas');
+    var context = canvas.getContext('2d');
+    canvas.width = global_maxX;
+    canvas.height = global_maxY;
+    
+    
+    
+    var pixels = context.getImageData(
+        0, 0, global_maxX, global_maxY
+      );
+      
+    var data = pixels.data;
+    for (let Y = 0; Y < global_maxY; Y++) {
+        for (let X = 0; X < global_maxX; X++) {
+            c = 255 * (get_height(X, Y) / global_maxZ);
+            data[(X + Y * global_maxX) * 4 + 0 ] = c;
+            data[(X + Y * global_maxX) * 4 + 1 ] = c;
+            data[(X + Y * global_maxX) * 4 + 2 ] = c;
+            data[(X + Y * global_maxX) * 4 + 3 ] = 255;
+        }
+    }
+    context.putImageData(pixels, 0, 0);
+    var link = document.getElementById('download')
+    link.innerHTML = 'download image';
+    link.href = "#";
+    link.download = "output.png";
+    link.href = canvas.toDataURL('image/png');
+}
+
+function load(evt) 
+{
+    var start;
+    start =  Date.now();
+    if (evt.target.readyState == FileReader.DONE) {
+        process_data(evt.target.result);    
+        console.log("End of data processing " + (Date.now() - start));
+        start = Date.now();
+        calculate_image();
+        console.log("Image calculation " + (Date.now() - start));
+    }    
+}
+
+function handle(e) 
+{
+    var files = this.files;
+    for (var i = 0, f; f = files[i]; i++) {
+        var reader = new FileReader();
+        reader.onloadend = load;
+        reader.readAsBinaryString(f);
+    }
+}
+
+
+document.getElementById('files').onchange = handle;
