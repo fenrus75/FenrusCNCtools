@@ -53,15 +53,15 @@ function Triangle(data, offset)
     this.status = 0;
     
     this.vertex[0][0] = data_f32_to_number(data, offset + 12);
-    this.vertex[0][1] = data_f32_to_number(data, offset + 16);
+    this.vertex[0][1] = -data_f32_to_number(data, offset + 16);
     this.vertex[0][2] = data_f32_to_number(data, offset + 20);
 
     this.vertex[1][0] = data_f32_to_number(data, offset + 24);
-    this.vertex[1][1] = data_f32_to_number(data, offset + 28);
+    this.vertex[1][1] = -data_f32_to_number(data, offset + 28);
     this.vertex[1][2] = data_f32_to_number(data, offset + 32);
 
     this.vertex[2][0] = data_f32_to_number(data, offset + 36);
-    this.vertex[2][1] = data_f32_to_number(data, offset + 40);
+    this.vertex[2][1] = -data_f32_to_number(data, offset + 40);
     this.vertex[2][2] = data_f32_to_number(data, offset + 44);
    
     this.minX = Math.min(this.vertex[0][0], this.vertex[1][0]); 
