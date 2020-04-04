@@ -6,3 +6,14 @@ a:visited {
     text-decoration: none;
 }
 
+
+#Progress {
+  width: 100%;
+  background-color: grey;
+}
+
+#Bar {
+  width: 1%;
+  height: 30px;
+  background-color: green;
+}

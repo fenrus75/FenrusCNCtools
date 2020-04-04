@@ -480,6 +480,29 @@ function process_data(data)
 }
 
 
+function  calculate_line(data, Y, elem, context, pixels) 
+{
+    for (let X = 0; X < global_maxX; X++) {
+            let c = 255 * (get_height(X, Y) / global_maxZ);
+            data[(X + Y * global_maxX) * 4 + 0 ] = c;
+            data[(X + Y * global_maxX) * 4 + 1 ] = c;
+            data[(X + Y * global_maxX) * 4 + 2 ] = c;
+            data[(X + Y * global_maxX) * 4 + 3 ] = 255;
+    }
+    elem.style.width = (Math.round(Y/global_maxY * 100)) + "%";
+    if ((Y & 15) == 0) {
+        context.putImageData(pixels, 0, 0);
+    }
+    if (Y == global_maxY -1) {
+        context.putImageData(pixels, 0, 0);
+        var link = document.getElementById('download')
+        link.innerHTML = 'download image';
+        link.href = "#";
+        link.download = "output.png";
+        link.href = canvas.toDataURL('image/png');
+    }
+}
+
 function calculate_image() 
 {
     var canvas = document.querySelector('canvas');
@@ -495,22 +518,14 @@ function calculate_image()
         0, 0, global_maxX, global_maxY
       );
       
+    var elem = document.getElementById("Bar");
+      
     var data = pixels.data;
     for (let Y = 0; Y < global_maxY; Y++) {
-        for (let X = 0; X < global_maxX; X++) {
-            c = 255 * (get_height(X, Y) / global_maxZ);
-            data[(X + Y * global_maxX) * 4 + 0 ] = c;
-            data[(X + Y * global_maxX) * 4 + 1 ] = c;
-            data[(X + Y * global_maxX) * 4 + 2 ] = c;
-            data[(X + Y * global_maxX) * 4 + 3 ] = 255;
-        }
+//            calculate_line(data, Y, elem, context, pixels);
+        setTimeout(calculate_line, 0, data, Y, elem, context, pixels);
     }
     context.putImageData(pixels, 0, 0);
-    var link = document.getElementById('download')
-    link.innerHTML = 'download image';
-    link.href = "#";
-    link.download = "output.png";
-    link.href = canvas.toDataURL('image/png');
 }
 
 function load(evt) 
