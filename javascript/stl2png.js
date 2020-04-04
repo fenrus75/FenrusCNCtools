@@ -488,6 +488,8 @@ function calculate_image()
     canvas.height = global_maxY;
     
     
+    global_maxX = Math.ceil(global_maxX);
+    global_maxY = Math.ceil(global_maxY);
     
     var pixels = context.getImageData(
         0, 0, global_maxX, global_maxY
