@@ -459,7 +459,7 @@ function process_data(data)
         document.getElementById('list').innerHTML  = "Length mismatch " + data.length + " " + total_triangles;
         return;
     }
-    document.getElementById('list').innerHTML  = "Parsing STL file";
+//    document.getElementById('list').innerHTML  = "Parsing STL file";
     
     console.log("Start of parsing at " + (Date.now() - start));
     
@@ -476,7 +476,7 @@ function process_data(data)
 
     console.log("Scale " + (Date.now() - start));
     
-    document.getElementById('list').innerHTML  = "Number of triangles " + total_triangles + "mX " + global_maxX + " mY " + global_maxY;
+//    document.getElementById('list').innerHTML  = "Number of triangles " + total_triangles + "mX " + global_maxX + " mY " + global_maxY;
 }
 
 

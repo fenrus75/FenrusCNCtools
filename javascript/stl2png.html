@@ -2,18 +2,30 @@
 <html>
 <head>
 <title>STL2PNG - javascript edition</title>
+<link rel="stylesheet" type="text/css" href="stl2png.css">
 </head>
 <body>
+<table width="100%">
+<tr><td valign="top">
 <a href="" id="download"></a>
-<hr>
-<canvas id="canvas"></canvas>
 <hr>
 <form>
 <input type="file" id="files" name="files[]" />
 <output id="list"></output>
 </form>
-
-
+<hr>
+<p>
+This website lets you convert STL files to PNG heightmap images
+for use in Carbide Create Pro.
+</p><p>
+All computation happens local
+and inside your browser, no information is uploaded or sent
+over the internet. For large files this can take 10+ seconds before the
+results show up.
+</p>
+</td><td width="1040">
+<canvas id="canvas"></canvas>
+</td></tr></table>
 
 <script type="text/javascript" src="stl2png.js"></script>
 </body>
