@@ -93,6 +93,7 @@ function Triangle(data, offset)
 
 
 let triangles = []
+let buckets = []
 
 function normalize_design_to_zero()
 {	
@@ -176,14 +177,12 @@ function  point_to_the_left(X, Y, AX, AY, BX, BY)
 }
 
 
-function within_triangle(X, Y, i)
+function within_triangle(X, Y, t)
 {
 	let det1, det2, det3;
 
 	let has_pos = 0, has_neg = 0;
 	
-	t = triangles[i];
-
 	det1 = point_to_the_left(X, Y, t.vertex[0][0], t.vertex[0][1], t.vertex[1][0], t.vertex[1][1]);
 	det2 = point_to_the_left(X, Y, t.vertex[1][0], t.vertex[1][1], t.vertex[2][0], t.vertex[2][1]);
 	det3 = point_to_the_left(X, Y, t.vertex[2][0], t.vertex[2][1], t.vertex[0][0], t.vertex[0][1]);
@@ -206,54 +205,143 @@ function within_triangle(X, Y, i)
 }
 
 
-function calc_Z(X, Y, index)
+function calc_Z(X, Y, t)
 {
-	let det = (triangles[index].vertex[1][1] - triangles[index].vertex[2][1]) * 
-		    (triangles[index].vertex[0][0] - triangles[index].vertex[2][0]) + 
-                    (triangles[index].vertex[2][0] - triangles[index].vertex[1][0]) * 
-		    (triangles[index].vertex[0][1] - triangles[index].vertex[2][1]);
+	let det = (t.vertex[1][1] - t.vertex[2][1]) * 
+		    (t.vertex[0][0] - t.vertex[2][0]) + 
+                    (t.vertex[2][0] - t.vertex[1][0]) * 
+		    (t.vertex[0][1] - t.vertex[2][1]);
 
-	let l1 = ((triangles[index].vertex[1][1] - triangles[index].vertex[2][1]) * (X - triangles[index].vertex[2][0]) + (triangles[index].vertex[2][0] - triangles[index].vertex[1][0]) * (Y - triangles[index].vertex[2][1])) / det;
-	let l2 = ((triangles[index].vertex[2][1] - triangles[index].vertex[0][1]) * (X - triangles[index].vertex[2][0]) + (triangles[index].vertex[0][0] - triangles[index].vertex[2][0]) * (Y - triangles[index].vertex[2][1])) / det;
+	let l1 = ((t.vertex[1][1] - t.vertex[2][1]) * (X - t.vertex[2][0]) + (t.vertex[2][0] - t.vertex[1][0]) * (Y - t.vertex[2][1])) / det;
+	let l2 = ((t.vertex[2][1] - t.vertex[0][1]) * (X - t.vertex[2][0]) + (t.vertex[0][0] - t.vertex[2][0]) * (Y - t.vertex[2][1])) / det;
 	let l3 = 1.0 - l1 - l2;
 
-	return l1 * triangles[index].vertex[0][2] + l2 * triangles[index].vertex[1][2] + l3 * triangles[index].vertex[2][2];
+	return l1 * t.vertex[0][2] + l2 * t.vertex[1][2] + l3 * t.vertex[2][2];
+}
+
+function Bucket(lead_triangle)
+{
+    this.minX = global_maxX;
+    this.maxX = 0;
+    this.minY = global_maxY;
+    this.maxY = 0;
+    
+    this.triangles = []
+    this.status = 0;
+}
+
+
+function make_buckets()
+{
+	let i;
+	let slop = Math.max(global_maxX, global_maxY)/50;
+	let maxslop = slop * 2;
+	let len = triangles.length
+
+	for (i = 0; i < len; i++) {
+		let j;
+		let reach;
+		let Xmax, Ymax, Xmin, Ymin;
+		let rXmax, rYmax, rXmin, rYmin;
+		let bucketptr = 0;
+		let bucket;
+		if (triangles[i].status > 0)
+			continue;
+
+		bucket = new Bucket();
+		Xmax = triangles[i].maxX;
+		Xmin = triangles[i].minX;
+		Ymax = triangles[i].maxY;
+		Ymin = triangles[i].minY;
+
+		rXmax = Xmax + slop;
+		rYmax = Ymax + slop;
+		rXmin = Xmin - slop;
+		rYmin = Ymin - slop;
+
+		bucket.triangles.push(triangles[i]);
+		triangles[i].status = 1;
+
+		reach = len;
+		if (reach > i + 50000)
+			reach = i + 50000;
+	
+		for (j = i + 1; j < reach && bucket.triangles.length < 64; j++)	{
+			if (triangles[j].status == 0 && triangles[j].maxX <= rXmax && triangles[j].maxY <= rYmax && triangles[j].minY >= rYmin &&  triangles[j].minX >= rXmin) {
+				Xmax = Math.max(Xmax, triangles[j].maxX);
+				Ymax = Math.max(Ymax, triangles[j].maxY);
+				Xmin = Math.min(Xmin, triangles[j].minX);
+				Ymin = Math.min(Ymin, triangles[j].minY);
+				bucket.triangles.push(triangles[j]);
+				triangles[j].status = 1;				
+			}				
+		}
+                let bucketr = bucket.triangles.length
+		if (bucketptr >= 64 -5)
+			slop = slop * 0.9;
+		if (bucketptr < 64 / 8)
+			slop = Math.min(slop * 1.1, maxslop);
+		if (bucketptr < 64 / 2)
+			slop = Math.min(slop * 1.05, maxslop);
+
+		bucket.minX = Xmin - 0.001; /* subtract a little to cope with rounding */
+		bucket.minY = Ymin - 0.001;
+		bucket.maxX = Xmax + 0.001;
+		bucket.maxY = Ymax + 0.001;
+		buckets.push(bucket);
+	}
+	console.log("Made " + buckets.length + " buckets\n");
 }
 
 function get_height(X, Y)
 {
 	let value = 0;
 	let i;
-	let len = triangles.length;
 	
-	for (i = 0; i < len; i++) {
-		let newZ;
+	let bl = buckets.length;
+	let j;
+	
+	for (j =0 ; j < bl; j++) {
+	        bucket = buckets[j];
+        	let len = bucket.triangles.length;
 
+                if (bucket.minX > X)
+		        continue;
+                if (bucket.minY > Y)
+                        continue;
+            	if (bucket.maxX < X)
+            		continue;
+                if (bucket.maxY < Y)
+                        continue;
 
-		// first a few quick bounding box checks 
-		if (triangles[i].minX > X)
-			continue;
-		if (triangles[i].minY > Y)
-			continue;
+        	for (i = 0; i < len; i++) {
+        	        let newZ;
+        	        let t = bucket.triangles[i];
+	    	
 
-		if (triangles[i].maxX < X)
-			continue;
+            		// first a few quick bounding box checks 
+	        	if (t.minX > X)
+		                continue;
+                        if (t.minY > Y)
+                                continue;
+
+            		if (t.maxX < X)
+            		        continue;
 			
-		if (triangles[i].maxY < Y)
-			continue;
+                        if (t.maxY < Y)
+                                continue;
 
 
-		/* then a more expensive detailed triangle test */
-		if (!within_triangle(X, Y, i)) {
-			continue;
+                        /* then a more expensive detailed triangle test */
+                        if (!within_triangle(X, Y, t)) {
+                                continue;
+                        }
+                        /* now calculate the Z height within the triangle */
+                        newZ = calc_Z(X, Y, t);
+
+            		value = Math.max(newZ, value);
                 }
-		/* now calculate the Z height within the triangle */
-		newZ = calc_Z(X, Y, i);
-
-//                console.log("X " + X + " Y " + Y + " i = " + i + " newZ" + newZ);
-
-		value = Math.max(newZ, value);
-	}
+        }
 	return value;
 }
 
@@ -266,6 +354,15 @@ function process_data(data)
     var start;
     
     start = Date.now();
+    
+    triangles = [];
+    buckets = [];
+    global_minX = 600000000;
+    global_minY = 600000000;
+    global_minZ = 600000000;
+    global_maxX = -600000000;
+    global_maxY = -600000000;
+    global_maxZ = -600000000;
     
     if (len < 84) {
         document.getElementById('list').innerHTML = "STL file too short";
@@ -290,6 +387,8 @@ function process_data(data)
     console.log("End of parsing at " + (Date.now() - start));
 
     scale_design(512);    
+    make_buckets();
+    console.log("End of buckets at " + (Date.now() - start));
 
     console.log("Scale " + (Date.now() - start));
     
@@ -297,7 +396,7 @@ function process_data(data)
 }
 
 
-async function calculate_image() 
+function calculate_image() 
 {
     var canvas = document.querySelector('canvas');
     var context = canvas.getContext('2d');
