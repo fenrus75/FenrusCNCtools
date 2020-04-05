@@ -73,7 +73,7 @@ function declare_point_load(X, Y, load)
 	y = Math.round((Y - global_minY) * scalefactor);
 	
 	if (x > imgwidth || y > imgheight) {
-		console.log("OOB " + x + " " + y + "\n");
+//		console.log("OOB " + x + " " + y + "\n");
 		return;
 	}
 		
@@ -91,7 +91,7 @@ function declare_point_load(X, Y, load)
 	
 	newr = newc;
 	if (newr < 128) newr = 128;
-
+	
 	setpixel(x, y, newc, newr);	
 	setpixel(x-1, y, newc, newr);	
 	setpixel(x+1, y, newc, newr);	
@@ -264,6 +264,8 @@ function depth_at_XY(X, Y, threshold)
 	
 	if (ax < 0) ax = 0;
 	if (ay < 0) ay = 0;
+	if (ax >= array_xmax) ax = array_xmax - 1;
+	if (ay >= array_ymax) ay = array_ymax - 1;
 	
 	var arr = array2D[ay][ax];
 
@@ -448,6 +450,7 @@ function tool_change(mline)
 	
 	mline = mline.replace("M6T","");
 	mline = mline.replace("M6 T","");
+	mline = mline.replace("T","");
 	nr = parseInt(mline);
 	
 	if (angle > 0) diam = 0; /* vbits */
@@ -461,16 +464,16 @@ function tool_change(mline)
 		diam = 0;
 	}
 	
-	if (nr == 102) {
+	if (nr == 102 || nr == 1) {
+		diam = 1.0/8 * 25.4;
 		newtarget = targetload(0.03, 45);
 	}
 	if (nr == 112) {
-		newtarget = targetload(0.02, 35);
-	}
-	if (nr == 102) {
+		diam = 1.0/16 * 25.4;
 		newtarget = targetload(0.02, 35);
 	}
 	if (nr == 201 || nr == 251) {
+		diam = 1.0/4 * 25.4;
 		newtarget = targetload(0.04, 60);
 	}
 	
@@ -481,7 +484,7 @@ function tool_change(mline)
 	
 	diameter = diam;
 	maxload = newtarget;
-//	console.log("New tool: " + nr + " diameter " + diameter + " max load " + maxload + "\n");
+	console.log("New tool: " + nr + " diameter " + diameter + " max load " + maxload + "\n");
 	
 }
 
@@ -494,7 +497,6 @@ function G1(x, y, z, feed) {
 	
 	if (dryrun > 0)
 		return;
-	
 		
 	if (currentz == z && diameter > 0 && glevel == 1) {
 		area_load(currentx, currenty, currentz, x, y, z, feed);
@@ -565,12 +567,108 @@ function handle_XYZ_line(line)
 	G1(newX, newY, newZ, newF);
 }
 
+function get_phi(rX,rY,aX,aY)
+{
+	aX -= rX;
+	aY -= rY;
+	let len = Math.sqrt(aX * aX + aY * aY);
+	aX /= len;
+	aY /= len;
+	let phi = Math.atan2(aY,aX);
+	return phi;
+}
+
+function handle_arc_line(line)
+{
+	let newX, newY, newZ, newF;
+	let newI, newJ, newK, newRx, newRy;
+	newX = currentx;
+	newY = currenty;
+	newZ = currentz;
+	newF = currentf;
+	newI = 0;
+	newJ = 0;
+	newK = 0;
+	let idx;
+	let clockwise = 1;
+	
+	let startphi, endphi;
+	let deltaphi = 0.01;
+	
+	if (line.includes("G3")) {
+		delphaphi = -0.1;
+		clockwise = 0;
+	}
+	
+	
+	idx = line.indexOf("X");
+	if (idx >= 0)
+		newX = parseFloat(line.substring(idx + 1));	
+	idx = line.indexOf("Y");
+	if (idx >= 0)
+		newY = parseFloat(line.substring(idx + 1));	
+	idx = line.indexOf("Z");
+	if (idx >= 0)
+		newZ = parseFloat(line.substring(idx + 1));	
+	idx = line.indexOf("I");
+	if (idx >= 0)
+		newI = parseFloat(line.substring(idx + 1));	
+	idx = line.indexOf("J");
+	if (idx >= 0)
+		newJ = parseFloat(line.substring(idx + 1));	
+	idx = line.indexOf("K");
+	if (idx >= 0)
+		newK = parseFloat(line.substring(idx + 1));	
+	idx = line.indexOf("F")
+	if (idx >= 0)
+		newF = parseFloat(line.substring(idx + 1));	
+		
+	newRx = currentx + newI;
+	newRy = currenty + newJ;
+	
+	start_phi = get_phi(newRx, newRy, currentx, currenty);
+	end_phi = get_phi(newRx, newRy, newX, newY);	
+	
+	let radius = dist(newRx, newRy, newX, newY);
+	
+	if (clockwise) {
+	
+		if (start_phi < end_phi) {
+			start_phi += 2 * 3.1415;
+		}
+	
+		let phi = start_phi;
+		while (phi > end_phi) {
+			G1(newRx + radius * Math.cos(phi), newRy + radius * Math.sin(phi), newZ, newF);
+			phi -= deltaphi;
+		}
+	} else {
+		if (start_phi > end_phi) {
+			start_phi -= 2 * 3.1415;
+		}
+	
+		let phi = start_phi;
+		while (phi < end_phi) {
+			G1(newRx + radius * Math.cos(phi), newRy + radius * Math.sin(phi), newZ, newF);
+			phi += deltaphi;
+		}
+	}
+	G1(newX, newY, newZ, newF);	
+		
+//	console.log("ARC X Y Z I J K " + newX + " " + newY + " " + newZ + " " + newI + " " + newJ + "  phi " + start_phi + " -> " + end_phi + " \n");
+//	G1(newX, newY, newZ, newF);
+}
+
 function handle_G_line(line)
 {
 	if (line[1] == '1') glevel = 1;
 	if (line[1] == '0') glevel = 0;
 	if (line[1] == '1' || line[1] == '0')
 		return handle_XYZ_line(line);
+		
+	if (line[1] == '2' || line[1] == '3')
+		if (line[2] != '0' && line[2] != '1')
+			return handle_arc_line(line);
 }
 
 function process_line(line)
@@ -593,6 +691,9 @@ function process_line(line)
 			break;
 		case 'G':
 			handle_G_line(line);
+			break;
+		case 'T':
+			tool_change(line);
 			break;
 		
 		
@@ -651,6 +752,8 @@ function process_data(data)
     /* and then for real */
     dryrun = 0;    
     stepsize = Math.round((lines.length + 1)/100);
+    if (stepsize < 1)
+    	stepsize = 1;
     for (let i = 0; i < len; i += stepsize) {
     	let end = i + stepsize;
     	if (end > lines.length)
@@ -660,7 +763,7 @@ function process_data(data)
     
 //    for (let i = 0; i < len; i++) {
 //    	process_line(lines[i]);
-//  }
+//    }
     imgcontext.putImageData(imgpixels, 0, 0);    
 
     console.log("End of parsing at " + (Date.now() - start));
@@ -672,8 +775,7 @@ function load(evt)
     var start;
     start =  Date.now();
     if (evt.target.readyState == FileReader.DONE) {
-        process_data(evt.target.result);    
-        console.log("End of data processing " + (Date.now() - start));
+        process_data(evt.target.result); console.log("End of data processing " + (Date.now() - start));
     }    
 }
 
