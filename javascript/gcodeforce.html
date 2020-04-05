@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>GcodeForce - javascript edition</title>
+<link rel="stylesheet" type="text/css" href="stl2png.css">
+</head>
+<body>
+<table width="100%">
+<tr><td valign="top">
+<a href="" id="download"></a>
+<hr>
+<form>
+<input type="file" id="files" name="files[]" />
+<output id="list"></output>
+</form>
+<hr>
+<div id="Progress">
+  <div id="Bar"></div>
+</div>
+<hr>
+<p>
+This website lets you import gcode files
+to show where in the design cutting forces are largest.
+</p><p>
+All computation happens local
+and inside your browser, no information is uploaded or sent
+over the internet. For large files this can take 10+ seconds before the
+results show up.
+</p>
+</td><td width="1040">
+<canvas id="canvas" width=1024 height=1024></canvas>
+</td></tr></table>
+
+<script type="text/javascript" src="gcodeforce.js"></script>
+</body>
+</html>
