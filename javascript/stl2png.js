@@ -4,6 +4,7 @@
     Licensed under the terms of the GPL-3.0 license
 */
 
+let desired_resolution = 1024;
 
 function data_f32_to_number(data, offset)
 {
@@ -40,6 +41,8 @@ let global_minZ = 600000000;
 let global_maxX = -600000000;
 let global_maxY = -600000000;
 let global_maxZ = -600000000;
+
+let orientation = 0;
 function Triangle(data, offset)
 {
     this.vertex = new Array(3);
@@ -63,6 +66,29 @@ function Triangle(data, offset)
     this.vertex[2][0] = data_f32_to_number(data, offset + 36);
     this.vertex[2][1] = -data_f32_to_number(data, offset + 40);
     this.vertex[2][2] = data_f32_to_number(data, offset + 44);
+    
+    if (orientation == 1) {
+        let x,y,z;
+        for (let i = 0; i < 3; i++) {
+            x = this.vertex[i][0];
+            y = this.vertex[i][1];
+            z = this.vertex[i][2];
+            this.vertex[i][0] = x;
+            this.vertex[i][1] = -z;
+            this.vertex[i][2] = -y;
+        }
+    }
+    if (orientation == 2) {
+        let x,y,z;
+        for (let i = 0; i < 3; i++) {
+            x = this.vertex[i][0];
+            y = this.vertex[i][1];
+            z = this.vertex[i][2];
+            this.vertex[i][0] = y;
+            this.vertex[i][1] = -z;
+            this.vertex[i][2] = -x;
+        }
+    }
    
     this.minX = Math.min(this.vertex[0][0], this.vertex[1][0]); 
     this.minX = Math.min(this.minX,         this.vertex[2][0]); 
@@ -470,7 +496,7 @@ function process_data(data)
 
     console.log("End of parsing at " + (Date.now() - start));
 
-    scale_design(1024);    
+    scale_design(desired_resolution);    
     make_buckets();
     console.log("End of buckets at " + (Date.now() - start));
 
@@ -526,6 +552,29 @@ function calculate_image()
         setTimeout(calculate_line, 0, data, Y, elem, context, pixels);
     }
     context.putImageData(pixels, 0, 0);
+}
+
+function RadioB(val)
+{
+    if (val == "top") {
+        orientation = 0;
+    };
+    if (val == "front") {
+        console.log("set front orientation")
+        orientation = 1;
+    };
+    if (val == "side") {
+        console.log("set side orientation")
+        orientation = 2;
+    };
+}
+
+function SideB(val)
+{
+    let news = Math.floor(parseFloat(val));
+    if (news > 0) {
+        desired_resolution = news;
+    }
 }
 
 function load(evt) 

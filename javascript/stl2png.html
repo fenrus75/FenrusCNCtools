@@ -27,6 +27,16 @@ and inside your browser, no information is uploaded or sent
 over the internet. For large files this can take 10+ seconds before the
 results show up.
 </p>
+<div id="orient">
+Orientation:<br>
+<input type="radio" value="top" name="or" checked onclick="RadioB(this.value)">Top</input>
+<input type="radio" value="front" name="or" onclick="RadioB(this.value)">Front</input>
+<input type="radio" value="side" name="or" onclick="RadioB(this.value)">Side</input><br>
+Resolution:<br>
+<input type="text" value="1024" onclick="SideB(this.value)">pixels</input>
+
+
+</div>
 </td><td width="1040">
 <canvas id="canvas"></canvas>
 </td></tr></table>
