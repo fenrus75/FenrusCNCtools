@@ -44,6 +44,7 @@ let global_maxY = -600000000;
 let global_maxZ = -600000000;
 
 let orientation = 0;
+
 function Triangle(data, offset)
 {
     this.vertex = new Array(3);
@@ -76,7 +77,91 @@ function Triangle(data, offset)
             z = this.vertex[i][2];
             this.vertex[i][0] = x;
             this.vertex[i][1] = -z;
-            this.vertex[i][2] = -y;
+            this.vertex[i][2] = y;
+        }
+    }
+    if (orientation == 2) {
+        let x,y,z;
+        for (let i = 0; i < 3; i++) {
+            x = this.vertex[i][0];
+            y = this.vertex[i][1];
+            z = this.vertex[i][2];
+            this.vertex[i][0] = y;
+            this.vertex[i][1] = -z;
+            this.vertex[i][2] = -x;
+        }
+    }
+   
+    this.minX = Math.min(this.vertex[0][0], this.vertex[1][0]); 
+    this.minX = Math.min(this.minX,         this.vertex[2][0]); 
+    
+    this.minY = Math.min(this.vertex[0][1], this.vertex[1][1]); 
+    this.minY = Math.min(this.minY,         this.vertex[2][1]); 
+
+    this.minZ = Math.min(this.vertex[0][2], this.vertex[1][2]); 
+    this.minZ = Math.min(this.minZ,         this.vertex[2][2]); 
+    
+    this.maxX = Math.max(this.vertex[0][0], this.vertex[1][0]); 
+    this.maxX = Math.max(this.maxX,         this.vertex[2][0]); 
+    
+    this.maxY = Math.max(this.vertex[0][1], this.vertex[1][1]); 
+    this.maxY = Math.max(this.maxY,         this.vertex[2][1]); 
+    
+    this.maxZ = Math.max(this.vertex[0][2], this.vertex[1][2]); 
+    this.maxZ = Math.max(this.maxZ,         this.vertex[2][2]); 
+    
+    global_minX = Math.min(global_minX, this.minX);
+    global_minY = Math.min(global_minY, this.minY);
+    global_minZ = Math.min(global_minZ, this.minZ);
+    global_maxX = Math.max(global_maxX, this.maxX);
+    global_maxY = Math.max(global_maxY, this.maxY);
+    global_maxZ = Math.max(global_maxZ, this.maxZ);
+    
+}
+
+
+function Triangle_Ascii(line1, line2, line3, line4, line5, line6, line7)
+{
+    this.vertex = new Array(3);
+    this.vertex[0] = new Array(3);
+    this.vertex[1] = new Array(3);
+    this.vertex[2] = new Array(3);
+    this.minX = 6000000000;
+    this.minY = 6000000000;
+    this.maxX = -6000000000;
+    this.maxY = -6000000000;
+    this.status = 0;
+    
+    line3 = line3.trim();
+    line4 = line4.trim();
+    line5 = line5.trim();
+    
+    let split3 = line3.split(" ");
+    let split4 = line4.split(" ");
+    let split5 = line5.split(" ");
+    
+    this.vertex[0][0] = parseFloat(split3[1]);
+    this.vertex[0][1] = -parseFloat(split3[2]);
+    this.vertex[0][2] = parseFloat(split3[3]);
+
+    this.vertex[1][0] = parseFloat(split4[1]);
+    this.vertex[1][1] = -parseFloat(split4[2]);
+    this.vertex[1][2] = parseFloat(split4[3]);
+
+    this.vertex[2][0] = parseFloat(split5[1]);
+    this.vertex[2][1] = -parseFloat(split5[2]);
+    this.vertex[2][2] = parseFloat(split5[3]);
+
+    
+    if (orientation == 1) {
+        let x,y,z;
+        for (let i = 0; i < 3; i++) {
+            x = this.vertex[i][0];
+            y = this.vertex[i][1];
+            z = this.vertex[i][2];
+            this.vertex[i][0] = x;
+            this.vertex[i][1] = -z;
+            this.vertex[i][2] = y;
         }
     }
     if (orientation == 2) {
@@ -480,6 +565,11 @@ function process_data(data)
         return; 
     }
     
+    if (data[0] == 's' && data[1] == 'o' && data[2] == 'l' && data[3] == 'i' && data[4] == 'd') {
+        console.log("ASCII STL detected");
+        return process_data_ascii(data);
+    }
+    
     let total_triangles = (data.charCodeAt(80)) + (data.charCodeAt(81)<<8) + (data.charCodeAt(82)<<16) + (data.charCodeAt(83)<<24); 
     
     if (84 + total_triangles * 50  != data.length) {
@@ -492,6 +582,72 @@ function process_data(data)
     
     for (let i = 0; i < total_triangles; i++) {
         T = new Triangle(data, 84 + i * 50);
+        triangles.push(T);
+    }
+
+    console.log("End of parsing at " + (Date.now() - start));
+
+    scale_design(desired_resolution);    
+    make_buckets();
+    console.log("End of buckets at " + (Date.now() - start));
+
+    console.log("Scale " + (Date.now() - start));
+    
+//    document.getElementById('list').innerHTML  = "Number of triangles " + total_triangles + "mX " + global_maxX + " mY " + global_maxY;
+}
+
+function process_data_ascii(data)
+{
+    let len = data.length;
+
+    let lines = data.split('\n');    
+    var start;
+    
+    start = Date.now();
+    
+    triangles = [];
+    buckets = [];
+    l2buckets = [];
+    global_minX = 600000000;
+    global_minY = 600000000;
+    global_minZ = 600000000;
+    global_maxX = -600000000;
+    global_maxY = -600000000;
+    global_maxZ = -600000000;
+    
+    if (len < 84) {
+        document.getElementById('list').innerHTML = "STL file too short";
+        return; 
+    }
+    
+    console.log("Start of parsing at " + (Date.now() - start));
+    
+    let lineslen = lines.length;
+    console.log("Total lines count " + lineslen);
+    
+    for (let i = 1; i < lineslen + 6; i+= 7) {
+        let line1 = lines[i];
+        let line2 = lines[i + 1];
+        let line3 = lines[i + 2];
+        let line4 = lines[i + 3];
+        let line5 = lines[i + 4];
+        let line6 = lines[i + 5];
+        let line7 = lines[i + 6];
+        if (typeof line1 === 'undefined')
+            continue;
+        if (typeof line2 === 'undefined')
+            continue;
+        if (typeof line3 === 'undefined')
+            continue;
+        if (typeof line4 === 'undefined')
+            continue;
+        if (typeof line5 === 'undefined')
+            continue;
+        if (typeof line6 === 'undefined')
+            continue;
+        if (typeof line7 === 'undefined')
+            continue;
+        T = new Triangle_Ascii(line1, line2, line3, line4, line5, line6, line7);
         triangles.push(T);
     }
 
