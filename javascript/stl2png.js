@@ -5,6 +5,7 @@
 */
 
 let desired_resolution = 1024;
+let zoffset = 0;
 
 function data_f32_to_number(data, offset)
 {
@@ -508,8 +509,16 @@ function process_data(data)
 
 function  calculate_line(data, Y, elem, context, pixels) 
 {
+    let zdiv = global_maxZ;
+    let zadd = 0;
+    
+    if (zoffset > 0) {
+        zadd = 0.01 * zoffset * global_maxZ;
+        zdiv = global_maxZ - zadd;
+    }
     for (let X = 0; X < global_maxX; X++) {
-            let c = 255 * (get_height(X, Y) / global_maxZ);
+            let d = ((get_height(X, Y) - zadd) / zdiv)             
+            let c = 255 * d;
             data[(X + Y * global_maxX) * 4 + 0 ] = c;
             data[(X + Y * global_maxX) * 4 + 1 ] = c;
             data[(X + Y * global_maxX) * 4 + 2 ] = c;
@@ -574,6 +583,14 @@ function SideB(val)
     let news = Math.floor(parseFloat(val));
     if (news > 0) {
         desired_resolution = news;
+    }
+}
+function OffsetB(val)
+{
+    let news = Math.floor(parseFloat(val));
+    if (news >= 0 && news < 100) {
+        console.log("Setting zoffset to " + val);
+        zoffset = news;
     }
 }
 
