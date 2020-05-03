@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>GcodeForce - javascript edition</title>
+<link rel="stylesheet" type="text/css" href="stl2png.css">
+</head>
+<body>
+<table width="100%">
+<tr><td valign="top">
+<a href="" id="download"></a>
+<hr>
+<form>
+<input type="file" id="files" name="files[]" />
+<output id="list"></output>
+</form>
+<hr>
+<div id="Progress">
+  <div id="Bar"></div>
+</div>
+<hr>
+<p>
+This website processes gcode files where it will reduce
+cutting forces by making the feedrate of the gcode dynamic
+(slower in high force areas)
+</p><p>
+All computation happens local
+and inside your browser, no information is uploaded or sent
+over the internet. For large files this can take 10+ seconds before the
+results show up.
+</p>
+<p>
+The tool currently only adjusts feedrates for regular endmills doing 2D operations.
+3D/Vbit/ball operations are for a future addition. 
+Also javascript diverges hugely between browsers; the Chrome browser is
+tested the most. I'll try to make others work on a best effort basis.
+</p>
+</td>
+</tr>
+<tr><td><pre id="outputpre"></pre></td></tr></table>
+
+<script type="text/javascript" src="gcode2gcode.js"></script>
+</body>
+</html>
