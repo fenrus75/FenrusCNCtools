@@ -23,6 +23,7 @@ let depthofcut = 0;
 let array2D;
 let glevel = 0;
 let filename = "output.nc";
+let speedlimit = 100;
 
 
 let scalefactor = 3.0;
@@ -482,10 +483,11 @@ function adjusted_feed(feed, X1,Y1,Z1, X2,Y2,Z2)
 	
 	if (load >= 0 && load <= 1.01) {
 		var load2 = load;
-		if (load2 < 0.52)
-			load2 = 0.5; /* speed limit */
 		load2 = load2 * 2;
 		feed = Math.floor(0.1 * feed / load2) * 10;
+		if (feed > currentfset * speedlimit / 100) {
+			feed = currentfset * speedlimit / 100;
+		}
 //		emit_output("(LOAD IS " + load + " FEED IS " + feed + "LOUT IS " + lout + ")");
 	}
 		
@@ -876,6 +878,15 @@ function handle(e)
         var reader = new FileReader();
         reader.onloadend = load;
         reader.readAsText(f);
+    }
+}
+
+function Speedlimit(value)
+{
+    let newlimit = parseFloat(value);
+    
+    if (newlimit > 0 && newlimit < 500) {
+    	speedlimit = newlimit;
     }
 }
 
