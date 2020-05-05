@@ -297,15 +297,16 @@ function area_load(X1, Y1, Z1, X2, Y2, Z2)
 	var sum = 0;
 	var count = 0;
 
-	var stepsize = diameter / 4;
+	var stepsize = diameter / 8;
 
 	if (dist(X1,Y1,X2,Y2)/10 < stepsize)
 		stepsize = dist(X1, Y1, X2, Y2) / 10;
 
-	if (stepsize < 0.1)
-		stepsize = 0.1;
+	if (stepsize < 0.04)
+		stepsize = 0.04;
 		
-	stepsize = 0.1;
+	if (stepsize > 0.2)
+		stepsize = 0.2;
 
 	var R = diameter / 2;
 
