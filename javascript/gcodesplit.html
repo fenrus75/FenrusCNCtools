@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>GcodeSplit - Split gcode files by toolpath</title>
+<link rel="stylesheet" type="text/css" href="stl2png.css">
+</head>
+<body>
+<table width="100%">
+<tr><td valign="top">
+<form>
+<input type="file" id="files" name="files[]" /><br><br>
+<output id="list"></output>
+</form>
+<hr>
+<a href="" id="download0"></a><br>
+<a href="" id="download1"></a><br>
+<a href="" id="download2"></a><br>
+<a href="" id="download3"></a><br>
+<a href="" id="download4"></a><br>
+<a href="" id="download5"></a><br>
+<a href="" id="download6"></a><br>
+<a href="" id="download7"></a><br>
+<a href="" id="download8"></a><br>
+<a href="" id="download9"></a><br>
+<a href="" id="download10"></a><br>
+<a href="" id="download11"></a><br>
+<a href="" id="download12"></a><br>
+</td><td valign="top">
+<p>
+This website processes gcode files and splits them into smaller files, one
+file per tool, for
+folks without a BitSetter.
+</p><p>
+The <a href="https://shop.carbide3d.com/collections/accessories/products/bitsetter">BitSetter</a> has been the best addon I got for my Shapeoko, and I highly
+recommend purchasing one. However, they aren't always in stock and shipping
+takes time... so for that case, this web application allows you to use
+Carbide Create's "Advanced V-Carve" feature even before the FedEx person
+shows up.
+</p><p>
+All computation happens local
+and inside your browser, no information is uploaded or sent
+over the internet. For large files this can take a few seconds before the
+results show up on the left.
+</p>
+Javascript diverges hugely between browsers; the Chrome browser is
+tested the most. I'll try to make others work on a best effort basis.
+</p>
+</td>
+</tr>
+<tr><td><pre id="outputpre"></pre></td></tr></table>
+
+<script type="text/javascript" src="gcodesplit.js"></script>
+</body>
+</html>
