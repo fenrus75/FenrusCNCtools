@@ -458,9 +458,36 @@ void gcode_mill_to(double X, double Y, double Z, double speedratio)
     prev_valid = 0;
 }
 
+double toolspeed3d(double cX, double cY, double cZ, double X, double Y, double Z)
+{
+	double horiz = dist(cX, cY, X, Y);
+	double d = dist3(cX, cY, cZ, X, Y, Z);
+	double vert = cZ - Z;
+	double time_horiz, time_vert;
+
+	time_horiz = horiz / tool_feedrate;
+
+	/* if we're milling up, feedrate dominates by definition */
+	if (vert <= 0) {
+			return d / time_horiz;
+	}
+
+	
+	/* scenario 1: feedrate dominates */
+	if (time_horiz > 0.000001) {
+		/* check if the effective plungerate is below max plung rate */
+		if (vert / time_horiz < tool_plungerate) {
+			return d / time_horiz;
+		}
+	}
+
+	/* when we get here, plunge rate dominates */
+	time_vert = vert / tool_plungerate;
+	return d / time_vert;
+}
+
 void gcode_vmill_to(double X, double Y, double Z, double speedratio)
 {
-	double d;
 	double toolspeed;
 	char command = '1';
 
@@ -472,7 +499,7 @@ void gcode_vmill_to(double X, double Y, double Z, double speedratio)
 //    printf("VMill to %5.4f %5.4f %5.4f\n", X, Y, Z);
 
 	/* slow start and stop for long distances */
-	if (speedratio == 1.0 && dist(cX,cY,X,Y) >= 1.5 * tool_diameter && approx4(cZ,Z)) {
+	if (speedratio == 1.0 && dist(cX,cY,X,Y) >= 1.5 * tool_diameter && approx4(cZ,Z) && dist(cX, cY, X,Y) > 5) {
 		double vX,vY, len;
 		vX = X - cX;
 		vY = Y - cY;
@@ -492,9 +519,8 @@ void gcode_vmill_to(double X, double Y, double Z, double speedratio)
     prevX2 = X;
     prevY2 = Y;
 
-	d = dist3(cX,cY,cZ,X,Y,Z);
 
-	toolspeed = dist(cX,cY,X,Y) / d * tool_feedrate + fabs(cZ-Z) / d * tool_plungerate;
+	toolspeed = toolspeed3d(cX, cY, cZ, X, Y, Z);
 
 	/* slow down for round corners */
 	if (dist(cX,cY,X,Y) < 0.5 * tool_diameter && speedratio > 0.7 && !am_roughing)
@@ -531,7 +557,7 @@ void gcode_vmill_to(double X, double Y, double Z, double speedratio)
 void gcode_travel_to(double X, double Y)
 {
     char buffer[256];
-    sprintf(buffer,"Travel distance %5.4fmm", dist(X, Y, cX, cY));
+//    sprintf(buffer,"Travel distance %5.4fmm", dist(X, Y, cX, cY));
     gcode_write_comment(buffer);
     if (cZ < safe_retract_height)
         gcode_retract();
