@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>STL2NC - javascript edition</title>
+    <link rel="stylesheet" type="text/css" href="stl2nc.css">
+</head>
+<body>
+    <div valign="top" style="font-family: Arial;">
+        <h1>STL to GCODE CAM tool</h1>
+        <p>
+            This website lets you convert STL files to Gcode
+            for use with Shapoko CNC machines
+        </p>
+        <p>
+            All computation happens local
+            and inside your browser, no information is uploaded or sent
+            over the internet. For large files this can take 10+ seconds before the
+            results show up.
+        </p>
+        <div id="orient">
+            Orientation:<br />
+            <input type="radio" value="top" name="or" id="top" checked onclick="RadioB(this.value)"><label for="top">Top</label>
+            <input type="radio" value="front" name="or" id="front" onclick="RadioB(this.value)"><label for="front">Front</label>
+            <input type="radio" value="side" name="or" id="side" onclick="RadioB(this.value)"><label for="side">Side</label>
+            <br />
+            <br />
+            Resolution:<br />
+            <input type="text" value="12" onChange="SideB(this.value)"> mm
+            <br /><br />
+            Depth offset:<br />
+            <input type="text" value="0" onChange="OffsetB(this.value)"> percent
+            <br />
+        </div>
+        <div>
+            <br />
+            <form>
+                <input type="file" id="files" name="files[]" />
+                <output id="list"></output>
+            </form>
+
+            <br />
+            <hr />
+            <div id="Progress">
+                <div id="Bar"></div>
+            </div>
+            <hr />
+
+            <a href="" id="download"></a>
+            
+        </div>
+        <div width="100%">
+            <pre id="outputpre"></pre>
+        </div>
+    </div>
+
+    <script type="text/javascript" src="stl2nc.js"></script>
+</body>
+</html>
