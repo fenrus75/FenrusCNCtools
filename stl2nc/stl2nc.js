@@ -884,11 +884,22 @@ function gcode_select_tool(toolnr)
         tool_stock_to_leave = 0.5;
         return;
     }    
-    if (toolnr == 102) {
+    if (toolnr == 101) {
         tool_diameter = inch_to_mm(0.125);
         tool_feedrate = inch_to_mm(30);
         tool_plungerate = inch_to_mm(10);
         tool_geometry = "ball"
+        tool_nr = toolnr;
+        tool_name = toolnr.toString()
+        tool_depth_of_cut = inch_to_mm(0.039);
+        tool_stock_to_leave = 0.25;
+        return;
+    }    
+    if (toolnr == 102) {
+        tool_diameter = inch_to_mm(0.125);
+        tool_feedrate = inch_to_mm(30);
+        tool_plungerate = inch_to_mm(10);
+        tool_geometry = "flat"
         tool_nr = toolnr;
         tool_name = toolnr.toString()
         tool_depth_of_cut = inch_to_mm(0.039);
@@ -936,10 +947,28 @@ function Level(tool_number)
 
 function push_segment(X1, Y1, Z1, X2, Y2, Z2, level)
 {
+    if (X1 == X2 && Y1 == Y2 && Z1 == Z2) {
+        return;
+    }
+
     if (typeof(levels[level]) == "undefined") {
         levels[level] = new Level();
         levels[level].tool = tool_nr;
         levels[level].paths = [];
+    }
+
+    /* if the new segment is just an extension of the previous... merge them */    
+    if (levels[level].paths.length > 0) {
+        prev = levels[level].paths[levels[level].paths.length - 1];
+        if (prev.X1 == X1 && prev.Z1 == prev.Z2 && Z1 == Z2 && prev.Y2 == Y1 && prev.Z1 == Z1) {
+            levels[level].paths[levels[level].paths.length - 1].Y2 = Y2;
+            return;
+        }
+
+        if (prev.Y1== Y1 && prev.Z1 == prev.Z2 && Z1 == Z2 && prev.X2 == X1 && prev.Z1 == Z1) {
+            levels[level].paths[levels[level].paths.length - 1].X2 = X2;
+            return;
+        }
     }
     
     let seg = new Segment();
@@ -952,6 +981,28 @@ function push_segment(X1, Y1, Z1, X2, Y2, Z2, level)
     
     levels[level].paths.push(seg);
 }
+
+function push_segment_multilevel(X1, Y1, Z1, X2, Y2, Z2)
+{
+    let z1 = Z1;
+    let z2 = Z2;
+    let l = 0;
+    let mult = 0.5;
+    let divider = 1/tool_depth_of_cut;
+    
+    if (X1 == X2 && Y1 == Y2 && Z1 == Z2) {
+        return;
+    }
+            
+    while (z1 < 0 || z2 < 0) {
+        push_segment(X1, Y1, z1, X2, Y2, z2, l);
+        z1 = Math.ceil( (z1 + mult * tool_depth_of_cut) * divider) / divider;
+        z2 = Math.ceil( (z2 + mult * tool_depth_of_cut) * divider) / divider;
+        l = l + 1;
+        mult = 1.0;
+    }         
+}
+
 
 let ACC = 100.0;
 
@@ -1094,6 +1145,8 @@ function segments_to_gcode()
     }
     levels = [];
 }
+
+
 function roughing_zig_zag()
 {
     let deltaX = tool_diameter / 2;
@@ -1101,41 +1154,77 @@ function roughing_zig_zag()
     let X = 0;
     let lastX = 0;
     
+    if (deltaY > 0.5) {
+        deltaY = 0.5;
+    }
+    
     while (X <= global_maxX) {
         let Y = 0;
         
         let prevX = X;
         let prevY = 0;
-        let prevZ = 0;
+        let prevZ = get_height_tool(X, Y, 2 * tool_diameter / 2) + tool_stock_to_leave;;
         
-        gcode_travel_to(X, 0);
+//        gcode_travel_to(X, 0);
         while (Y <= global_maxY) {
+            /* for roughing we look 2x the tool diameter as a stock-to-leave measure */
             let Z = get_height_tool(X, Y, 2 * tool_diameter / 2) + tool_stock_to_leave;
-            
-//            gcode_mill_to_3D(X, Y, Z);
-            let z1 = prevZ;
-            let z2 = Z;
-            let l = 0;
-            
-//            push_segment(prevX, prevY, prevZ, X, Y, Z, l);
-            
-            while (z1 < 0 && z2 < 0) {
-                push_segment(prevX, prevY, z1, X, Y, z2, l);
-                z1 = z1 + tool_depth_of_cut;
-                z2 = z2 + tool_depth_of_cut;
-                l = l + 1;
-            }
+
+            push_segment_multilevel(prevX, prevY, prevZ, X, Y, Z);
             
             
             prevY = Y;
             prevZ = Z;
             
-            if (Y == global_maxY) {
+            if (Y == global_maxY) 
+            {
                 break;
             }
             Y = Y + deltaY;
-            if (Y > global_maxY) {
+            if (Y > global_maxY) 
+            {
                 Y = global_maxY;
+            }
+        }
+    
+        
+        
+        
+        if (X == global_maxX) {
+            break;
+        }
+        X = X + deltaX;
+        if (X > global_maxX) {
+            X = global_maxX;
+        }
+
+
+
+        Y = global_maxY;
+        
+        newZ = get_height_tool(X, Y, 2 * tool_diameter / 2) + tool_stock_to_leave;;
+        prevX = X;
+        prevY = global_maxY;
+        
+        prevZ = newZ;
+        
+//        gcode_travel_to(X, 0);
+        while (Y >= 0) {
+            /* for roughing we look 2x the tool diameter as a stock-to-leave measure */
+            let Z = get_height_tool(X, Y, 2 * tool_diameter / 2) + tool_stock_to_leave;
+
+            push_segment_multilevel(prevX, prevY, prevZ, X, Y, Z);
+            
+            
+            prevY = Y;
+            prevZ = Z;
+            
+            if (Y == 0) {
+                break;
+            }
+            Y = Y - deltaY;
+            if (Y  <= 0) {
+                Y = 0;
             }
         }
     
@@ -1150,6 +1239,7 @@ function roughing_zig_zag()
             X = global_maxX;
             
         }
+
     }
     
     
@@ -1157,15 +1247,118 @@ function roughing_zig_zag()
     
 }
 
+function finishing_zig_zag()
+{
+    let deltaX = tool_diameter / 10;
+    let deltaY = tool_diameter / 10;
+    let Y = 0;
+    let lastY = 0;
+    
+    if (deltaX > 0.5) {
+        deltaX = 0.5;
+    }
+    
+    if (deltaY < 0.1) {
+        deltaY = 0.1;
+    }
+    while (Y <= global_maxY) {
+        let X = 0;
+        
+        let prevX = 0;
+        let prevY = Y;
+        let prevZ = get_height_tool(X, Y, tool_diameter / 2);
+        
+//        gcode_travel_to(X, 0);
+        while (X <= global_maxX) {
+            let Z = get_height_tool(X, Y, tool_diameter / 2);
+            
+            push_segment(prevX, prevY, prevZ, X, Y, Z, 0);
+            
+            
+            prevX = X;
+            prevZ = Z;
+            
+            if (X == global_maxX) 
+            {
+                break;
+            }
+            X = X + deltaX;
+            if (X > global_maxX) 
+            {
+                X = global_maxX;
+            }
+        }
+    
+        
+        
+        
+        if (Y == global_maxY) {
+            break;
+        }
+        Y = Y + deltaY;
+        if (Y > global_maxY) {
+            Y = global_maxY;
+        }
+
+
+
+        X = global_maxX;
+        
+        newZ = get_height_tool(X, Y, tool_diameter / 2) ;
+        prevY = Y;
+        prevX = global_maxX;
+        
+        prevZ = newZ;
+        
+//        gcode_travel_to(X, 0);
+        while (X >= 0) {
+            /* for roughing we look 2x the tool diameter as a stock-to-leave measure */
+            let Z = get_height_tool(X, Y, tool_diameter / 2);
+
+            push_segment(prevX, prevY, prevZ, X, Y, Z, 0);
+            
+            
+            prevX = X;
+            prevZ = Z;
+            
+            if (X == 0) 
+            {
+                break;
+            }
+            X = X - deltaX;
+            if (X  <= 0) 
+            {
+                X = 0;
+            }
+        }
+    
+        
+        
+        
+        if (Y == global_maxX) {
+            break;
+        }
+        Y = Y + deltaY;
+        if (Y > global_maxY) {
+            Y = global_maxY;
+            
+        }
+
+    }
+    
+    
+    segments_to_gcode();
+}
+
 function calculate_image() 
 {
     gcode_header();
     
-    gcode_change_tool(201);
-    zig_zag();
+    gcode_change_tool(102);
+    roughing_zig_zag();
     
-//    gcode_change_tool(27);
-//    zig_zag();
+    gcode_change_tool(27);
+    finishing_zig_zag();
     
     gcode_footer();
     
@@ -1176,7 +1369,7 @@ function calculate_image()
     link.href = "#";
     link.download = filename + ".nc";
     link.href = "data:text/plain;base64," + btoa(gcode_string);
-
+    gcode_string = "";
 }
 
 function RadioB(val)
