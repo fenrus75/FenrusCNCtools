@@ -558,7 +558,7 @@ void gcode_travel_to(double X, double Y)
 {
     char buffer[256];
 //    sprintf(buffer,"Travel distance %5.4fmm", dist(X, Y, cX, cY));
-    gcode_write_comment(buffer);
+//    gcode_write_comment(buffer);
     if (cZ < safe_retract_height)
         gcode_retract();
     fprintf(gcode, "G0");
