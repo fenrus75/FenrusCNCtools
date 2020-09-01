@@ -71,16 +71,17 @@ let global_maxZ = -600000000;
 
 let orientation = 0;
 
-function Triangle(data, offset)
-{
+class Triangle {
+  constructor (data, offset)
+  {
     this.vertex = new Array(3);
     this.vertex[0] = new Array(3);
     this.vertex[1] = new Array(3);
     this.vertex[2] = new Array(3);
-    this.minX = 6000000000;
-    this.minY = 6000000000;
-    this.maxX = -6000000000;
-    this.maxY = -6000000000;
+    this.minX = 6000000000.0;
+    this.minY = 6000000000.0;
+    this.maxX = -6000000000.0;
+    this.maxY = -6000000000.0;
     this.status = 0;
     
     this.vertex[0][0] = data_f32_to_number(data, offset + 12);
@@ -142,20 +143,21 @@ function Triangle(data, offset)
     global_maxX = Math.max(global_maxX, this.maxX);
     global_maxY = Math.max(global_maxY, this.maxY);
     global_maxZ = Math.max(global_maxZ, this.maxZ);
-    
+  }
 }
 
-
-function Triangle_Ascii(line1, line2, line3, line4, line5, line6, line7)
+class Triangle_Ascii
 {
+  constructor (line1, line2, line3, line4, line5, line6, line7)
+  {
     this.vertex = new Array(3);
     this.vertex[0] = new Array(3);
     this.vertex[1] = new Array(3);
     this.vertex[2] = new Array(3);
-    this.minX = 6000000000;
-    this.minY = 6000000000;
-    this.maxX = -6000000000;
-    this.maxY = -6000000000;
+    this.minX = 6000000000.0;
+    this.minY = 6000000000.0;
+    this.maxX = -6000000000.0;
+    this.maxY = -6000000000.0;
     this.status = 0;
     
     line3 = line3.trim();
@@ -226,7 +228,7 @@ function Triangle_Ascii(line1, line2, line3, line4, line5, line6, line7)
     global_maxX = Math.max(global_maxX, this.maxX);
     global_maxY = Math.max(global_maxY, this.maxY);
     global_maxZ = Math.max(global_maxZ, this.maxZ);
-    
+  } 
 }
 
 
@@ -353,26 +355,30 @@ function calc_Z(X, Y, t)
 	return l1 * t.vertex[0][2] + l2 * t.vertex[1][2] + l3 * t.vertex[2][2];
 }
 
-function Bucket(lead_triangle)
-{
+class Bucket {
+  constructor (lead_triangle)
+  {
     this.minX = global_maxX;
-    this.maxX = 0;
+    this.maxX = 0.0;
     this.minY = global_maxY;
-    this.maxY = 0;
+    this.maxY = 0.0;
     
     this.triangles = []
     this.status = 0;
+  }
 }
 
-function L2Bucket(lead_triangle)
-{
+class L2Bucket {
+  constructor (lead_triangle)
+  {
     this.minX = global_maxX;
-    this.maxX = 0;
+    this.maxX = 0.0;
     this.minY = global_maxY;
-    this.maxY = 0;
+    this.maxY = 0.0;
     
     this.buckets = []
     this.status = 0;
+  }
 }
 
 
@@ -919,24 +925,28 @@ function gcode_change_tool(toolnr)
     gcode_write_toolchange();
 }
 
-function Segment()
-{
+class Segment {
+  constructor()
+  {
     this.X1 = -1;
     this.Y1 = -1;
     this.Z1 = -1;
     this.X2 = -1;
     this.Y2 = -1;
     this.Z2 = -1;
+  }
 }
 
 
 let levels = [];
 
 
-function Level(tool_number)
-{
+class Level {
+  constructor(tool_number)
+  {
     this.tool = tool_number;
     this.paths = [];
+  }
 }
 
 function push_segment(X1, Y1, Z1, X2, Y2, Z2, level)
