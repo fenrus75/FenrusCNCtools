@@ -439,9 +439,11 @@ let BUCKET_SIZE2=32;
 function make_buckets()
 {
 	let i;
-	let slop = Math.max(global_maxX, global_maxY)/80;
+	let slop = Math.min(Math.max(global_maxX, global_maxY)/100, 1);
 	let maxslop = slop * 2;
 	let len = triangles.length
+	
+	console.log("Slop is ", slop);
 
 	for (i = 0; i < len; i++) {
 		let j;
@@ -499,7 +501,8 @@ function make_buckets()
 	}
 	console.log("Made " + buckets.length + " buckets\n");
 	
-	slop = Math.max(global_maxX, global_maxY)/10;
+	slop = Math.min(Math.max(global_maxX, global_maxY)/30, 4);
+	console.log("L2 Slop is ", slop);
 	maxslop = slop * 2;
 
 	let nrbuckets = buckets.length
