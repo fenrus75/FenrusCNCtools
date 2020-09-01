@@ -812,10 +812,12 @@ function gcode_footer()
 
 let gcode_first_toolchange = 1;
 
+let gcode_retract_count = 0;
 function gcode_retract()
 {
     gcode_write("G0Z" + gcode_float2str( safe_retract_height));
     gcode_cZ = safe_retract_height;
+    gcode_retract_count += 1;
 }
 
 function gcode_travel_to(X, Y)
@@ -994,12 +996,13 @@ function gcode_change_tool(toolnr)
 class Segment {
   constructor()
   {
-    this.X1 = -1;
-    this.Y1 = -1;
-    this.Z1 = -1;
-    this.X2 = -1;
-    this.Y2 = -1;
-    this.Z2 = -1;
+    this.X1 = -1.0;
+    this.Y1 = -1.0;
+    this.Z1 = -1.0;
+    this.X2 = -1.0;
+    this.Y2 = -1.0;
+    this.Z2 = -1.0;
+    this.direct_mill_distance = 0.0001;
   }
 }
 
@@ -1015,7 +1018,7 @@ class Level {
   }
 }
 
-function push_segment(X1, Y1, Z1, X2, Y2, Z2, level)
+function push_segment(X1, Y1, Z1, X2, Y2, Z2, level = 0.0, direct_mill = 0.0001)
 {
     if (X1 == X2 && Y1 == Y2 && Z1 == Z2) {
         return;
@@ -1050,11 +1053,12 @@ function push_segment(X1, Y1, Z1, X2, Y2, Z2, level)
     seg.X2 = X2;
     seg.Y2 = Y2;
     seg.Z2 = Z2;
+    seg.direct_mill_distance = direct_mill;
     
     levels[level].paths.push(seg);
 }
 
-function push_segment_multilevel(X1, Y1, Z1, X2, Y2, Z2)
+function push_segment_multilevel(X1, Y1, Z1, X2, Y2, Z2, direct_mill = 0.0001)
 {
     let z1 = Z1;
     let z2 = Z2;
@@ -1069,7 +1073,7 @@ function push_segment_multilevel(X1, Y1, Z1, X2, Y2, Z2)
 //    console.log("X1 ", X1, " Y1 ", Y1, " Z1 ", Z1, " X2 ", X2, " Y2 ", Y2, " Z2 ", Z2);
             
     while (z1 < 0 || z2 < 0) {
-        push_segment(X1, Y1, z1, X2, Y2, z2, l);
+        push_segment(X1, Y1, z1, X2, Y2, z2, l, direct_mill);
         z1 = Math.ceil( (z1 + mult * tool_depth_of_cut) * divider) / divider;
         z2 = Math.ceil( (z2 + mult * tool_depth_of_cut) * divider) / divider;
         l = l + 1;
@@ -1209,77 +1213,84 @@ function segments_to_gcode()
         for (let seg = 0; seg < levels[lev].paths.length; seg++) {
             let segm = levels[lev].paths[seg];
             
-            if (!approx4(gcode_cX, segm.X1) || ! approx4(gcode_cY, segm.Y1) || !approx4(gcode_cZ, segm.Z1)) {
+            if (dist3(gcode_cX, gcode_cY, gcode_cZ, segm.X1, segm.Y1, segm.Z1) > segm.direct_mill_distance) {
                 gcode_travel_to(segm.X1, segm.Y1);
                 gcode_mill_to_3D(segm.X1, segm.Y1, segm.Z1);
 //                console.log("cx ", gcode_cX, " X1 ", segm.X1);
 //                console.log("cy ", gcode_cY, " X1 ", segm.Y1);
 //                console.log("cz ", gcode_cZ, " X1 ", segm.Z1);
+            } else {
+                if (dist3(gcode_cX, gcode_cY, gcode_cZ, segm.X1, segm.Y1, segm.Z1) > 0.00001) {
+                    gcode_mill_to_3D(segm.X1, segm.Y1, segm.Z1);            
+                }
             }
             gcode_mill_to_3D(segm.X2, segm.Y2, segm.Z2);            
         }
     }
     levels = [];
     console.log("Segments_to_gcode " + (Date.now() - startdate));
+    console.log("Total retract count", gcode_retract_count);
 }
 
 function roughing_zig(X, deltaY)
 {
-       let Y = 0;
+       let Y = -tool_diameter / 2;
         
         let prevX = X;
-        let prevY = 0;
+        let prevY = Y;
         let prevZ = get_height_tool(X, Y, 2 * tool_diameter / 2) + tool_stock_to_leave;;
+        let maxY = global_maxY + tool_diameter / 2;
         
 //        gcode_travel_to(X, 0);
-        while (Y <= global_maxY) {
+        while (Y <= maxY) {
             /* for roughing we look 2x the tool diameter as a stock-to-leave measure */
             let Z = get_height_tool(X, Y, 2 * tool_diameter / 2) + tool_stock_to_leave;
 
-            push_segment_multilevel(prevX, prevY, prevZ, X, Y, Z);
+            push_segment_multilevel(prevX, prevY, prevZ, X, Y, Z, tool_diameter * 0.7);
             
             
             prevY = Y;
             prevZ = Z;
             
-            if (Y == global_maxY) 
+            if (Y == maxY) 
             {
                 break;
             }
             Y = Y + deltaY;
-            if (Y > global_maxY) 
+            if (Y > maxY) 
             {
-                Y = global_maxY;
+                Y = maxY;
             }
         }    
  }
 function roughing_zag(X, deltaY)
 {
-        let Y = global_maxY;
+        let Y = global_maxY + tool_diameter / 2;
         
         let newZ = get_height_tool(X, Y, 2 * tool_diameter / 2) + tool_stock_to_leave;;
         let prevX = X;
-        let prevY = global_maxY;
+        let prevY = Y;
+        let minY = -tool_diameter / 2;
         
         let prevZ = newZ;
         
 //        gcode_travel_to(X, 0);
-        while (Y >= 0) {
+        while (Y >= minY) {
             /* for roughing we look 2x the tool diameter as a stock-to-leave measure */
             let Z = get_height_tool(X, Y, 2 * tool_diameter / 2) + tool_stock_to_leave;
 
-            push_segment_multilevel(prevX, prevY, prevZ, X, Y, Z);
+            push_segment_multilevel(prevX, prevY, prevZ, X, Y, Z, tool_diameter * 0.7);
             
             
             prevY = Y;
             prevZ = Z;
             
-            if (Y == 0) {
+            if (Y == minY) {
                 break;
             }
             Y = Y - deltaY;
-            if (Y  <= 0) {
-                Y = 0;
+            if (Y  <= minY) {
+                Y = minY;
             }
         }
         var elem = document.getElementById("BarRoughing");
@@ -1296,7 +1307,7 @@ function cutout_box1()
     let maxX = global_maxX + tool_diameter / 2;
     let maxY = global_maxY + tool_diameter / 2;
     
-    let maxZ = -global_maxZ + tool_depth_of_cut;
+    let maxZ = -global_maxZ + tool_depth_of_cut * 0.5;
     
     push_segment_multilevel(minX, minY, maxZ, minX, maxY, maxZ);
     push_segment_multilevel(minX, maxY, maxZ, maxX, maxY, maxZ);
@@ -1382,7 +1393,7 @@ function finishing_zig(Y, deltaX)
         while (X <= maxX) {
             let Z = get_height_tool(X, Y, tool_diameter / 2);
             
-            push_segment(prevX, prevY, prevZ, X, Y, Z, 0);
+            push_segment(prevX, prevY, prevZ, X, Y, Z, 0, 5);
             
             
             prevX = X;
@@ -1417,7 +1428,7 @@ function finishing_zag(Y, deltaX)
             /* for roughing we look 2x the tool diameter as a stock-to-leave measure */
             let Z = get_height_tool(X, Y, tool_diameter / 2);
 
-            push_segment(prevX, prevY, prevZ, X, Y, Z, 0);
+            push_segment(prevX, prevY, prevZ, X, Y, Z, 0, 5);
             
             
             prevX = X;
