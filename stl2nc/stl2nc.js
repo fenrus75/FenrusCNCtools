@@ -562,9 +562,9 @@ function make_buckets()
 	
 }
 
-function get_height(X, Y, value = 0.0)
+function get_height(X, Y, value = -global_maxZ)
 {
-//        value = value + global_maxZ;
+        value = value + global_maxZ;
 //        let value = 0.0;
 	let l2bl = l2buckets.length;
 	
@@ -948,6 +948,8 @@ function gcode_select_tool(toolnr)
 {
     /* reset some of the cached variables */
     gcode_cF = -1; 
+    cache_prev_X = -50000;
+    cache_prev_Y = -50000;
     /* TODO: NEED TOOL DATABASE */
     if (toolnr == 201) {
         tool_diameter = inch_to_mm(0.25);
@@ -1102,24 +1104,25 @@ function geometry_at_distance(R)
     return 0;
 }
 
-let cache_prev_X = 0.0;
-let cache_prev_Y = 0.0;
+let cache_prev_X = -5000.0;
+let cache_prev_Y = -5000.0;
 
 function update_height(height, X, Y, offset)
 {
-/*
+
     let prevheight = height;
-    height = Math.max(height, get_height(X, Y, height) + offset);
+    let newheight = get_height(X, Y, height) + offset;
     
-    if (height > prevheight) {
+    if (newheight > prevheight) {
         cache_prev_X = X;
         cache_prev_Y = Y;
+        height = newheight;
     }
 
     return height;
-*/
 
-    return Math.max(height, get_height(X, Y) + offset);
+
+//    return Math.max(height, get_height(X, Y) + offset);
 
 }
 
@@ -1129,19 +1132,15 @@ function get_height_tool(X, Y, R)
 	let balloffset = 0.0;
 	let r;
 	
-	d = update_height(d, X + 0.0000 * R, Y + 0.0000 * R, 0);
-	
-	
-	
-	/* we track the previous heighest point and make sure we check that early */
-/*	
+	/* we track the previous heighest point and make sure we check that early */	
 	r = dist(X, Y, cache_prev_X, cache_prev_Y)
 	if (r <= R) {
-	    
         	balloffset = -geometry_at_distance(r);
         	d = update_height(d, cache_prev_X, cache_prev_Y, balloffset);
         }
- */       
+
+	d = update_height(d, X + 0.0000 * R, Y + 0.0000 * R, 0);
+ 
 	balloffset = -geometry_at_distance(R);
 
 	d = update_height(d, X + 1.0000 * R, Y + 0.0000 * R,  balloffset);
