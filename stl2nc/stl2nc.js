@@ -4,6 +4,8 @@
     Licensed under the terms of the GPL-3.0 license
 */
 
+"use strict";
+
 let desired_depth = 12;
 let zoffset = 0;
 let image_width = 0;
@@ -330,19 +332,18 @@ function normalize_design_to_zero()
     let len = triangles.length;
     
     for (let i = 0; i < len; i++) {
-        t = triangles[i];
-        t.vertex[0][0] -= global_minX;
-        t.vertex[1][0] -= global_minX;
-        t.vertex[2][0] -= global_minX;
+        triangles[i].vertex[0][0] -= global_minX;
+        triangles[i].vertex[1][0] -= global_minX;
+        triangles[i].vertex[2][0] -= global_minX;
 
-        t.vertex[0][1] -= global_minY;
-        t.vertex[1][1] -= global_minY;
-        t.vertex[2][1] -= global_minY;
+        triangles[i].vertex[0][1] -= global_minY;
+        triangles[i].vertex[1][1] -= global_minY;
+        triangles[i].vertex[2][1] -= global_minY;
 
 
-        t.vertex[0][2] -= global_minZ;
-        t.vertex[1][2] -= global_minZ;
-        t.vertex[2][2] -= global_minZ;
+        triangles[i].vertex[0][2] -= global_minZ;
+        triangles[i].vertex[1][2] -= global_minZ;
+        triangles[i].vertex[2][2] -= global_minZ;
     }
 
     global_maxX -= global_minX;    
@@ -365,30 +366,29 @@ function scale_design(desired_depth)
     
     
     for (let i = 0; i < len; i++) {
-        t = triangles[i];
-        t.vertex[0][0] *= factor;
-        t.vertex[0][1] *= factor;
-        t.vertex[0][2] *= factor;
+        triangles[i].vertex[0][0] *= factor;
+        triangles[i].vertex[0][1] *= factor;
+        triangles[i].vertex[0][2] *= factor;
 
-        t.vertex[1][0] *= factor;
-        t.vertex[1][1] *= factor;
-        t.vertex[1][2] *= factor;
+        triangles[i].vertex[1][0] *= factor;
+        triangles[i].vertex[1][1] *= factor;
+        triangles[i].vertex[1][2] *= factor;
 
-        t.vertex[2][0] *= factor;
-        t.vertex[2][1] *= factor;
-        t.vertex[2][2] *= factor;
+        triangles[i].vertex[2][0] *= factor;
+        triangles[i].vertex[2][1] *= factor;
+        triangles[i].vertex[2][2] *= factor;
 
-        t.minX = Math.min(t.vertex[0][0], t.vertex[1][0]); 
-        t.minX = Math.min(t.minX, 	  t.vertex[2][0]); 
-        t.minY = Math.min(t.vertex[0][1], t.vertex[1][1]); 
-        t.minY = Math.min(t.minY, 	  t.vertex[2][1]); 
-        t.minZ = Math.min(t.vertex[0][2], t.vertex[1][2]); 
-        t.minZ = Math.min(t.minZ, 	  t.vertex[2][2]); 
+        triangles[i].minX = Math.min(triangles[i].vertex[0][0], triangles[i].vertex[1][0]); 
+        triangles[i].minX = Math.min(triangles[i].minX, 	triangles[i].vertex[2][0]); 
+        triangles[i].minY = Math.min(triangles[i].vertex[0][1], triangles[i].vertex[1][1]); 
+        triangles[i].minY = Math.min(triangles[i].minY, 	triangles[i].vertex[2][1]); 
+        triangles[i].minZ = Math.min(triangles[i].vertex[0][2], triangles[i].vertex[1][2]); 
+        triangles[i].minZ = Math.min(triangles[i].minZ, 	triangles[i].vertex[2][2]); 
     
-        t.maxX = Math.max(t.vertex[0][0], t.vertex[1][0]); 
-        t.maxX = Math.max(t.maxX, 	  t.vertex[2][0]); 
-        t.maxY = Math.max(t.vertex[0][1], t.vertex[1][1]); 
-        t.maxY = Math.max(t.maxY, 	  t.vertex[2][1]); 
+        triangles[i].maxX = Math.max(triangles[i].vertex[0][0], triangles[i].vertex[1][0]); 
+        triangles[i].maxX = Math.max(triangles[i].maxX, 	triangles[i].vertex[2][0]); 
+        triangles[i].maxY = Math.max(triangles[i].vertex[0][1], triangles[i].vertex[1][1]); 
+        triangles[i].maxY = Math.max(triangles[i].maxY, 	triangles[i].vertex[2][1]); 
     }
 
     global_maxX *= factor;    
@@ -554,7 +554,7 @@ function get_height(X, Y)
 	
 	for (let k = 0; k < l2bl; k++) {
 	
-            l2bucket = l2buckets[k];
+            let l2bucket = l2buckets[k];
 
             if (l2bucket.minX > X)
 		        continue;
@@ -578,7 +578,7 @@ function get_height(X, Y)
                 if (l2bucket.buckets[j].maxY < Y) 
 		   continue;
 
-		bucket = l2bucket.buckets[j];
+		let bucket = l2bucket.buckets[j];
         	let len = l2bucket.buckets[j].triangles.length;
         	for (let i = 0; i < len; i++) {
         	        let newZ;
@@ -650,7 +650,7 @@ function process_data(data)
     console.log("Start of parsing at " + (Date.now() - start));
     
     for (let i = 0; i < total_triangles; i++) {
-        T = new Triangle(data, 84 + i * 50);
+        let T = new Triangle(data, 84 + i * 50);
         triangles.push(T);
     }
 
@@ -716,7 +716,7 @@ function process_data_ascii(data)
             continue;
         if (typeof line7 === 'undefined')
             continue;
-        T = new Triangle_Ascii(line1, line2, line3, line4, line5, line6, line7);
+        let T = new Triangle_Ascii(line1, line2, line3, line4, line5, line6, line7);
         triangles.push(T);
     }
 
@@ -743,7 +743,8 @@ function mm_to_inch(mm)
 
 
 let tool_diameter = inch_to_mm(0.25);
-let tool_feedrate = 0;
+let tool_feedrate = 0.0;
+let tool_plungerate = 0.0;
 let tool_geometry = "";
 let tool_name = "";
 let tool_nr = 0;
@@ -1013,7 +1014,7 @@ function push_segment(X1, Y1, Z1, X2, Y2, Z2, level)
 
     /* if the new segment is just an extension of the previous... merge them */    
     if (levels[level].paths.length > 0) {
-        prev = levels[level].paths[levels[level].paths.length - 1];
+        let prev = levels[level].paths[levels[level].paths.length - 1];
         if (prev.X1 == X1 && prev.Z1 == prev.Z2 && Z1 == Z2 && prev.Y2 == Y1 && prev.Z1 == Z1 && X1 == X2) {
             levels[level].paths[levels[level].paths.length - 1].Y2 = Y2;
             return;
@@ -1189,7 +1190,7 @@ function segments_to_gcode()
 {
     for (let lev = levels.length - 1; lev >= 0; lev--) {
         for (let seg = 0; seg < levels[lev].paths.length; seg++) {
-            segm = levels[lev].paths[seg];
+            let segm = levels[lev].paths[seg];
             
             if (!approx4(gcode_cX, segm.X1) || ! approx4(gcode_cY, segm.Y1) || !approx4(gcode_cZ, segm.Z1)) {
                 gcode_travel_to(segm.X1, segm.Y1);
@@ -1564,7 +1565,7 @@ function handle(e)
 {
     var files = this.files;
     for (var i = 0, f; f = files[i]; i++) {
-        fn = basename(f.name);
+        let fn = basename(f.name);
         if (fn != "" && fn.includes(".stl")) {
                 filename = fn;
         }
