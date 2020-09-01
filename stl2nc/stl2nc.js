@@ -951,15 +951,17 @@ function push_segment(X1, Y1, Z1, X2, Y2, Z2, level)
         levels[level].paths = [];
     }
 
+//    console.log("X1 ", X1, " Y1 ", Y1, " Z1 ", Z1, " X2 ", X2, " Y2 ", Y2, " Z2 ", Z2, " level ", level);
+
     /* if the new segment is just an extension of the previous... merge them */    
     if (levels[level].paths.length > 0) {
         prev = levels[level].paths[levels[level].paths.length - 1];
-        if (prev.X1 == X1 && prev.Z1 == prev.Z2 && Z1 == Z2 && prev.Y2 == Y1 && prev.Z1 == Z1) {
+        if (prev.X1 == X1 && prev.Z1 == prev.Z2 && Z1 == Z2 && prev.Y2 == Y1 && prev.Z1 == Z1 && X1 == X2) {
             levels[level].paths[levels[level].paths.length - 1].Y2 = Y2;
             return;
         }
 
-        if (prev.Y1== Y1 && prev.Z1 == prev.Z2 && Z1 == Z2 && prev.X2 == X1 && prev.Z1 == Z1) {
+        if (prev.Y1== Y1 && prev.Z1 == prev.Z2 && Z1 == Z2 && prev.X2 == X1 && prev.Z1 == Z1 && Y1 == Y2) {
             levels[level].paths[levels[level].paths.length - 1].X2 = X2;
             return;
         }
@@ -987,6 +989,8 @@ function push_segment_multilevel(X1, Y1, Z1, X2, Y2, Z2)
     if (X1 == X2 && Y1 == Y2 && Z1 == Z2) {
         return;
     }
+    
+//    console.log("X1 ", X1, " Y1 ", Y1, " Z1 ", Z1, " X2 ", X2, " Y2 ", Y2, " Z2 ", Z2);
             
     while (z1 < 0 || z2 < 0) {
         push_segment(X1, Y1, z1, X2, Y2, z2, l);
@@ -1208,6 +1212,22 @@ function roughing_zag(X, deltaY)
 }
 
 
+function cutout_box()
+{
+    let minX = -tool_diameter / 2;
+    let minY = -tool_diameter / 2;
+    let maxX = global_maxX + tool_diameter / 2;
+    let maxY = global_maxY + tool_diameter / 2;
+    
+    let maxZ = -global_maxZ;
+    
+    push_segment_multilevel(minX, minY, maxZ, minX, maxY, maxZ);
+    push_segment_multilevel(minX, maxY, maxZ, maxX, maxY, maxZ);
+    push_segment_multilevel(maxX, maxY, maxZ, maxX, minY, maxZ);
+    push_segment_multilevel(maxX, minY, maxZ, minX, minY, maxZ);
+}
+
+
 function roughing_zig_zag(tool)
 {
     gcode_select_tool(tool);
@@ -1221,6 +1241,8 @@ function roughing_zig_zag(tool)
     if (deltaY > 0.5) {
         deltaY = 0.5;
     }
+
+    setTimeout(cutout_box, 0);    
     
     while (X <= global_maxX) {
 
@@ -1249,7 +1271,7 @@ function roughing_zig_zag(tool)
 
     }
     
-    
+
     setTimeout(segments_to_gcode, 0);
     
 }
