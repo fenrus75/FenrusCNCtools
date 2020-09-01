@@ -564,6 +564,7 @@ function make_buckets()
 
 function get_height(X, Y, value = 0.0)
 {
+//        value = value + global_maxZ;
 //        let value = 0.0;
 	let l2bl = l2buckets.length;
 	
@@ -579,10 +580,10 @@ function get_height(X, Y, value = 0.0)
             		continue;
             if (l2bucket.maxY < Y)
                         continue;
-/*       
+       
             if (l2bucket.maxZ <= value)
                     continue;
-*/
+
             let bl = l2buckets[k].buckets.length;
 	
             for (let j =0 ; j < bl; j++) {
@@ -1131,14 +1132,16 @@ function get_height_tool(X, Y, R)
 	d = update_height(d, X + 0.0000 * R, Y + 0.0000 * R, 0);
 	
 	
+	
 	/* we track the previous heighest point and make sure we check that early */
+/*	
 	r = dist(X, Y, cache_prev_X, cache_prev_Y)
 	if (r <= R) {
 	    
         	balloffset = -geometry_at_distance(r);
         	d = update_height(d, cache_prev_X, cache_prev_Y, balloffset);
         }
-        
+ */       
 	balloffset = -geometry_at_distance(R);
 
 	d = update_height(d, X + 1.0000 * R, Y + 0.0000 * R,  balloffset);
@@ -1274,6 +1277,8 @@ function roughing_zig(X, deltaY)
             }
         }    
  }
+ 
+let prev_pct = 0;
 function roughing_zag(X, deltaY)
 {
         let Y = global_maxY + tool_diameter / 2;
@@ -1304,8 +1309,12 @@ function roughing_zag(X, deltaY)
                 Y = minY;
             }
         }
-        var elem = document.getElementById("BarRoughing");
-        elem.style.width = (Math.round(X/global_maxX * 100)) + "%";
+        let pct = (Math.round(X/global_maxX * 100));
+        if (pct > prev_pct + 10 || pct > 99) {
+            var elem = document.getElementById("BarRoughing");
+            elem.style.width = pct + "%";
+            prev_pct = pct;
+        }
     
         
 }
@@ -1423,6 +1432,7 @@ function finishing_zig(Y, deltaX)
     
 
 }
+let prev_pct2 = 0;
 function finishing_zag(Y, deltaX)
 {
         let X = global_maxX + tool_diameter / 2;
@@ -1455,8 +1465,18 @@ function finishing_zag(Y, deltaX)
                 X = minX;
             }
         }
-        var elem = document.getElementById("BarFinishing");
-        elem.style.width = (Math.round(Y/global_maxY * 100)) + "%";
+        let pct = (Math.round(Y/global_maxY * 100));
+        if (pct > prev_pct2 + 5 || pct > 99) {
+            if (pct > 100) {
+                pct = 100;
+            }
+            if (pct < 0) {
+                pct = 0;
+            }
+            var elem = document.getElementById("BarFinishing");
+            elem.style.width = pct + "%";
+            prev_pct2 = pct;
+        }
 }
 
 function finishing_zig_zag(tool)
