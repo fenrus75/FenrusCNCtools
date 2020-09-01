@@ -1146,20 +1146,9 @@ function segments_to_gcode()
     levels = [];
 }
 
-
-function roughing_zig_zag()
+function roughing_zig(X, deltaY)
 {
-    let deltaX = tool_diameter / 2;
-    let deltaY = tool_diameter / 4;
-    let X = 0;
-    let lastX = 0;
-    
-    if (deltaY > 0.5) {
-        deltaY = 0.5;
-    }
-    
-    while (X <= global_maxX) {
-        let Y = 0;
+       let Y = 0;
         
         let prevX = X;
         let prevY = 0;
@@ -1185,28 +1174,17 @@ function roughing_zig_zag()
             {
                 Y = global_maxY;
             }
-        }
-    
+        }    
+ }
+function roughing_zag(X, deltaY)
+{
+        let Y = global_maxY;
         
+        let newZ = get_height_tool(X, Y, 2 * tool_diameter / 2) + tool_stock_to_leave;;
+        let prevX = X;
+        let prevY = global_maxY;
         
-        
-        if (X == global_maxX) {
-            break;
-        }
-        X = X + deltaX;
-        if (X > global_maxX) {
-            X = global_maxX;
-        }
-
-
-
-        Y = global_maxY;
-        
-        newZ = get_height_tool(X, Y, 2 * tool_diameter / 2) + tool_stock_to_leave;;
-        prevX = X;
-        prevY = global_maxY;
-        
-        prevZ = newZ;
+        let prevZ = newZ;
         
 //        gcode_travel_to(X, 0);
         while (Y >= 0) {
@@ -1227,8 +1205,38 @@ function roughing_zig_zag()
                 Y = 0;
             }
         }
+        var elem = document.getElementById("BarRoughing");
+        elem.style.width = (Math.round(X/global_maxX * 100)) + "%";
     
         
+}
+
+
+function roughing_zig_zag()
+{
+    let deltaX = tool_diameter / 2;
+    let deltaY = tool_diameter / 4;
+    let X = 0;
+    let lastX = 0;
+    
+    if (deltaY > 0.5) {
+        deltaY = 0.5;
+    }
+    
+    while (X <= global_maxX) {
+
+        setTimeout(roughing_zig, 0, X, deltaY);        
+        
+        if (X == global_maxX) {
+            break;
+        }
+        X = X + deltaX;
+        if (X > global_maxX) {
+            X = global_maxX;
+        }
+
+
+        setTimeout(roughing_zag, 0, X, deltaY);
         
         
         if (X == global_maxX) {
@@ -1243,25 +1251,12 @@ function roughing_zig_zag()
     }
     
     
-    segments_to_gcode();
+    setTimeout(segments_to_gcode, 0);
     
 }
 
-function finishing_zig_zag()
+function finishing_zig(Y, deltaX)
 {
-    let deltaX = tool_diameter / 10;
-    let deltaY = tool_diameter / 10;
-    let Y = 0;
-    let lastY = 0;
-    
-    if (deltaX > 0.5) {
-        deltaX = 0.5;
-    }
-    
-    if (deltaY < 0.1) {
-        deltaY = 0.1;
-    }
-    while (Y <= global_maxY) {
         let X = 0;
         
         let prevX = 0;
@@ -1289,26 +1284,17 @@ function finishing_zig_zag()
             }
         }
     
-        
-        
-        
-        if (Y == global_maxY) {
-            break;
-        }
-        Y = Y + deltaY;
-        if (Y > global_maxY) {
-            Y = global_maxY;
-        }
 
-
-
-        X = global_maxX;
+}
+function finishing_zag(Y, deltaX)
+{
+        let X = global_maxX;
         
-        newZ = get_height_tool(X, Y, tool_diameter / 2) ;
-        prevY = Y;
-        prevX = global_maxX;
+        let newZ = get_height_tool(X, Y, tool_diameter / 2) ;
+        let prevY = Y;
+        let prevX = global_maxX;
         
-        prevZ = newZ;
+        let prevZ = newZ;
         
 //        gcode_travel_to(X, 0);
         while (X >= 0) {
@@ -1331,8 +1317,40 @@ function finishing_zig_zag()
                 X = 0;
             }
         }
+        var elem = document.getElementById("BarFinishing");
+        elem.style.width = (Math.round(Y/global_maxY * 100)) + "%";
+}
+
+function finishing_zig_zag()
+{
+    let deltaX = tool_diameter / 10;
+    let deltaY = tool_diameter / 10;
+    let Y = 0;
+    let lastY = 0;
     
+    if (deltaX > 0.5) {
+        deltaX = 0.5;
+    }
+    
+    if (deltaY < 0.1) {
+        deltaY = 0.1;
+    }
+    while (Y <= global_maxY) {
+ 
+        setTimeout(finishing_zig, 0, Y, deltaX);       
         
+        
+        if (Y == global_maxY) {
+            break;
+        }
+        Y = Y + deltaY;
+        if (Y > global_maxY) {
+            Y = global_maxY;
+        }
+
+
+        setTimeout(finishing_zag, 0, Y, deltaX);       
+
         
         
         if (Y == global_maxX) {
@@ -1347,7 +1365,19 @@ function finishing_zig_zag()
     }
     
     
-    segments_to_gcode();
+    setTimeout(segments_to_gcode, 0);
+}
+
+function update_gcode_on_website()
+{
+    var pre = document.getElementById('outputpre')
+    pre.innerHTML = gcode_string;
+    var link = document.getElementById('download')
+    link.innerHTML = 'Download ' + filename+".nc";
+    link.href = "#";
+    link.download = filename + ".nc";
+    link.href = "data:text/plain;base64," + btoa(gcode_string);
+    gcode_string = "";
 }
 
 function calculate_image() 
@@ -1359,17 +1389,9 @@ function calculate_image()
     
     gcode_change_tool(27);
     finishing_zig_zag();
-    
-    gcode_footer();
-    
-    var pre = document.getElementById('outputpre')
-    pre.innerHTML = gcode_string;
-    var link = document.getElementById('download')
-    link.innerHTML = 'Download ' + filename+".nc";
-    link.href = "#";
-    link.download = filename + ".nc";
-    link.href = "data:text/plain;base64," + btoa(gcode_string);
-    gcode_string = "";
+
+    setTimeout(gcode_footer, 0);
+    setTimeout(update_gcode_on_website, 0);
 }
 
 function RadioB(val)

@@ -17,3 +17,23 @@ a:visited {
   height: 30px;
   background-color: green;
 }
+#ProgressFinishing {
+  width: 100%;
+  background-color: grey;
+}
+
+#BarFinishing {
+  width: 1%;
+  height: 30px;
+  background-color: green;
+}
+#ProgressRoughing {
+  width: 100%;
+  background-color: grey;
+}
+
+#BarRoughing {
+  width: 1%;
+  height: 30px;
+  background-color: green;
+}
