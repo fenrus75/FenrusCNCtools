@@ -7,10 +7,8 @@
 "use strict";
 
 let desired_depth = 12;
-let zoffset = 0;
-let image_width = 0;
-let image_height = 0;
-let safe_retract_height = 2;
+let zoffset = 0.0;
+let safe_retract_height = 2.0;
 let rippem = 18000;
 let filename = "";
 
@@ -354,9 +352,9 @@ function normalize_design_to_zero()
     global_maxX -= global_minX;    
     global_maxY -= global_minY;   
     global_maxZ -= global_minZ;    
-    global_minX = 0;
-    global_minY = 0;
-    global_minZ = 0;
+    global_minX = 0.0;
+    global_minY = 0.0;
+    global_minZ = 0.0;
 }
 
 function scale_design(desired_depth)
@@ -430,6 +428,7 @@ class L2Bucket {
     this.maxX = 0.0;
     this.minY = global_maxY;
     this.maxY = 0.0;
+    this.maxZ = 0.0;
     
     this.buckets = []
     this.status = 0;
@@ -511,7 +510,7 @@ function make_buckets()
 	let nrbuckets = buckets.length
 	for (i = 0; i < nrbuckets; i++) {
 		let j;
-		let Xmax, Ymax, Xmin, Ymin;
+		let Xmax, Ymax, Xmin, Ymin, Zmax;
 		let rXmax, rYmax, rXmin, rYmin;
 		let bucketptr = 0;
 		let l2bucket;
@@ -539,6 +538,7 @@ function make_buckets()
 				Ymax = Math.max(Ymax, buckets[j].maxY);
 				Xmin = Math.min(Xmin, buckets[j].minX);
 				Ymin = Math.min(Ymin, buckets[j].minY);
+				Zmax = Math.max(Zmax, buckets[j].maxZ);
 				l2bucket.buckets.push(buckets[j]);
 				buckets[j].status = 1;				
 			}				
@@ -555,15 +555,16 @@ function make_buckets()
 		l2bucket.minY = Ymin;
 		l2bucket.maxX = Xmax;
 		l2bucket.maxY = Ymax;
+		l2bucket.maxZ = Zmax;
 		l2buckets.push(l2bucket);
 	}
 	console.log("Created " + l2buckets.length + " L2 buckets\n");
 	
 }
 
-function get_height(X, Y)
+function get_height(X, Y, value = 0.0)
 {
-        let value = 0.0;
+//        let value = 0.0;
 	let l2bl = l2buckets.length;
 	
 	for (let k = 0; k < l2bl; k++) {
@@ -578,7 +579,10 @@ function get_height(X, Y)
             		continue;
             if (l2bucket.maxY < Y)
                         continue;
-
+/*       
+            if (l2bucket.maxZ <= value)
+                    continue;
+*/
             let bl = l2buckets[k].buckets.length;
 	
             for (let j =0 ; j < bl; j++) {
@@ -591,10 +595,11 @@ function get_height(X, Y)
                     continue;
                 if (l2bucket.buckets[j].maxY < Y) 
 		    continue;
-/*		    
+		    
+
 		if (l2bucket.buckets[j].maxZ <= value)
 		    continue;
-*/
+
 		let bucket = l2bucket.buckets[j];
         	let len = l2bucket.buckets[j].triangles.length;
         	for (let i = 0; i < len; i++) {
@@ -610,6 +615,8 @@ function get_height(X, Y)
                         if (bucket.triangles[i].maxX < X)
                             continue;
                         if (bucket.triangles[i].maxY < Y)
+                            continue;
+                        if (bucket.triangles[i].maxZ <= value)
                             continue;
 
                         /* then a more expensive detailed triangle test */
@@ -782,10 +789,10 @@ function gcode_comment(str)
 }
 
 
-let gcode_cX = 0;
-let gcode_cY = 0;
-let gcode_cZ = 0;
-let gcode_cF = 0;
+let gcode_cX = 0.0;
+let gcode_cY = 0.0;
+let gcode_cZ = 0.0;
+let gcode_cF = 0.0;
 
 function gcode_float2str(value)
 {
@@ -929,9 +936,9 @@ function gcode_write_toolchange()
     gcode_write("M6 T" + tool_name);
     gcode_write("M3 S" + rippem.toString());
     gcode_write("G0 X0Y0");
-    gcode_cX = 0;
-    gcode_cY = 0;
-    gcode_cF = -1;
+    gcode_cX = 0.0;
+    gcode_cY = 0.0;
+    gcode_cF = -1.0;
     gcode_retract();
     gcode_first_toolchange = 0;    
 }
@@ -981,7 +988,7 @@ function gcode_select_tool(toolnr)
         tool_geometry = "ball"
         tool_nr = toolnr;
         tool_name = toolnr.toString()
-        tool_stock_to_leave = 0;
+        tool_stock_to_leave = 0.0;
         return;
     }    
     console.log("UNKNOWN TOOL");    
@@ -1094,21 +1101,25 @@ function geometry_at_distance(R)
     return 0;
 }
 
-let cache_prev_X = 0;
-let cache_prev_Y = 0;
+let cache_prev_X = 0.0;
+let cache_prev_Y = 0.0;
 
 function update_height(height, X, Y, offset)
 {
-//    let prevheight = height;
-//    height = Math.max(height, get_height(X, Y) + offset);
-//    
-//    if (height > prevheight) {
-//        cache_prev_X = X;
-//        cache_prev_Y = Y;
-//    }
-//
-//    return height;
+/*
+    let prevheight = height;
+    height = Math.max(height, get_height(X, Y, height) + offset);
+    
+    if (height > prevheight) {
+        cache_prev_X = X;
+        cache_prev_Y = Y;
+    }
+
+    return height;
+*/
+
     return Math.max(height, get_height(X, Y) + offset);
+
 }
 
 function get_height_tool(X, Y, R)
