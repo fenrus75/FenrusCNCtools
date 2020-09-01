@@ -1256,14 +1256,15 @@ function roughing_zig_zag(tool)
 
 function finishing_zig(Y, deltaX)
 {
-        let X = 0;
+        let X = -tool_diameter / 2;
+        let maxX = global_maxX + tool_diameter / 2;
         
-        let prevX = 0;
+        let prevX = X;
         let prevY = Y;
         let prevZ = get_height_tool(X, Y, tool_diameter / 2);
         
 //        gcode_travel_to(X, 0);
-        while (X <= global_maxX) {
+        while (X <= maxX) {
             let Z = get_height_tool(X, Y, tool_diameter / 2);
             
             push_segment(prevX, prevY, prevZ, X, Y, Z, 0);
@@ -1272,14 +1273,14 @@ function finishing_zig(Y, deltaX)
             prevX = X;
             prevZ = Z;
             
-            if (X == global_maxX) 
+            if (X == maxX) 
             {
                 break;
             }
             X = X + deltaX;
-            if (X > global_maxX) 
+            if (X > maxX) 
             {
-                X = global_maxX;
+                X = maxX;
             }
         }
     
@@ -1287,7 +1288,8 @@ function finishing_zig(Y, deltaX)
 }
 function finishing_zag(Y, deltaX)
 {
-        let X = global_maxX;
+        let X = global_maxX + tool_diameter / 2;
+        let minX = -tool_diameter / 2;
         
         let newZ = get_height_tool(X, Y, tool_diameter / 2) ;
         let prevY = Y;
@@ -1296,7 +1298,7 @@ function finishing_zag(Y, deltaX)
         let prevZ = newZ;
         
 //        gcode_travel_to(X, 0);
-        while (X >= 0) {
+        while (X >= minX) {
             /* for roughing we look 2x the tool diameter as a stock-to-leave measure */
             let Z = get_height_tool(X, Y, tool_diameter / 2);
 
@@ -1306,14 +1308,14 @@ function finishing_zag(Y, deltaX)
             prevX = X;
             prevZ = Z;
             
-            if (X == 0) 
+            if (X == minX) 
             {
                 break;
             }
             X = X - deltaX;
-            if (X  <= 0) 
+            if (X  <= minX) 
             {
-                X = 0;
+                X = minX;
             }
         }
         var elem = document.getElementById("BarFinishing");
@@ -1326,11 +1328,15 @@ function finishing_zig_zag(tool)
     setTimeout(gcode_change_tool, 0, tool);
     gcode_select_tool(tool);
     
+    let minY = -tool_diameter / 2;
+    let maxY = global_maxY + tool_diameter / 2;
+    
     
     let deltaX = tool_diameter / 10;
     let deltaY = tool_diameter / 10;
-    let Y = 0;
+    let Y = -minY;
     let lastY = 0;
+    
     
     if (deltaX > 0.5) {
         deltaX = 0.5;
@@ -1344,17 +1350,17 @@ function finishing_zig_zag(tool)
     }
     
     console.log("dX ", deltaX, "  dY ", deltaY);
-    while (Y <= global_maxY) {
+    while (Y <= maxY) {
  
         setTimeout(finishing_zig, 0, Y, deltaX);       
         
         
-        if (Y == global_maxY) {
+        if (Y == maxY) {
             break;
         }
         Y = Y + deltaY;
-        if (Y > global_maxY) {
-            Y = global_maxY;
+        if (Y > maxY) {
+            Y = maxY;
         }
 
 
@@ -1362,12 +1368,12 @@ function finishing_zig_zag(tool)
 
         
         
-        if (Y == global_maxX) {
+        if (Y == maxY) {
             break;
         }
         Y = Y + deltaY;
-        if (Y > global_maxY) {
-            Y = global_maxY;
+        if (Y > maxY) {
+            Y = MaxY;
             
         }
 
