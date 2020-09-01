@@ -1212,7 +1212,22 @@ function roughing_zag(X, deltaY)
 }
 
 
-function cutout_box()
+function cutout_box1()
+{
+    let minX = -tool_diameter / 2;
+    let minY = -tool_diameter / 2;
+    let maxX = global_maxX + tool_diameter / 2;
+    let maxY = global_maxY + tool_diameter / 2;
+    
+    let maxZ = -global_maxZ + tool_depth_of_cut;
+    
+    push_segment_multilevel(minX, minY, maxZ, minX, maxY, maxZ);
+    push_segment_multilevel(minX, maxY, maxZ, maxX, maxY, maxZ);
+    push_segment_multilevel(maxX, maxY, maxZ, maxX, minY, maxZ);
+    push_segment_multilevel(maxX, minY, maxZ, minX, minY, maxZ);
+}
+
+function cutout_box2()
 {
     let minX = -tool_diameter / 2;
     let minY = -tool_diameter / 2;
@@ -1221,10 +1236,10 @@ function cutout_box()
     
     let maxZ = -global_maxZ;
     
-    push_segment_multilevel(minX, minY, maxZ, minX, maxY, maxZ);
-    push_segment_multilevel(minX, maxY, maxZ, maxX, maxY, maxZ);
-    push_segment_multilevel(maxX, maxY, maxZ, maxX, minY, maxZ);
-    push_segment_multilevel(maxX, minY, maxZ, minX, minY, maxZ);
+    push_segment(minX, minY, maxZ, minX, maxY, maxZ, 0);
+    push_segment(minX, maxY, maxZ, maxX, maxY, maxZ, 0);
+    push_segment(maxX, maxY, maxZ, maxX, minY, maxZ, 0);
+    push_segment(maxX, minY, maxZ, minX, minY, maxZ, 0);
 }
 
 
@@ -1242,7 +1257,7 @@ function roughing_zig_zag(tool)
         deltaY = 0.5;
     }
 
-    setTimeout(cutout_box, 0);    
+    setTimeout(cutout_box1, 0);    
     
     while (X <= global_maxX) {
 
@@ -1271,7 +1286,8 @@ function roughing_zig_zag(tool)
 
     }
     
-
+    setTimeout(segments_to_gcode, 0);
+    setTimeout(cutout_box2, 0);    
     setTimeout(segments_to_gcode, 0);
     
 }
