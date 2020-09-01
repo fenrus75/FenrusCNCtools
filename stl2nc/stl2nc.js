@@ -1567,7 +1567,7 @@ function finishing_zig_zag(tool)
         }
         Y = Y + deltaY;
         if (Y > maxY) {
-            Y = MaxY;
+            Y = maxY;
             
         }
 
@@ -1593,8 +1593,33 @@ function update_gcode_on_website()
 }
 
 
+function reset_globals()
+{
+    prev_pct = 0;
+    prev_pct2 = 0;
+    global_minX = 600000000;
+    global_minY = 600000000;
+    global_minZ = 600000000;
+    global_maxX = -600000000;
+    global_maxY = -600000000;
+    global_maxZ = -600000000;
+    triangles = [];
+    buckets = [];
+    l2buckets = [];
+    gcode_string = "";
+    gcode_cX = 0.0;
+    gcode_cY = 0.0;
+    gcode_cZ = 0.0;
+    gcode_cF = 0.0;
+    gcode_first_toolchange = 1;
+    gcode_retract_count = 0;
+    levels = [];
+    halfway_counter = 0;
+}
+
 function calculate_image() 
 {
+    
     startdate = Date.now();
     gcode_header();    
 
@@ -1642,7 +1667,10 @@ function load(evt)
 {
     var start;
     start =  Date.now();
+    
+    
     if (evt.target.readyState == FileReader.DONE) {
+        reset_globals();        
         process_data(evt.target.result);    
         console.log("End of data processing " + (Date.now() - start));
         start = Date.now();
