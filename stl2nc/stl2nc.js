@@ -84,6 +84,8 @@ class Triangle {
     this.minY = 6000000000.0;
     this.maxX = -6000000000.0;
     this.maxY = -6000000000.0;
+    this.minZ = 600000000.0;
+    this.maxZ = -600000000.0;
     this.status = 0;
     
     this.vertex[0][0] = data_f32_to_number(data, offset + 12);
@@ -389,6 +391,8 @@ function scale_design(desired_depth)
         triangles[i].maxX = Math.max(triangles[i].maxX, 	triangles[i].vertex[2][0]); 
         triangles[i].maxY = Math.max(triangles[i].vertex[0][1], triangles[i].vertex[1][1]); 
         triangles[i].maxY = Math.max(triangles[i].maxY, 	triangles[i].vertex[2][1]); 
+        triangles[i].maxZ = Math.max(triangles[i].vertex[0][2], triangles[i].vertex[1][2]); 
+        triangles[i].maxZ = Math.max(triangles[i].maxZ, 	triangles[i].vertex[2][2]); 
     }
 
     global_maxX *= factor;    
@@ -409,6 +413,7 @@ class Bucket {
     this.maxX = 0.0;
     this.minY = global_maxY;
     this.maxY = 0.0;
+    this.maxZ = 0.0;
     
     this.triangles = []
     this.status = 0;
@@ -429,17 +434,19 @@ class L2Bucket {
 }
 
 
+let BUCKET_SIZE=64;
+let BUCKET_SIZE2=32;
 function make_buckets()
 {
 	let i;
-	let slop = Math.max(global_maxX, global_maxY)/50;
+	let slop = Math.max(global_maxX, global_maxY)/80;
 	let maxslop = slop * 2;
 	let len = triangles.length
 
 	for (i = 0; i < len; i++) {
 		let j;
 		let reach;
-		let Xmax, Ymax, Xmin, Ymin;
+		let Xmax, Ymax, Xmin, Ymin, Zmax;
 		let rXmax, rYmax, rXmin, rYmin;
 		let bucketptr = 0;
 		let bucket;
@@ -464,10 +471,11 @@ function make_buckets()
 		if (reach > i + 50000)
 			reach = i + 50000;
 	
-		for (j = i + 1; j < reach && bucket.triangles.length < 64; j++)	{
+		for (j = i + 1; j < reach && bucket.triangles.length < BUCKET_SIZE; j++)	{
 			if (triangles[j].status == 0 && triangles[j].maxX <= rXmax && triangles[j].maxY <= rYmax && triangles[j].minY >= rYmin &&  triangles[j].minX >= rXmin) {
 				Xmax = Math.max(Xmax, triangles[j].maxX);
 				Ymax = Math.max(Ymax, triangles[j].maxY);
+				Zmax = Math.max(Zmax, triangles[j].maxZ);
 				Xmin = Math.min(Xmin, triangles[j].minX);
 				Ymin = Math.min(Ymin, triangles[j].minY);
 				bucket.triangles.push(triangles[j]);
@@ -475,17 +483,18 @@ function make_buckets()
 			}				
 		}
                 let bucketr = bucket.triangles.length
-		if (bucketptr >= 64 -5)
+		if (bucketptr >= BUCKET_SIZE -5)
 			slop = slop * 0.9;
-		if (bucketptr < 64 / 8)
+		if (bucketptr < BUCKET_SIZE / 8)
 			slop = Math.min(slop * 1.1, maxslop);
-		if (bucketptr < 64 / 2)
+		if (bucketptr < BUCKET_SIZE / 2)
 			slop = Math.min(slop * 1.05, maxslop);
 
 		bucket.minX = Xmin - 0.001; /* subtract a little to cope with rounding */
 		bucket.minY = Ymin - 0.001;
 		bucket.maxX = Xmax + 0.001;
 		bucket.maxY = Ymax + 0.001;
+                bucket.maxZ = Zmax;
 		buckets.push(bucket);
 	}
 	console.log("Made " + buckets.length + " buckets\n");
@@ -518,7 +527,7 @@ function make_buckets()
                 l2bucket.buckets.push(buckets[i]);
 		buckets[i].status = 1;
 	
-		for (j = i + 1; j < nrbuckets && l2bucket.buckets.length < 64; j++)	{
+		for (j = i + 1; j < nrbuckets && l2bucket.buckets.length < BUCKET_SIZE2; j++)	{
 			if (buckets[j].status == 0 && buckets[j].maxX <= rXmax && buckets[j].maxY <= rYmax && buckets[j].minY >= rYmin &&  buckets[j].minX >= rXmin) {
 				Xmax = Math.max(Xmax, buckets[j].maxX);
 				Ymax = Math.max(Ymax, buckets[j].maxY);
@@ -529,11 +538,11 @@ function make_buckets()
 			}				
 		}
 
-		if (bucketptr >= 64 - 4)
+		if (bucketptr >= BUCKET_SIZE2 - 4)
 			slop = slop * 0.9;
-		if (bucketptr < 64 / 8)
+		if (bucketptr < BUCKET_SIZE2 / 8)
 			slop = Math.min(slop * 1.1, maxslop);
-		if (bucketptr < 64 / 2)
+		if (bucketptr < BUCKET_SIZE2 / 2)
 			slop = Math.min(slop * 1.05, maxslop);
 
 		l2bucket.minX = Xmin;
@@ -548,8 +557,7 @@ function make_buckets()
 
 function get_height(X, Y)
 {
-	let value = 0;
-	
+        let value = 0.0;
 	let l2bl = l2buckets.length;
 	
 	for (let k = 0; k < l2bl; k++) {
@@ -576,8 +584,11 @@ function get_height(X, Y)
                 if (l2bucket.buckets[j].maxX < X)
                     continue;
                 if (l2bucket.buckets[j].maxY < Y) 
-		   continue;
-
+		    continue;
+/*		    
+		if (l2bucket.buckets[j].maxZ <= value)
+		    continue;
+*/
 		let bucket = l2bucket.buckets[j];
         	let len = l2bucket.buckets[j].triangles.length;
         	for (let i = 0; i < len; i++) {
