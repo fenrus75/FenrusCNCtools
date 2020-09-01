@@ -15,6 +15,9 @@ let rippem = 18000;
 let filename = "";
 
 
+let finishing_endmill = 27;
+let roughing_endmill = 201;
+
 /* 2D distance function */
 function dist(x1,y1,x2,y2)
 {
@@ -1516,9 +1519,9 @@ function calculate_image()
     startdate = Date.now();
     gcode_header();    
 
-    roughing_zig_zag(102);
+    roughing_zig_zag(roughing_endmill);
 
-    finishing_zig_zag(27);
+    finishing_zig_zag(finishing_endmill);
 
     setTimeout(gcode_footer, 0);
     setTimeout(update_gcode_on_website, 0);
@@ -1587,6 +1590,16 @@ function handle(e)
         reader.onloadend = load;
         reader.readAsBinaryString(f);
     }
+}
+
+function handle_roughing(val)
+{
+    roughing_endmill = Math.floor(parseFloat(val));;
+}
+
+function handle_finishing(val)
+{
+    finishing_endmill = Math.floor(parseFloat(val));;
 }
 
 

@@ -24,12 +24,28 @@
             <input type="radio" value="side" name="or" id="side" onclick="RadioB(this.value)"><label for="side">Side</label>
             <br />
             <br />
-            Resolution:<br />
+            Stock depth:<br />
             <input type="text" value="12" onChange="SideB(this.value)"> mm
             <br /><br />
             Depth offset:<br />
             <input type="text" value="0" onChange="OffsetB(this.value)"> percent
             <br />
+        </div>
+        <div>
+            <br>
+            <label for="roughing">Roughing endmill</label>
+            <select name="roughing" id="roughing" onclick="handle_roughing(this.value)">
+                <option value="201">#201 - One Quarter inch flat endmill</option>
+                <option value="102">#102 - One Eighth inch flat endmill</option>
+            </select>
+        </div>
+        <div>
+            <br>
+            <label for="finishing">Finishing endmill</label>
+            <select name="finishing" id="finishing" onclick="handle_finishing(this.value)">
+                <option value="27">#27 - 1mm diameter tapered ballnose endmill</option>
+                <option value="101">#101 - One Eighth inch ballnose endmill</option>
+            </select>
         </div>
         <div>
             <br />
