@@ -144,6 +144,57 @@ class Triangle {
     global_maxY = Math.max(global_maxY, this.maxY);
     global_maxZ = Math.max(global_maxZ, this.maxZ);
   }
+  within_triangle(X, Y)
+  {
+  
+ /*
+        if (this.minX > X)
+            return 0;
+         
+        if (this.minY > Y)
+            return 0;
+        if (this.maxX < X)
+            return 0;
+        if (this.maxY < Y)
+            return 0;
+*/
+	let det1, det2, det3;
+
+	let has_pos = 0, has_neg = 0;
+	
+	det1 = point_to_the_left(X, Y, this.vertex[0][0], this.vertex[0][1], this.vertex[1][0], this.vertex[1][1]);
+	det2 = point_to_the_left(X, Y, this.vertex[1][0], this.vertex[1][1], this.vertex[2][0], this.vertex[2][1]);
+	det3 = point_to_the_left(X, Y, this.vertex[2][0], this.vertex[2][1], this.vertex[0][0], this.vertex[0][1]);
+
+//	has_neg = (det1 < 0) || (det2 < 0) || (det3 < 0);
+        if (det1 < 0) { has_neg = 1; };
+        if (det2 < 0) { has_neg = 1; };
+        if (det3 < 0) { has_neg = 1; };
+//	has_pos = (det1 > 0) || (det2 > 0) || (det3 > 0);
+        if (det1 > 0) { has_pos = 1; };
+        if (det2 > 0) { has_pos = 1; };
+        if (det3 > 0) { has_pos = 1; };
+        
+        if (has_neg && has_pos)
+            return 0;
+        return 1;
+
+	return !(has_neg && has_pos);
+  }
+   calc_Z(X, Y)
+  {
+	let det = (this.vertex[1][1] - this.vertex[2][1]) * 
+		    (this.vertex[0][0] - this.vertex[2][0]) + 
+                    (this.vertex[2][0] - this.vertex[1][0]) * 
+		    (this.vertex[0][1] - this.vertex[2][1]);
+
+	let l1 = ((this.vertex[1][1] - this.vertex[2][1]) * (X - this.vertex[2][0]) + (this.vertex[2][0] - this.vertex[1][0]) * (Y - this.vertex[2][1])) / det;
+	let l2 = ((this.vertex[2][1] - this.vertex[0][1]) * (X - this.vertex[2][0]) + (this.vertex[0][0] - this.vertex[2][0]) * (Y - this.vertex[2][1])) / det;
+	let l3 = 1.0 - l1 - l2;
+
+	return l1 * this.vertex[0][2] + l2 * this.vertex[1][2] + l3 * this.vertex[2][2];
+  }
+
 }
 
 class Triangle_Ascii
@@ -229,6 +280,44 @@ class Triangle_Ascii
     global_maxY = Math.max(global_maxY, this.maxY);
     global_maxZ = Math.max(global_maxZ, this.maxZ);
   } 
+  within_triangle(X, Y)
+  {
+	let det1, det2, det3;
+
+	let has_pos = 0, has_neg = 0;
+	
+	det1 = point_to_the_left(X, Y, this.vertex[0][0], this.vertex[0][1], this.vertex[1][0], this.vertex[1][1]);
+	det2 = point_to_the_left(X, Y, this.vertex[1][0], this.vertex[1][1], this.vertex[2][0], this.vertex[2][1]);
+	det3 = point_to_the_left(X, Y, this.vertex[2][0], this.vertex[2][1], this.vertex[0][0], this.vertex[0][1]);
+
+//	has_neg = (det1 < 0) || (det2 < 0) || (det3 < 0);
+        if (det1 < 0) { has_neg = 1; };
+        if (det2 < 0) { has_neg = 1; };
+        if (det3 < 0) { has_neg = 1; };
+//	has_pos = (det1 > 0) || (det2 > 0) || (det3 > 0);
+        if (det1 > 0) { has_pos = 1; };
+        if (det2 > 0) { has_pos = 1; };
+        if (det3 > 0) { has_pos = 1; };
+        
+        if (has_neg && has_pos)
+            return 0;
+        return 1;
+
+	return !(has_neg && has_pos);
+  }
+  calc_Z(X, Y)
+  {
+	let det = (this.vertex[1][1] - this.vertex[2][1]) * 
+		    (this.vertex[0][0] - this.vertex[2][0]) + 
+                    (this.vertex[2][0] - this.vertex[1][0]) * 
+		    (this.vertex[0][1] - this.vertex[2][1]);
+
+	let l1 = ((this.vertex[1][1] - this.vertex[2][1]) * (X - this.vertex[2][0]) + (this.vertex[2][0] - this.vertex[1][0]) * (Y - this.vertex[2][1])) / det;
+	let l2 = ((this.vertex[2][1] - this.vertex[0][1]) * (X - this.vertex[2][0]) + (this.vertex[0][0] - this.vertex[2][0]) * (Y - this.vertex[2][1])) / det;
+	let l3 = 1.0 - l1 - l2;
+
+	return l1 * this.vertex[0][2] + l2 * this.vertex[1][2] + l3 * this.vertex[2][2];
+  }
 }
 
 
@@ -312,48 +401,6 @@ function  point_to_the_left(X, Y, AX, AY, BX, BY)
 	return (BX-AX)*(Y-AY) - (BY-AY)*(X-AX);
 }
 
-
-function within_triangle(X, Y, t)
-{
-	let det1, det2, det3;
-
-	let has_pos = 0, has_neg = 0;
-	
-	det1 = point_to_the_left(X, Y, t.vertex[0][0], t.vertex[0][1], t.vertex[1][0], t.vertex[1][1]);
-	det2 = point_to_the_left(X, Y, t.vertex[1][0], t.vertex[1][1], t.vertex[2][0], t.vertex[2][1]);
-	det3 = point_to_the_left(X, Y, t.vertex[2][0], t.vertex[2][1], t.vertex[0][0], t.vertex[0][1]);
-
-//	has_neg = (det1 < 0) || (det2 < 0) || (det3 < 0);
-        if (det1 < 0) { has_neg = 1; };
-        if (det2 < 0) { has_neg = 1; };
-        if (det3 < 0) { has_neg = 1; };
-//	has_pos = (det1 > 0) || (det2 > 0) || (det3 > 0);
-        if (det1 > 0) { has_pos = 1; };
-        if (det2 > 0) { has_pos = 1; };
-        if (det3 > 0) { has_pos = 1; };
-        
-        if (has_neg && has_pos)
-            return 0;
-        return 1;
-
-	return !(has_neg && has_pos);
-
-}
-
-
-function calc_Z(X, Y, t)
-{
-	let det = (t.vertex[1][1] - t.vertex[2][1]) * 
-		    (t.vertex[0][0] - t.vertex[2][0]) + 
-                    (t.vertex[2][0] - t.vertex[1][0]) * 
-		    (t.vertex[0][1] - t.vertex[2][1]);
-
-	let l1 = ((t.vertex[1][1] - t.vertex[2][1]) * (X - t.vertex[2][0]) + (t.vertex[2][0] - t.vertex[1][0]) * (Y - t.vertex[2][1])) / det;
-	let l2 = ((t.vertex[2][1] - t.vertex[0][1]) * (X - t.vertex[2][0]) + (t.vertex[0][0] - t.vertex[2][0]) * (Y - t.vertex[2][1])) / det;
-	let l3 = 1.0 - l1 - l2;
-
-	return l1 * t.vertex[0][2] + l2 * t.vertex[1][2] + l3 * t.vertex[2][2];
-}
 
 class Bucket {
   constructor (lead_triangle)
@@ -521,38 +568,39 @@ function get_height(X, Y)
             let bl = l2buckets[k].buckets.length;
 	
             for (let j =0 ; j < bl; j++) {
-	        bucket = l2bucket.buckets[j];
-
-                if (bucket.minX > X)
+	        
+                if (l2bucket.buckets[j].minX > X)
                     continue;
-                if (bucket.minY > Y)
+                if (l2bucket.buckets[j].minY > Y)
                     continue;
-                if (bucket.maxX < X)
+                if (l2bucket.buckets[j].maxX < X)
                     continue;
-                if (bucket.maxY < Y) 
+                if (l2bucket.buckets[j].maxY < Y) 
 		   continue;
 
-        	let len = bucket.triangles.length;
+		bucket = l2bucket.buckets[j];
+        	let len = l2bucket.buckets[j].triangles.length;
         	for (let i = 0; i < len; i++) {
         	        let newZ;
-        	        let t = bucket.triangles[i];
+        	        //let t = bucket.triangles[i];
 	    	
+
             		// first a few quick bounding box checks 
-	        	if (t.minX > X)
+	        	if (bucket.triangles[i].minX > X)
                             continue;
-                        if (t.minY > Y)
+                        if (bucket.triangles[i].minY > Y)
                             continue;
-                        if (t.maxX < X)
+                        if (bucket.triangles[i].maxX < X)
                             continue;
-                        if (t.maxY < Y)
+                        if (bucket.triangles[i].maxY < Y)
                             continue;
 
                         /* then a more expensive detailed triangle test */
-                        if (!within_triangle(X, Y, t)) {
+                        if (!bucket.triangles[i].within_triangle(X, Y)) {
                                 continue;
                         }
                         /* now calculate the Z height within the triangle */
-                        newZ = calc_Z(X, Y, t);
+                        newZ = bucket.triangles[i].calc_Z(X, Y);
 
             		value = Math.max(newZ, value);
                 }
@@ -1154,6 +1202,7 @@ function segments_to_gcode()
         }
     }
     levels = [];
+    console.log("Segments_to_gcode " + (Date.now() - startdate));
 }
 
 function roughing_zig(X, deltaY)
