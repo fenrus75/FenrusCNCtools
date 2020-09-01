@@ -496,56 +496,50 @@ function make_buckets()
 function get_height(X, Y)
 {
 	let value = 0;
-	let i;
-	let k;
 	
 	let l2bl = l2buckets.length;
 	
-	for (k = 0; k < l2bl; k++) {
+	for (let k = 0; k < l2bl; k++) {
 	
-	let bl = l2buckets[k].buckets.length;
-	l2bucket = l2buckets[k];
-	let j;
-	if (l2bucket.minX > X)
+            l2bucket = l2buckets[k];
+
+            if (l2bucket.minX > X)
 		        continue;
-        if (l2bucket.minY > Y)
+            if (l2bucket.minY > Y)
                         continue;
-        if (l2bucket.maxX < X)
+            if (l2bucket.maxX < X)
             		continue;
-        if (l2bucket.maxY < Y)
+            if (l2bucket.maxY < Y)
                         continue;
 
+            let bl = l2buckets[k].buckets.length;
 	
-	for (j =0 ; j < bl; j++) {
+            for (let j =0 ; j < bl; j++) {
 	        bucket = l2bucket.buckets[j];
-        	let len = bucket.triangles.length;
 
                 if (bucket.minX > X)
-		        continue;
+                    continue;
                 if (bucket.minY > Y)
-                        continue;
-            	if (bucket.maxX < X)
-            		continue;
-                if (bucket.maxY < Y)
-                        continue;
+                    continue;
+                if (bucket.maxX < X)
+                    continue;
+                if (bucket.maxY < Y) 
+		   continue;
 
-        	for (i = 0; i < len; i++) {
+        	let len = bucket.triangles.length;
+        	for (let i = 0; i < len; i++) {
         	        let newZ;
         	        let t = bucket.triangles[i];
 	    	
-
             		// first a few quick bounding box checks 
 	        	if (t.minX > X)
-		                continue;
+                            continue;
                         if (t.minY > Y)
-                                continue;
-
-            		if (t.maxX < X)
-            		        continue;
-			
+                            continue;
+                        if (t.maxX < X)
+                            continue;
                         if (t.maxY < Y)
-                                continue;
-
+                            continue;
 
                         /* then a more expensive detailed triangle test */
                         if (!within_triangle(X, Y, t)) {
@@ -556,7 +550,7 @@ function get_height(X, Y)
 
             		value = Math.max(newZ, value);
                 }
-        }
+            }
         }
 	return value - global_maxZ;
 }
@@ -1021,14 +1015,16 @@ let cache_prev_Y = 0;
 
 function update_height(height, X, Y, offset)
 {
-    let prevheight = height;
-    height = Math.max(height, get_height(X, Y) + offset);
-    
-    if (height > prevheight) {
-        cache_prev_X = X;
-        cache_prev_Y = Y;
-    }
-    return height;
+//    let prevheight = height;
+//    height = Math.max(height, get_height(X, Y) + offset);
+//    
+//    if (height > prevheight) {
+//        cache_prev_X = X;
+//        cache_prev_Y = Y;
+//    }
+//
+//    return height;
+    return Math.max(height, get_height(X, Y) + offset);
 }
 
 function get_height_tool(X, Y, R)
@@ -1212,8 +1208,11 @@ function roughing_zag(X, deltaY)
 }
 
 
-function roughing_zig_zag()
+function roughing_zig_zag(tool)
 {
+    gcode_select_tool(tool);
+    setTimeout(gcode_change_tool, 0, tool);
+    
     let deltaX = tool_diameter / 2;
     let deltaY = tool_diameter / 4;
     let X = 0;
@@ -1321,8 +1320,13 @@ function finishing_zag(Y, deltaX)
         elem.style.width = (Math.round(Y/global_maxY * 100)) + "%";
 }
 
-function finishing_zig_zag()
+function finishing_zig_zag(tool)
 {
+
+    setTimeout(gcode_change_tool, 0, tool);
+    gcode_select_tool(tool);
+    
+    
     let deltaX = tool_diameter / 10;
     let deltaY = tool_diameter / 10;
     let Y = 0;
@@ -1331,10 +1335,15 @@ function finishing_zig_zag()
     if (deltaX > 0.5) {
         deltaX = 0.5;
     }
-    
-    if (deltaY < 0.1) {
-        deltaY = 0.1;
+    if (deltaX < 0.15) {
+        deltaX = Math.min(0.15, tool_diameter/2);
     }
+    
+    if (deltaY < 0.15) {
+        deltaY = 0.15;
+    }
+    
+    console.log("dX ", deltaX, "  dY ", deltaY);
     while (Y <= global_maxY) {
  
         setTimeout(finishing_zig, 0, Y, deltaX);       
@@ -1368,6 +1377,8 @@ function finishing_zig_zag()
     setTimeout(segments_to_gcode, 0);
 }
 
+let startdate;
+
 function update_gcode_on_website()
 {
     var pre = document.getElementById('outputpre')
@@ -1378,20 +1389,22 @@ function update_gcode_on_website()
     link.download = filename + ".nc";
     link.href = "data:text/plain;base64," + btoa(gcode_string);
     gcode_string = "";
+    console.log("Gcode calculation " + (Date.now() - startdate));
 }
+
 
 function calculate_image() 
 {
-    gcode_header();
-    
-    gcode_change_tool(102);
-    roughing_zig_zag();
-    
-    gcode_change_tool(27);
-    finishing_zig_zag();
+    startdate = Date.now();
+    gcode_header();    
+
+    roughing_zig_zag(102);
+
+    finishing_zig_zag(27);
 
     setTimeout(gcode_footer, 0);
     setTimeout(update_gcode_on_website, 0);
+    
 }
 
 function RadioB(val)
