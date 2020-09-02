@@ -503,7 +503,7 @@ function make_buckets()
 	}
 	console.log("Made " + buckets.length + " buckets\n");
 	
-	slop = Math.min(Math.max(global_maxX, global_maxY)/30, 4);
+	slop = Math.min(Math.max(global_maxX, global_maxY)/20, 8);
 	console.log("L2 Slop is ", slop);
 	maxslop = slop * 2;
 
