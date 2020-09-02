@@ -1897,22 +1897,22 @@ function update_gui_actuals()
     
     link  = document.getElementById('resultwidth')
     if (gui_is_metric) {
-        link.innerHTML = "&nbsp;&nbsp;Design width: " + Math.ceil(global_maxX*10)/10 + "mm";
+        link.innerHTML = Math.ceil(global_maxX*10)/10 + "mm";
     } else {
-        link.innerHTML = "&nbsp;&nbsp;Design width: " + mm_to_inch(global_maxX) + "\"";
+        link.innerHTML = mm_to_inch(global_maxX) + "\"";
     }
 
     link  = document.getElementById('resultheight')
     if (gui_is_metric) {
-        link.innerHTML = "&nbsp;&nbsp;Design height: " + Math.ceil(global_maxY*10)/10 + "mm";
+        link.innerHTML = Math.ceil(global_maxY*10)/10 + "mm";
     } else {
-        link.innerHTML = "&nbsp;&nbsp;Design height: " + mm_to_inch(global_maxY) + "\"";
+        link.innerHTML = mm_to_inch(global_maxY) + "\"";
     }
     link  = document.getElementById('resultdepth')
     if (gui_is_metric) {
-        link.innerHTML = "&nbsp;&nbsp;Design depth: " + Math.ceil(global_maxZ*10)/10 + "mm";
+        link.innerHTML = Math.ceil(global_maxZ*10)/10 + "mm";
     } else {
-        link.innerHTML = "&nbsp;&nbsp;Design depth: " + mm_to_inch(global_maxZ) +"\"";
+        link.innerHTML = mm_to_inch(global_maxZ) +"\"";
     }
 }
 

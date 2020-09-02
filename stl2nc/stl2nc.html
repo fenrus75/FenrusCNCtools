@@ -24,9 +24,11 @@
             <input type="radio" value="side" name="or" id="side" onclick="RadioB(this.value)"><label for="side">Side</label>
             <br />
             <br />
-            Stock width:  <input type="text" value="120" onChange="handle_width(this.value)" id="width">&nbsp;<label id="widthmm">mm</label></input><label id="resultwidth"></label><br/>
-            Stock height: <input type="text" value="120" onChange="handle_height(this.value)" id="height">&nbsp;<label id="heightmm">mm</label></input><label id="resultheight"></label><br/>
-            Stock depth:  <input type="text" value="12" onChange="handle_depth(this.value)" id="depth">&nbsp;<label id="depthmm">mm</label></input><label id="resultdepth"></label><br/>
+            <table>
+            <tr><td>Stock width:</td><td><input type="text" value="120" onChange="handle_width(this.value)" id="width">&nbsp;<label id="widthmm">mm</label></input></td><td>&nbsp;&nbsp;</td><td>Design width:</td><td><label id="resultwidth"></label></td></tr>
+            <tr><td>Stock height:</td><td> <input type="text" value="120" onChange="handle_height(this.value)" id="height">&nbsp;<label id="heightmm">mm</label></input></td><td>&nbsp;&nbsp;</td><td>Design height:</td><td><label id="resultheight"></label></td></tr>
+            <tr><td>Stock depth: </td><td> <input type="text" value="12" onChange="handle_depth(this.value)" id="depth">&nbsp;<label id="depthmm">mm</label></input></td><td>&nbsp;&nbsp;</td><td>Design depth:</td><td><label id="resultdepth"></label></td></tr>
+            </table>
             Units in :
             <select name="metric" id="metric" onclick="handle_metric(this.value)">
                 <option value="metric">Metric</option>
@@ -36,8 +38,8 @@
             <br />
             
             <br />
-            Depth offset:<br />
-            <input type="text" value="0" onChange="OffsetB(this.value)"> percent
+            STL Depth offset: (shifts the design up and down)<br />
+            <input type="text" value="0" onChange="OffsetB(this.value)"/>percent
             <br />
         </div>
         <div>
