@@ -97,15 +97,15 @@ class Triangle {
     this.status = 0;
     
     this.vertex[0][0] = data_f32_to_number(data, offset + 12);
-    this.vertex[0][1] = -data_f32_to_number(data, offset + 16);
+    this.vertex[0][1] = data_f32_to_number(data, offset + 16);
     this.vertex[0][2] = data_f32_to_number(data, offset + 20);
 
     this.vertex[1][0] = data_f32_to_number(data, offset + 24);
-    this.vertex[1][1] = -data_f32_to_number(data, offset + 28);
+    this.vertex[1][1] = data_f32_to_number(data, offset + 28);
     this.vertex[1][2] = data_f32_to_number(data, offset + 32);
 
     this.vertex[2][0] = data_f32_to_number(data, offset + 36);
-    this.vertex[2][1] = -data_f32_to_number(data, offset + 40);
+    this.vertex[2][1] = data_f32_to_number(data, offset + 40);
     this.vertex[2][2] = data_f32_to_number(data, offset + 44);
     
     if (orientation == 1) {
@@ -232,15 +232,15 @@ class Triangle_Ascii
     let split5 = line5.split(" ");
     
     this.vertex[0][0] = parseFloat(split3[1]);
-    this.vertex[0][1] = -parseFloat(split3[2]);
+    this.vertex[0][1] = parseFloat(split3[2]);
     this.vertex[0][2] = parseFloat(split3[3]);
 
     this.vertex[1][0] = parseFloat(split4[1]);
-    this.vertex[1][1] = -parseFloat(split4[2]);
+    this.vertex[1][1] = parseFloat(split4[2]);
     this.vertex[1][2] = parseFloat(split4[3]);
 
     this.vertex[2][0] = parseFloat(split5[1]);
-    this.vertex[2][1] = -parseFloat(split5[2]);
+    this.vertex[2][1] = parseFloat(split5[2]);
     this.vertex[2][2] = parseFloat(split5[3]);
 
     
@@ -1359,6 +1359,7 @@ function segments_to_gcode()
     console.log("Total retract count", gcode_retract_count);
     console.log("Total halfway count", halfway_counter);
 }
+let prev_pct = 0;
 
 function roughing_zig(X, deltaY)
 {
@@ -1399,9 +1400,15 @@ function roughing_zig(X, deltaY)
                 Y = maxY;
             }
         }    
+        let pct = (Math.round(X/global_maxX * 100));
+        if (pct > prev_pct + 10 || pct > 99) {
+            var elem = document.getElementById("BarRoughing");
+            elem.style.width = pct + "%";
+            prev_pct = pct;
+        }
+    
  }
  
-let prev_pct = 0;
 function roughing_zag(X, deltaY)
 {
         let Y = global_maxY + tool_diameter / 2;
