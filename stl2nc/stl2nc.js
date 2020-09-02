@@ -961,7 +961,7 @@ function toolspeed3d(cX, cY, cZ, X, Y, Z)
 
 	/* if we're milling up, feedrate dominates by definition */
 	if (vert <= 0) {
-			return d / time_horiz;
+            return tool_feedrate;
 	}
 
 	
@@ -969,13 +969,12 @@ function toolspeed3d(cX, cY, cZ, X, Y, Z)
 	if (time_horiz > 0.000001) {
 		/* check if the effective plungerate is below max plung rate */
 		if (vert / time_horiz < tool_plungerate) {
-			return d / time_horiz;
+			return tool_feedrate;
 		}
 	}
 
 	/* when we get here, plunge rate dominates */
-	time_vert = vert / tool_plungerate;
-	return d / time_vert;
+	return tool_plungerate;
 }
 
 function gcode_mill_to_3D(X, Y, Z)
@@ -1236,7 +1235,7 @@ function update_height(height, X, Y, offset)
 
 function get_height_tool(X, Y, R)
 {	
-	let d = -desired_depth, dorg;
+	let d = -global_maxZ, dorg;
 	let balloffset = 0.0;
 	let r;
 	
