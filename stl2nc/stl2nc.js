@@ -7,11 +7,13 @@
 "use strict";
 
 let desired_depth = 12;
+let desired_width = 120;
+let desired_height = 120;
 let zoffset = 0.0;
 let safe_retract_height = 2.0;
 let rippem = 18000;
 let filename = "";
-
+let gui_is_metric = 1;
 
 let finishing_endmill = 27;
 let roughing_endmill = 201;
@@ -370,7 +372,11 @@ function scale_design(desired_depth)
     
     normalize_design_to_zero();
     
-    factor = desired_depth / global_maxZ; 
+    let factorD = desired_depth / global_maxZ; 
+    let factorW = desired_width / global_maxX; 
+    let factorH = desired_height / global_maxY; 
+    
+    factor = Math.min(factorD, Math.min(factorW, factorH));
     
     
     for (let i = 0; i < len; i++) {
@@ -569,8 +575,8 @@ function make_buckets()
 
 function get_height(X, Y, value = -global_maxZ, offset = 0.0)
 {
-        value = value + global_maxZ - offset;
-//        let value = 0.0;
+        value = value + global_maxZ - offset;        
+
 	let l2bl = l2buckets.length;
 	
 	for (let k = 0; k < l2bl; k++) {
@@ -773,6 +779,7 @@ function process_data(data)
     console.log("End of parsing at " + (Date.now() - start));
 
     scale_design(desired_depth);    
+    update_gui_actuals();	
     make_buckets();
     console.log("End of buckets at " + (Date.now() - start));
 
@@ -849,12 +856,12 @@ function process_data_ascii(data)
 
 function inch_to_mm(inch)
 {
-    return inch * 25.4;
+    return Math.ceil( (inch * 25.4) *1000)/1000;
 }
 
 function mm_to_inch(mm)
 {
-    return mm / 25.4;
+    return Math.ceil(mm / 25.4 * 1000)/1000;
 }
 
 
@@ -1751,6 +1758,8 @@ function SideB(val)
         desired_depth = news;
     }
 }
+
+
 function OffsetB(val)
 {
     let news = Math.floor(parseFloat(val));
@@ -1804,6 +1813,118 @@ function handle_roughing(val)
 function handle_finishing(val)
 {
     finishing_endmill = Math.floor(parseFloat(val));;
+}
+
+
+function handle_depth(val)
+{
+    let news = parseFloat(val);
+    if (news > 0) {
+        if (gui_is_metric) {
+            desired_depth = news;
+        } else {
+            desired_depth = inch_to_mm(news);
+        }
+    }
+    console.log("Setting depth to ", desired_depth);
+}
+
+function handle_width(val)
+{
+    let news = parseFloat(val);
+    if (news > 0) {
+        if (gui_is_metric) {
+            desired_width = news;
+        } else {
+            desired_width = inch_to_mm(news);
+        }
+    }
+    console.log("Setting width to ", desired_width);
+}
+
+function handle_height(val)
+{
+    let news = parseFloat(val);
+    if (news > 0) {
+        if (gui_is_metric) {
+            desired_height = news;
+        } else {
+            desired_height = inch_to_mm(news);
+        }
+    }
+    console.log("Setting height to ", desired_height);
+}
+
+
+function update_gui_dimensions()
+{
+    let link;
+    let linkmm;
+    
+    link  = document.getElementById('width')
+    linkmm = document.getElementById('widthmm')
+    if (gui_is_metric) {
+        link.value = desired_width;
+        linkmm.innerHTML = "mm";
+    } else {
+        link.value = mm_to_inch(desired_width);
+        linkmm.innerHTML = "inch";
+    }
+
+    link  = document.getElementById('height')
+    linkmm = document.getElementById('heightmm')
+    if (gui_is_metric) {
+        link.value = desired_height;
+        linkmm.innerHTML = "mm";
+    } else {
+        link.value = mm_to_inch(desired_height);
+        linkmm.innerHTML = "inch";
+    }
+    link  = document.getElementById('depth')
+    linkmm = document.getElementById('depthmm')
+    if (gui_is_metric) {
+        link.value = desired_depth;
+        linkmm.innerHTML = "mm";
+    } else {
+        link.value = mm_to_inch(desired_depth);
+        linkmm.innerHTML = "inch";
+    }
+}
+
+function update_gui_actuals()
+{
+    let link;
+    
+    link  = document.getElementById('resultwidth')
+    if (gui_is_metric) {
+        link.innerHTML = "&nbsp;&nbsp;Design width: " + Math.ceil(global_maxX*10)/10 + "mm";
+    } else {
+        link.innerHTML = "&nbsp;&nbsp;Design width: " + mm_to_inch(global_maxX) + "\"";
+    }
+
+    link  = document.getElementById('resultheight')
+    if (gui_is_metric) {
+        link.innerHTML = "&nbsp;&nbsp;Design height: " + Math.ceil(global_maxY*10)/10 + "mm";
+    } else {
+        link.innerHTML = "&nbsp;&nbsp;Design height: " + mm_to_inch(global_maxY) + "\"";
+    }
+    link  = document.getElementById('resultdepth')
+    if (gui_is_metric) {
+        link.innerHTML = "&nbsp;&nbsp;Design depth: " + Math.ceil(global_maxZ*10)/10 + "mm";
+    } else {
+        link.innerHTML = "&nbsp;&nbsp;Design depth: " + mm_to_inch(global_maxZ) +"\"";
+    }
+}
+
+function handle_metric(val)
+{
+    if (val == "imperial") {
+        gui_is_metric = 0;
+    } 
+    if (val == "metric") {
+        gui_is_metric = 1;
+    } 
+    update_gui_dimensions();
 }
 
 
