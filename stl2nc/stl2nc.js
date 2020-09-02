@@ -28,6 +28,11 @@ function dist3(x1,y1,z1,x2,y2,z2)
 	return Math.sqrt((x1-x2)*(x1-x2)+(y1-y2)*(y1-y2)+(z1-z2)*(z1-z2));
 }
 
+function dist3sq(x1,y1,z1,x2,y2,z2)
+{
+	return ((x1-x2)*(x1-x2)+(y1-y2)*(y1-y2)+(z1-z2)*(z1-z2));
+}
+
 /* returns 1 if A and B are within 4 digits behind the decimal */
 function approx4(A, B) { 
 	if (Math.abs(A-B) < 0.0002) 
@@ -562,9 +567,9 @@ function make_buckets()
 	
 }
 
-function get_height(X, Y, value = -global_maxZ)
+function get_height(X, Y, value = -global_maxZ, offset = 0.0)
 {
-        value = value + global_maxZ;
+        value = value + global_maxZ - offset;
 //        let value = 0.0;
 	let l2bl = l2buckets.length;
 	
@@ -628,6 +633,92 @@ function get_height(X, Y, value = -global_maxZ)
                         newZ = bucket.triangles[i].calc_Z(X, Y);
 
             		value = Math.max(newZ, value);
+                }
+            }
+        }
+	return value - global_maxZ + offset;
+}
+
+function get_heighest_point(X, Y, radius, value = -global_maxZ)
+{
+        value += global_maxZ;
+        
+        let minX = X - radius;
+        let maxX = X + radius;
+        let minY = Y - radius;
+        let maxY = Y + radius;
+//        let value = 0.0;
+	let l2bl = l2buckets.length;
+	
+	for (let k = 0; k < l2bl; k++) {
+	
+            let l2bucket = l2buckets[k];
+
+            if (l2bucket.minX > maxX)
+		        continue;
+            if (l2bucket.minY > maxY)
+                        continue;
+            if (l2bucket.maxX < minX)
+            		continue;
+            if (l2bucket.maxY < minY)
+                        continue;
+       
+            if (l2bucket.maxZ <= value)
+                    continue;
+
+            let bl = l2buckets[k].buckets.length;
+	
+            for (let j =0 ; j < bl; j++) {
+	        
+                if (l2bucket.buckets[j].minX > maxX)
+                    continue;
+                if (l2bucket.buckets[j].minY > maxY)
+                    continue;
+                if (l2bucket.buckets[j].maxX < minX)
+                    continue;
+                if (l2bucket.buckets[j].maxY < minY) 
+		    continue;
+		    
+
+		if (l2bucket.buckets[j].maxZ <= value)
+		    continue;
+
+		let bucket = l2bucket.buckets[j];
+        	let len = l2bucket.buckets[j].triangles.length;
+        	for (let i = 0; i < len; i++) {
+        	        let newZ;
+        	        //let t = bucket.triangles[i];
+
+                        let bt = bucket.triangles[i];
+
+            		// first a few quick bounding box checks 
+	        	if (bt.minX > maxX)
+                            continue;
+                        if (bt.minY > maxY)
+                            continue;
+                        if (bt.maxX < minX)
+                            continue;
+                        if (bt.maxY < minY)
+                            continue;
+                        if (bt.maxZ <= value)
+                            continue;
+                            
+                        
+                            
+                        for (let q = 0; q < 3; q++) {
+                            /* check if this point of the triangle is the heighest */
+                            if (bt.maxZ == bt.vertex[q][2]) {
+                                let active_R = dist(X, Y, bt.vertex[q][0], bt.vertex[q][1]);
+                                if (active_R <= radius) {
+                                    let offset =  -geometry_at_distance(active_R);
+                                    if (value < bt.maxZ + offset) {
+                                        value = bt.maxZ + offset;
+                                        cache_prev_X = bt.vertex[q][0];
+                                        cache_prev_Y = bt.vertex[q][1];
+                                    }
+                                }
+                            }
+                        }                        
                 }
             }
         }
@@ -1111,7 +1202,7 @@ function update_height(height, X, Y, offset)
 {
 
     let prevheight = height;
-    let newheight = get_height(X, Y, height) + offset;
+    let newheight = get_height(X, Y, height, offset) + offset;
     
     if (newheight > prevheight) {
         cache_prev_X = X;
@@ -1132,12 +1223,18 @@ function get_height_tool(X, Y, R)
 	let balloffset = 0.0;
 	let r;
 	
+
+
 	/* we track the previous heighest point and make sure we check that early */	
+	/*
 	r = dist(X, Y, cache_prev_X, cache_prev_Y)
 	if (r <= R) {
         	balloffset = -geometry_at_distance(r);
         	d = update_height(d, cache_prev_X, cache_prev_Y, balloffset);
         }
+        */
+        /* get_heighest_point takes endmill geometry offset into account already */	
+//	d = get_heighest_point(X, Y, R, d);
 
 	d = update_height(d, X + 0.0000 * R, Y + 0.0000 * R, 0);
  
