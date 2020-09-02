@@ -1092,6 +1092,16 @@ function gcode_select_tool(toolnr)
         tool_stock_to_leave = 0.0;
         return;
     }    
+    if (toolnr == 18) {
+        tool_diameter = 1;
+        tool_feedrate = inch_to_mm(20);
+        tool_plungerate = inch_to_mm(10);
+        tool_geometry = "flatl"
+        tool_nr = toolnr;
+        tool_name = toolnr.toString()
+        tool_stock_to_leave = 0.1;
+        return;
+    }    
     console.log("UNKNOWN TOOL");    
 }
 
@@ -1366,7 +1376,7 @@ function roughing_zig(X, deltaY)
             if (Math.abs(prevZ - Z) > 0.6) {
                 halfway_counter += 1;
                 let halfY = (Y + prevY) / 2;
-                let halfZ = get_height_tool(X, halfY, tool_diameter / 2);
+                let halfZ = get_height_tool(X, halfY, tool_diameter / 2) + tool_stock_to_leave;
                 push_segment(prevX, prevY, prevZ, X, halfY, halfZ, 0, 5);
                 prevY = halfY;
                 prevZ = halfZ;
@@ -1411,7 +1421,7 @@ function roughing_zag(X, deltaY)
             if (Math.abs(prevZ - Z) > 0.6) {
                 halfway_counter += 1;
                 let halfY = (Y + prevY) / 2;
-                let halfZ = get_height_tool(X, halfY, tool_diameter / 2);
+                let halfZ = get_height_tool(X, halfY, tool_diameter / 2) + tool_stock_to_leave;
                 push_segment(prevX, prevY, prevZ, X, halfY, halfZ, 0, 5);
                 prevY = halfY;
                 prevZ = halfZ;

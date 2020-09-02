@@ -43,20 +43,24 @@
             <br />
         </div>
         <div>
-            <br>
-            <label for="roughing">Roughing endmill</label>
+            <br/>
+            <table>
+            <tr><td>
+            <label for="roughing">Roughing endmill</label></td><td>
             <select name="roughing" id="roughing" onclick="handle_roughing(this.value)">
-                <option value="201">#201 - One Quarter inch flat endmill</option>
+                <option value="18">#18 - 2mm diameter flat endmill</option>
                 <option value="102">#102 - One Eighth inch flat endmill</option>
-            </select>
-        </div>
-        <div>
-            <br>
-            <label for="finishing">Finishing endmill</label>
+                <option value="201" selected>#201 - One Quarter inch flat endmill</option>
+            </select></td></tr>
+            <tr><td>
+            <label for="finishing">Finishing endmill</label></td><td>
             <select name="finishing" id="finishing" onclick="handle_finishing(this.value)">
-                <option value="27">#27 - 1mm diameter tapered ballnose endmill</option>
+                <option value="18">#18 - 2mm diameter flat endmill</option>
+                <option value="27" selected>#27 - 1mm diameter tapered ballnose endmill</option>
                 <option value="101">#101 - One Eighth inch ballnose endmill</option>
             </select>
+            </td></tr></table>
+            <br/>
         </div>
         <div>
             <br />
