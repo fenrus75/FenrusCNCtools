@@ -1154,7 +1154,7 @@ function push_segment(X1, Y1, Z1, X2, Y2, Z2, level = 0.0, direct_mill = 0.0001)
     /* if the new segment is just an extension of the previous... merge them */    
     if (levels[level].paths.length > 0) {
         let prev = levels[level].paths[levels[level].paths.length - 1];
-        if (prev.X1 == X1 && prev.Z1 == prev.Z2 && Z1 == Z2 && prev.Y2 == Y1 && prev.Z1 == Z1 && X1 == X2) {
+        if (prev.X1 == X1 && prev.Z1 == prev.Z2 && Z1 == Z2 && approx4(prev.Y2,Y1) && prev.Z1 == Z1 && X1 == X2) {
             levels[level].paths[levels[level].paths.length - 1].Y2 = Y2;
             return;
         }
@@ -1391,7 +1391,7 @@ function roughing_zig(X, deltaY)
                 halfway_counter += 1;
                 let halfY = (Y + prevY) / 2;
                 let halfZ = get_height_tool(X, halfY, tool_diameter / 2) + tool_stock_to_leave;
-                push_segment(prevX, prevY, prevZ, X, halfY, halfZ, 0, 5);
+                push_segment_multilevel(prevX, prevY, prevZ, X, halfY, halfZ, tool_diameter * 0.7);
                 prevY = halfY;
                 prevZ = halfZ;
             } 
@@ -1442,7 +1442,7 @@ function roughing_zag(X, deltaY)
                 halfway_counter += 1;
                 let halfY = (Y + prevY) / 2;
                 let halfZ = get_height_tool(X, halfY, tool_diameter / 2) + tool_stock_to_leave;
-                push_segment(prevX, prevY, prevZ, X, halfY, halfZ, 0, 5);
+                push_segment_multilevel(prevX, prevY, prevZ, X, halfY, halfZ, tool_diameter * 0.7);
                 prevY = halfY;
                 prevZ = halfZ;
             } 
