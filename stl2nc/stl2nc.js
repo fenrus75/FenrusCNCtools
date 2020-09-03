@@ -1141,10 +1141,12 @@ function push_segment(X1, Y1, Z1, X2, Y2, Z2, level = 0.0, direct_mill = 0.0001)
         return;
     }
 
-    if (typeof(levels[level]) == "undefined") {
-        levels[level] = new Level();
-        levels[level].tool = tool_nr;
-        levels[level].paths = [];
+    for (let lev = 0; lev <= level; lev++) {
+        if (typeof(levels[lev]) == "undefined") {
+            levels[lev] = new Level();
+            levels[lev].tool = tool_nr;
+            levels[lev].paths = [];
+        }
     }
 
 //    console.log("X1 ", X1, " Y1 ", Y1, " Z1 ", Z1, " X2 ", X2, " Y2 ", Y2, " Z2 ", Z2, " level ", level);
@@ -1183,16 +1185,28 @@ function push_segment_multilevel(X1, Y1, Z1, X2, Y2, Z2, direct_mill = 0.0001)
     let mult = 0.5;
     let divider = 1/tool_depth_of_cut;
     
+    let total_buckets = Math.ceil(global_maxZ / tool_depth_of_cut)
+    
     if (X1 == X2 && Y1 == Y2 && Z1 == Z2) {
         return;
     }
     
+//    let jump = Math.abs(Math.ceil((global_maxZ + Math.min(Z1,Z2)) / tool_depth_of_cut));
+//    console.log("Jump is ", jump, "Z1 = ",Z1," Z2 = ", Z2);
+    
 //    console.log("X1 ", X1, " Y1 ", Y1, " Z1 ", Z1, " X2 ", X2, " Y2 ", Y2, " Z2 ", Z2);
             
     while (z1 < 0 || z2 < 0) {
+        if (l != 0) {
+            let dZ = -Math.min(z1, z2) / tool_depth_of_cut;
+            dZ = Math.floor(dZ);
+            l = total_buckets - dZ;
+        }
         push_segment(X1, Y1, z1, X2, Y2, z2, l, direct_mill);
         z1 = Math.ceil( (z1 + mult * tool_depth_of_cut) * divider) / divider;
         z2 = Math.ceil( (z2 + mult * tool_depth_of_cut) * divider) / divider;
+        z1 = Math.max(z1, z2);
+        z2 = Math.max(z1, z2);
         l = l + 1;
         mult = 1.0;
     }         
