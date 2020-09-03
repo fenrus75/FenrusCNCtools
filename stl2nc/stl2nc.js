@@ -1205,6 +1205,14 @@ function push_segment_multilevel(X1, Y1, Z1, X2, Y2, Z2, direct_mill = 0.0001)
         push_segment(X1, Y1, z1, X2, Y2, z2, l, direct_mill);
         z1 = Math.ceil( (z1 + mult * tool_depth_of_cut) * divider) / divider;
         z2 = Math.ceil( (z2 + mult * tool_depth_of_cut) * divider) / divider;
+        
+        /* deal with rounding artifacts/boundary conditions elsewhere */
+        if (z1 < -tool_depth_of_cut/2) {
+            z1 = z1 - 0.001;
+        }
+        if (z2 < -tool_depth_of_cut/2) {
+            z2 = z2 - 0.001;
+        }
         z1 = Math.max(z1, z2);
         z2 = Math.max(z1, z2);
         l = l + 1;
@@ -1544,10 +1552,10 @@ function cutout_box1()
     
     let maxZ = -global_maxZ + tool_depth_of_cut * 0.5;
     
-    push_segment_multilevel(minX, minY, maxZ, minX, maxY, maxZ);
-    push_segment_multilevel(minX, maxY, maxZ, maxX, maxY, maxZ);
-    push_segment_multilevel(maxX, maxY, maxZ, maxX, minY, maxZ);
-    push_segment_multilevel(maxX, minY, maxZ, minX, minY, maxZ);
+    push_segment_multilevel(minX, minY, maxZ, minX, maxY, maxZ, tool_diameter / 1.9);
+    push_segment_multilevel(minX, maxY, maxZ, maxX, maxY, maxZ, tool_diameter / 1.9);
+    push_segment_multilevel(maxX, maxY, maxZ, maxX, minY, maxZ, tool_diameter / 1.9);
+    push_segment_multilevel(maxX, minY, maxZ, minX, minY, maxZ, tool_diameter / 1.9);
 }
 
 function cutout_box2()
