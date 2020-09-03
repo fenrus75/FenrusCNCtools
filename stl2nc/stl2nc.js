@@ -1185,7 +1185,7 @@ function push_segment_multilevel(X1, Y1, Z1, X2, Y2, Z2, direct_mill = 0.0001)
     let mult = 0.5;
     let divider = 1/tool_depth_of_cut;
     
-    let total_buckets = Math.ceil(global_maxZ / tool_depth_of_cut)
+    let total_buckets = Math.ceil(global_maxZ / (tool_depth_of_cut/2)) + 2
     
     if (X1 == X2 && Y1 == Y2 && Z1 == Z2) {
         return;
@@ -1198,8 +1198,8 @@ function push_segment_multilevel(X1, Y1, Z1, X2, Y2, Z2, direct_mill = 0.0001)
             
     while (z1 < 0 || z2 < 0) {
         if (l != 0) {
-            let dZ = -Math.min(z1, z2) / tool_depth_of_cut;
-            dZ = Math.floor(dZ);
+            let dZ = -Math.min(z1, z2) / (tool_depth_of_cut/2);
+            dZ = Math.round(dZ);
             l = total_buckets - dZ;
         }
         push_segment(X1, Y1, z1, X2, Y2, z2, l, direct_mill);
@@ -1347,7 +1347,67 @@ function get_height_tool(X, Y, R)
 }
 
 
-function segments_to_gcode()
+function segments_to_gcode(maxlook = 1)
+{
+    for (let lev = levels.length - 1; lev >= 0; lev--) {
+        let start = 0;
+        /* force the first sgement to never be a hit to a previous <whatever> including previous layer */
+        gcode_cX = -4000.0;
+        gcode_cY = -4000.0;
+        gcode_cZ = -4000.0;
+        while (levels[lev].paths.length > 0) {
+          let found_one = 0;
+          let max = levels[lev].paths.length;
+          if (max > maxlook) {
+              max = maxlook;
+          }
+          
+          if (max > 1 && lev == 0) {
+              max = 1;
+          }
+          if (start >= max) {
+              start = max - 1;
+          }
+          
+          /* step 1: try to find a segement that doesn't cause us to do a retract */
+          for (let seg = start; seg < max; seg++) {
+            let segm = levels[lev].paths[seg];
+            
+            if (dist3(gcode_cX, gcode_cY, gcode_cZ, segm.X1, segm.Y1, segm.Z1) < segm.direct_mill_distance) {
+                if (dist3(gcode_cX, gcode_cY, gcode_cZ, segm.X1, segm.Y1, segm.Z1) > 0.00001) {
+                    gcode_mill_to_3D(segm.X1, segm.Y1, segm.Z1);            
+                }
+                found_one = 1;
+                gcode_mill_to_3D(segm.X2, segm.Y2, segm.Z2);            
+                
+                levels[lev].paths.splice(seg, 1);
+                start = seg;
+                break;
+                
+            }
+         }
+         
+         if (found_one == 0) {
+            /* step 2: we didn't find any, so just pick the first one */
+            let segm = levels[lev].paths[0];
+            /* go up and horizontal to the start of the segment */
+            gcode_travel_to(segm.X1, segm.Y1);
+            /* plunge */
+            gcode_mill_to_3D(segm.X1, segm.Y1, segm.Z1);
+            /* and mill */
+            gcode_mill_to_3D(segm.X2, segm.Y2, segm.Z2);            
+            levels[lev].paths.splice(0, 1);
+            start = 0;
+        }
+      }
+    }
+    levels = [];
+    console.log("Segments_to_gcode " + (Date.now() - startdate));
+    console.log("Total retract count", gcode_retract_count);
+    console.log("Total halfway count", halfway_counter);
+}
+
+function segments_to_gcode_quick()
 {
     for (let lev = levels.length - 1; lev >= 0; lev--) {
         for (let seg = 0; seg < levels[lev].paths.length; seg++) {
@@ -1372,7 +1432,9 @@ function segments_to_gcode()
     console.log("Total retract count", gcode_retract_count);
     console.log("Total halfway count", halfway_counter);
 }
+
 let prev_pct = 0;
+
 
 function roughing_zig(X, deltaY)
 {
@@ -1390,7 +1452,7 @@ function roughing_zig(X, deltaY)
             if (Math.abs(prevZ - Z) > 0.6) {
                 halfway_counter += 1;
                 let halfY = (Y + prevY) / 2;
-                let halfZ = get_height_tool(X, halfY, tool_diameter / 2) + tool_stock_to_leave;
+                let halfZ = get_height_tool(X, halfY, 2 * tool_diameter / 2) + tool_stock_to_leave;
                 push_segment_multilevel(prevX, prevY, prevZ, X, halfY, halfZ, tool_diameter * 0.7);
                 prevY = halfY;
                 prevZ = halfZ;
@@ -1441,7 +1503,7 @@ function roughing_zag(X, deltaY)
             if (Math.abs(prevZ - Z) > 0.6) {
                 halfway_counter += 1;
                 let halfY = (Y + prevY) / 2;
-                let halfZ = get_height_tool(X, halfY, tool_diameter / 2) + tool_stock_to_leave;
+                let halfZ = get_height_tool(X, halfY, 2 * tool_diameter / 2) + tool_stock_to_leave;
                 push_segment_multilevel(prevX, prevY, prevZ, X, halfY, halfZ, tool_diameter * 0.7);
                 prevY = halfY;
                 prevZ = halfZ;
@@ -1547,7 +1609,7 @@ function roughing_zig_zag(tool)
 
     }
     
-    setTimeout(segments_to_gcode, 0);
+    setTimeout(segments_to_gcode, 0, 50);
     setTimeout(cutout_box2, 0);    
     setTimeout(segments_to_gcode, 0);
     
@@ -1708,7 +1770,7 @@ function finishing_zig_zag(tool)
     }
     
     
-    setTimeout(segments_to_gcode, 0);
+    setTimeout(segments_to_gcode_quick, 0);
 }
 
 let startdate;
