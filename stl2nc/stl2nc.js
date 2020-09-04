@@ -6,12 +6,12 @@
 
 "use strict";
 
-let desired_depth = 12;
-let desired_width = 120;
-let desired_height = 120;
+let desired_depth = 12.0;
+let desired_width = 120.0;
+let desired_height = 120.0;
 let zoffset = 0.0;
 let safe_retract_height = 2.0;
-let rippem = 18000;
+let rippem = 18000.0;
 let filename = "";
 let gui_is_metric = 1;
 
@@ -47,7 +47,7 @@ function data_f32_to_number(data, offset)
 {
     let u32value = (data.charCodeAt(offset + 0)    )  + (data.charCodeAt(offset + 1)<<8) + 
                    (data.charCodeAt(offset + 2)<<16)  + (data.charCodeAt(offset + 3)<<24);     
-    let sign = (u32value & 0x80000000)?-1:1;
+    let sign = (u32value & 0x80000000)?-1:1; // TODO: Does STL support negative numbers at all? 
     let mant = (u32value & 0x7FFFFF);
     let exp  = (u32value >> 23) & 0xFF;
     
@@ -72,12 +72,12 @@ function data_f32_to_number(data, offset)
 }
 
 
-let global_minX = 600000000;
-let global_minY = 600000000;
-let global_minZ = 600000000;
-let global_maxX = -600000000;
-let global_maxY = -600000000;
-let global_maxZ = -600000000;
+let global_minX = 600000000.0;
+let global_minY = 600000000.0;
+let global_minZ = 600000000.0;
+let global_maxX = -600000000.0;
+let global_maxY = -600000000.0;
+let global_maxZ = -600000000.0;
 
 let orientation = 0;
 
@@ -107,6 +107,14 @@ class Triangle {
     this.vertex[2][0] = data_f32_to_number(data, offset + 36);
     this.vertex[2][1] = data_f32_to_number(data, offset + 40);
     this.vertex[2][2] = data_f32_to_number(data, offset + 44);
+    
+    if (orientation == 0) {
+        let Znorm =  data_f32_to_number(data, offset + 8);
+        /* the normal vector of the triangle points down, we'll never see it */
+        if (Znorm < 0) {
+            this.status = 1;
+        }
+    }
     
     if (orientation == 1) {
         let x,y,z;
@@ -341,6 +349,8 @@ function normalize_design_to_zero()
 {	
     let len = triangles.length;
     
+    let offset = (global_maxZ - global_minZ) * zoffset / 100.0;
+    
     for (let i = 0; i < len; i++) {
         triangles[i].vertex[0][0] -= global_minX;
         triangles[i].vertex[1][0] -= global_minX;
@@ -354,11 +364,16 @@ function normalize_design_to_zero()
         triangles[i].vertex[0][2] -= global_minZ;
         triangles[i].vertex[1][2] -= global_minZ;
         triangles[i].vertex[2][2] -= global_minZ;
+
+        triangles[i].vertex[0][2] -= offset;
+        triangles[i].vertex[1][2] -= offset;
+        triangles[i].vertex[2][2] -= offset;
     }
 
     global_maxX -= global_minX;    
     global_maxY -= global_minY;   
     global_maxZ -= global_minZ;    
+    global_maxZ -= offset;
     global_minX = 0.0;
     global_minY = 0.0;
     global_minZ = 0.0;
@@ -368,7 +383,7 @@ function scale_design(desired_depth)
 {	
     let len = triangles.length;
     
-    let factor = 1;
+    let factor = 1.0;
     
     normalize_design_to_zero();
     
@@ -405,6 +420,11 @@ function scale_design(desired_depth)
         triangles[i].maxY = Math.max(triangles[i].maxY, 	triangles[i].vertex[2][1]); 
         triangles[i].maxZ = Math.max(triangles[i].vertex[0][2], triangles[i].vertex[1][2]); 
         triangles[i].maxZ = Math.max(triangles[i].maxZ, 	triangles[i].vertex[2][2]); 
+        
+        /* if we're entirely below the surface due to a Z offset, mark it for skipping */
+        if (triangles[i].maxZ <= 0) {
+            triangles[i].status = 1;
+        } 
     }
 
     global_maxX *= factor;    
@@ -452,12 +472,10 @@ let BUCKET_SIZE2=32;
 function make_buckets()
 {
 	let i;
-	let slop = Math.min(Math.max(global_maxX, global_maxY)/100, 1);
+	let slop = Math.min(Math.max(global_maxX, global_maxY)/100.0, 1.5);
 	let maxslop = slop * 2;
 	let len = triangles.length
 	
-	console.log("Slop is ", slop);
-
 	for (i = 0; i < len; i++) {
 		let j;
 		let reach;
@@ -515,7 +533,6 @@ function make_buckets()
 	console.log("Made " + buckets.length + " buckets\n");
 	
 	slop = Math.min(Math.max(global_maxX, global_maxY)/20, 8);
-	console.log("L2 Slop is ", slop);
 	maxslop = slop * 2;
 
 	let nrbuckets = buckets.length
@@ -744,12 +761,12 @@ function process_data(data)
     triangles = [];
     buckets = [];
     l2buckets = [];
-    global_minX = 600000000;
-    global_minY = 600000000;
-    global_minZ = 600000000;
-    global_maxX = -600000000;
-    global_maxY = -600000000;
-    global_maxZ = -600000000;
+    global_minX = 600000000.0;
+    global_minY = 600000000.0;
+    global_minZ = 600000000.0;
+    global_maxX = -600000000.0;
+    global_maxY = -600000000.0;
+    global_maxZ = -600000000.0;
     
     if (len < 84) {
         document.getElementById('list').innerHTML = "STL file too short";
@@ -800,12 +817,12 @@ function process_data_ascii(data)
     triangles = [];
     buckets = [];
     l2buckets = [];
-    global_minX = 600000000;
-    global_minY = 600000000;
-    global_minZ = 600000000;
-    global_maxX = -600000000;
-    global_maxY = -600000000;
-    global_maxZ = -600000000;
+    global_minX = 600000000.0;
+    global_minY = 600000000.0;
+    global_minZ = 600000000.0;
+    global_maxX = -600000000.0;
+    global_maxY = -600000000.0;
+    global_maxZ = -600000000.0;
     
     if (len < 84) {
         document.getElementById('list').innerHTML = "STL file too short";
@@ -1044,9 +1061,9 @@ function gcode_write_toolchange()
 function gcode_select_tool(toolnr)
 {
     /* reset some of the cached variables */
-    gcode_cF = -1; 
-    cache_prev_X = -50000;
-    cache_prev_Y = -50000;
+    gcode_cF = -1.0; 
+    cache_prev_X = -50000.0;
+    cache_prev_Y = -50000.0;
     /* TODO: NEED TOOL DATABASE */
     if (toolnr == 201) {
         tool_diameter = inch_to_mm(0.25);
@@ -1412,7 +1429,6 @@ function segments_to_gcode(maxlook = 1)
     levels = [];
     console.log("Segments_to_gcode " + (Date.now() - startdate));
     console.log("Total retract count", gcode_retract_count);
-    console.log("Total halfway count", halfway_counter);
 }
 
 function segments_to_gcode_quick()
@@ -1438,7 +1454,6 @@ function segments_to_gcode_quick()
     levels = [];
     console.log("Segments_to_gcode " + (Date.now() - startdate));
     console.log("Total retract count", gcode_retract_count);
-    console.log("Total halfway count", halfway_counter);
 }
 
 let prev_pct = 0;
@@ -1446,7 +1461,7 @@ let prev_pct = 0;
 
 function roughing_zig(X, deltaY)
 {
-       let Y = -tool_diameter / 2;
+        let Y = -tool_diameter / 2;
         
         let prevX = X;
         let prevY = Y;
