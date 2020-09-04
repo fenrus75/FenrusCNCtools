@@ -57,10 +57,14 @@
             <select name="finishing" id="finishing" onclick="handle_finishing(this.value)">
                 <option value="18">#18 - 2mm diameter flat endmill</option>
                 <option value="27" selected>#27 - 1mm diameter tapered ballnose endmill</option>
+                <option value="28">#28 - 1/2mm diameter tapered ballnose endmill</option>
                 <option value="101">#101 - One Eighth inch ballnose endmill</option>
             </select>
             </td></tr></table>
             <br/>
+        </div>
+        <div>
+        Stepover for finishing: <input type="text" value="0.10" onChange="handle_stepover(this.value)" id="stepover">&nbsp;<label id="stepovermm">mm</label></input>
         </div>
         <div>
             <br />

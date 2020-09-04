@@ -890,6 +890,8 @@ let tool_name = "";
 let tool_nr = 0;
 let tool_depth_of_cut = 0.1;
 let tool_stock_to_leave = 0.5;
+let tool_finishing_stepover = 0.1;
+
 
 
 let gcode_string = "";
@@ -1108,8 +1110,18 @@ function gcode_select_tool(toolnr)
         tool_stock_to_leave = 0.0;
         return;
     }    
+    if (toolnr == 28) {
+        tool_diameter = 0.5;
+        tool_feedrate = inch_to_mm(30);
+        tool_plungerate = inch_to_mm(10);
+        tool_geometry = "ball"
+        tool_nr = toolnr;
+        tool_name = toolnr.toString()
+        tool_stock_to_leave = 0.0;
+        return;
+    }    
     if (toolnr == 18) {
-        tool_diameter = 1;
+        tool_diameter = 2;
         tool_feedrate = inch_to_mm(20);
         tool_plungerate = inch_to_mm(10);
         tool_geometry = "flatl"
@@ -1774,17 +1786,8 @@ function finishing_zig_zag(tool)
     let Y = -minY;
     let lastY = 0;
     
-    
-    if (deltaX > 0.5) {
-        deltaX = 0.5;
-    }
-    if (deltaX < 0.15) {
-        deltaX = Math.min(0.15, tool_diameter/2);
-    }
-    
-    if (deltaY < 0.15) {
-        deltaY = 0.15;
-    }
+    deltaX = tool_finishing_stepover;
+    deltaY = tool_finishing_stepover;
     
     console.log("dX ", deltaX, "  dY ", deltaY);
     while (Y <= maxY) {
@@ -1949,9 +1952,24 @@ function handle_roughing(val)
     roughing_endmill = Math.floor(parseFloat(val));;
 }
 
+function handle_stepover(val)
+{
+    let news = parseFloat(val);
+    if (gui_is_metric) {
+        tool_finishing_stepover = val;
+    } else {
+        tool_finishing_stepover = inch_to_mm(val);
+    }
+    
+}
+
 function handle_finishing(val)
 {
     finishing_endmill = Math.floor(parseFloat(val));;
+    gcode_select_tool(finishing_endmill);
+    tool_finishing_stepover = tool_diameter / 10;
+    console.log("Setting stepover to ", tool_finishing_stepover);
+    update_gui_dimensions();
 }
 
 
@@ -2026,6 +2044,16 @@ function update_gui_dimensions()
         linkmm.innerHTML = "mm";
     } else {
         link.value = mm_to_inch(desired_depth);
+        linkmm.innerHTML = "inch";
+    }
+
+    link  = document.getElementById('stepover')
+    linkmm = document.getElementById('stepovermm')
+    if (gui_is_metric) {
+        link.value = tool_finishing_stepover
+        linkmm.innerHTML = "mm";
+    } else {
+        link.value = mm_to_inch(tool_finishing_stepover);
         linkmm.innerHTML = "inch";
     }
 }
