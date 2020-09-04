@@ -1412,6 +1412,29 @@ function segments_to_gcode(maxlook = 1)
             }
          }
          
+
+          /* step 1: try to find a segement that is very nearby */
+          for (let seg = 0; found_one == 0 && seg < max; seg++) {
+            let segm = levels[lev].paths[seg];
+            
+            if (dist3(gcode_cX, gcode_cY, gcode_cZ, segm.X1, segm.Y1, segm.Z1) <= 2 * tool_diameter) {
+                found_one = 1;
+                /* go up and horizontal to the start of the segment */
+                if (dist3(gcode_cX, gcode_cY, gcode_cZ, segm.X1, segm.Y1, segm.Z1) >= 0.001)  {
+                    gcode_travel_to(segm.X1, segm.Y1);
+                }
+                /* plunge */
+                gcode_mill_to_3D(segm.X1, segm.Y1, segm.Z1);
+                /* and mill */
+                gcode_mill_to_3D(segm.X2, segm.Y2, segm.Z2);            
+                
+                levels[lev].paths.splice(seg, 1);
+                start = seg;
+                break;
+                
+            }
+         }
+         
          if (found_one == 0) {
             /* step 2: we didn't find any, so just pick the first one */
             let segm = levels[lev].paths[0];
