@@ -1043,6 +1043,36 @@ function gcode_mill_to_3D(X, Y, Z)
         gcode_write("G" + command + sX + sY + sZ + sF);        
 }
 
+function gcode_mill_down_to(Z)
+{
+	let toolspeed;
+	let sZ;
+	let sF;
+
+        if (gcode_cZ == Z)
+            return;
+	toolspeed = tool_plungerate;
+	
+	let Z2 = Z + tool_depth_of_cut * 1.5;
+	
+	if (Z2 < gcode_cZ) {
+            sZ = "Z" + gcode_float2str(Z2);
+	    gcode_write("G0"+sZ);
+	}
+	
+
+        sZ = "Z" + gcode_float2str(Z);
+        
+        toolspeed = Math.floor(toolspeed);
+
+        sF = "F" + toolspeed.toString();
+        
+        gcode_write("G1" + sZ + sF);        
+        gcode_cZ = Z;
+        gcode_cF = toolspeed;
+
+}
+
 
 function gcode_write_toolchange()
 {
@@ -1075,7 +1105,7 @@ function gcode_select_tool(toolnr)
         tool_nr = toolnr;
         tool_name = toolnr.toString()
         tool_depth_of_cut = inch_to_mm(0.039);
-        tool_stock_to_leave = 0.5;
+        tool_stock_to_leave = 0.25;
         return;
     }    
     if (toolnr == 101) {
@@ -1436,7 +1466,7 @@ function segments_to_gcode(maxlook = 1)
                     gcode_travel_to(segm.X1, segm.Y1);
                 }
                 /* plunge */
-                gcode_mill_to_3D(segm.X1, segm.Y1, segm.Z1);
+                gcode_mill_down_to(segm.Z1);
                 /* and mill */
                 gcode_mill_to_3D(segm.X2, segm.Y2, segm.Z2);            
                 
@@ -1453,7 +1483,7 @@ function segments_to_gcode(maxlook = 1)
             /* go up and horizontal to the start of the segment */
             gcode_travel_to(segm.X1, segm.Y1);
             /* plunge */
-            gcode_mill_to_3D(segm.X1, segm.Y1, segm.Z1);
+            gcode_mill_down_to(segm.Z1);
             /* and mill */
             gcode_mill_to_3D(segm.X2, segm.Y2, segm.Z2);            
             levels[lev].paths.splice(0, 1);
@@ -1500,17 +1530,17 @@ function roughing_zig(X, deltaY)
         
         let prevX = X;
         let prevY = Y;
-        let prevZ = get_height_tool(X, Y, 2 * tool_diameter / 2) + tool_stock_to_leave;;
+        let prevZ = get_height_tool(X, Y, 1.5 * tool_diameter / 2) + tool_stock_to_leave;;
         let maxY = global_maxY + tool_diameter / 2;
         
 //        gcode_travel_to(X, 0);
         while (Y <= maxY) {
             /* for roughing we look 2x the tool diameter as a stock-to-leave measure */
-            let Z = get_height_tool(X, Y, 2 * tool_diameter / 2) + tool_stock_to_leave;
+            let Z = get_height_tool(X, Y, 1.5 * tool_diameter / 2) + tool_stock_to_leave;
             if (Math.abs(prevZ - Z) > 0.6) {
                 halfway_counter += 1;
                 let halfY = (Y + prevY) / 2;
-                let halfZ = get_height_tool(X, halfY, 2 * tool_diameter / 2) + tool_stock_to_leave;
+                let halfZ = get_height_tool(X, halfY, 1.5 * tool_diameter / 2) + tool_stock_to_leave;
                 push_segment_multilevel(prevX, prevY, prevZ, X, halfY, halfZ, tool_diameter * 0.7);
                 prevY = halfY;
                 prevZ = halfZ;
@@ -1546,7 +1576,7 @@ function roughing_zag(X, deltaY)
 {
         let Y = global_maxY + tool_diameter / 2;
         
-        let newZ = get_height_tool(X, Y, 2 * tool_diameter / 2) + tool_stock_to_leave;;
+        let newZ = get_height_tool(X, Y, 1.5 * tool_diameter / 2) + tool_stock_to_leave;;
         let prevX = X;
         let prevY = Y;
         let minY = -tool_diameter / 2;
@@ -1556,12 +1586,12 @@ function roughing_zag(X, deltaY)
 //        gcode_travel_to(X, 0);
         while (Y >= minY) {
             /* for roughing we look 2x the tool diameter as a stock-to-leave measure */
-            let Z = get_height_tool(X, Y, 2 * tool_diameter / 2) + tool_stock_to_leave;
+            let Z = get_height_tool(X, Y, 1.5 * tool_diameter / 2) + tool_stock_to_leave;
 
             if (Math.abs(prevZ - Z) > 0.6) {
                 halfway_counter += 1;
                 let halfY = (Y + prevY) / 2;
-                let halfZ = get_height_tool(X, halfY, 2 * tool_diameter / 2) + tool_stock_to_leave;
+                let halfZ = get_height_tool(X, halfY, 1.5 * tool_diameter / 2) + tool_stock_to_leave;
                 push_segment_multilevel(prevX, prevY, prevZ, X, halfY, halfZ, tool_diameter * 0.7);
                 prevY = halfY;
                 prevZ = halfZ;
