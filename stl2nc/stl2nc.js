@@ -1580,9 +1580,10 @@ function roughing_zig_zag(tool)
     setTimeout(gcode_change_tool, 0, tool);
     
     let deltaX = tool_diameter / 2;
-    let deltaY = tool_diameter / 4;
-    let X = 0;
-    let lastX = 0;
+    let deltaY = tool_diameter / 8;
+    let X = -tool_diameter / 4;
+    let lastX = X;
+    let maxX = global_maxX + tool_diameter / 4;
     
     if (deltaY > 0.5) {
         deltaY = 0.5;
@@ -1590,7 +1591,7 @@ function roughing_zig_zag(tool)
 
     setTimeout(cutout_box1, 0);    
     
-    while (X <= global_maxX) {
+    while (X <= maxX) {
 
         setTimeout(roughing_zig, 0, X, deltaY);        
         
@@ -1598,20 +1599,20 @@ function roughing_zig_zag(tool)
             break;
         }
         X = X + deltaX;
-        if (X > global_maxX) {
-            X = global_maxX;
+        if (X > maxX) {
+            X = maxX;
         }
 
 
         setTimeout(roughing_zag, 0, X, deltaY);
         
         
-        if (X == global_maxX) {
+        if (X == maxX) {
             break;
         }
         X = X + deltaX;
-        if (X > global_maxX) {
-            X = global_maxX;
+        if (X > maxX) {
+            X = maxX;
             
         }
 
