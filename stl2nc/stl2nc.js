@@ -1121,12 +1121,12 @@ function gcode_select_tool(toolnr)
     }    
     if (toolnr == 102) {
         tool_diameter = inch_to_mm(0.125);
-        tool_feedrate = inch_to_mm(30);
+        tool_feedrate = inch_to_mm(40);
         tool_plungerate = inch_to_mm(10);
         tool_geometry = "flat"
         tool_nr = toolnr;
         tool_name = toolnr.toString()
-        tool_depth_of_cut = inch_to_mm(0.039);
+        tool_depth_of_cut = 1;
         tool_stock_to_leave = 0.25;
         return;
     }    
