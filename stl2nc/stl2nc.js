@@ -594,11 +594,11 @@ function get_height(X, Y, value = -global_maxZ, offset = 0.0)
 {
         value = value + global_maxZ - offset;        
 
-	let l2bl = l2buckets.length;
+	const l2bl = l2buckets.length;
 	
-	for (let k = 0; k < l2bl; k++) {
+	for (var k = 0; k < l2bl; k++) {
 	
-            let l2bucket = l2buckets[k];
+            const l2bucket = l2buckets[k];
 
             if (l2bucket.minX > X)
 		        continue;
@@ -612,7 +612,7 @@ function get_height(X, Y, value = -global_maxZ, offset = 0.0)
             if (l2bucket.maxZ <= value)
                     continue;
 
-            let bl = l2buckets[k].buckets.length;
+            const bl = l2buckets[k].buckets.length;
 	
             for (let j =0 ; j < bl; j++) {
 	        
@@ -629,8 +629,8 @@ function get_height(X, Y, value = -global_maxZ, offset = 0.0)
 		if (l2bucket.buckets[j].maxZ <= value)
 		    continue;
 
-		let bucket = l2bucket.buckets[j];
-        	let len = l2bucket.buckets[j].triangles.length;
+		const bucket = l2bucket.buckets[j];
+        	const len = l2bucket.buckets[j].triangles.length;
         	for (let i = 0; i < len; i++) {
         	        let newZ;
         	        //let t = bucket.triangles[i];
@@ -644,6 +644,78 @@ function get_height(X, Y, value = -global_maxZ, offset = 0.0)
                         if (bucket.triangles[i].maxX < X)
                             continue;
                         if (bucket.triangles[i].maxY < Y)
+                            continue;
+                        if (bucket.triangles[i].maxZ <= value)
+                            continue;
+
+                        /* then a more expensive detailed triangle test */
+                        if (!bucket.triangles[i].within_triangle(X, Y)) {
+                                continue;
+                        }
+                        /* now calculate the Z height within the triangle */
+                        newZ = bucket.triangles[i].calc_Z(X, Y);
+
+            		value = Math.max(newZ, value);
+                }
+            }
+        }
+	return value - global_maxZ + offset;
+}
+
+function get_height_array(minX, minY, maxX, maxY, arr, value = -global_maxZ, offset = 0.0)
+{
+        value = value + global_maxZ - offset;        
+
+	const l2bl = l2buckets.length;
+	
+	for (var k = 0; k < l2bl; k++) {
+	
+            const l2bucket = l2buckets[k];
+
+            if (l2bucket.minX > maxX)
+		        continue;
+            if (l2bucket.minY > maxY)
+                        continue;
+            if (l2bucket.maxX < minX)
+            		continue;
+            if (l2bucket.maxY < minY)
+                        continue;
+       
+            if (l2bucket.maxZ <= value)
+                    continue;
+
+            const bl = l2buckets[k].buckets.length;
+	
+            for (let j =0 ; j < bl; j++) {
+	        
+                if (l2bucket.buckets[j].minX > maxX)
+                    continue;
+                if (l2bucket.buckets[j].minY > maxY)
+                    continue;
+                if (l2bucket.buckets[j].maxX < minX)
+                    continue;
+                if (l2bucket.buckets[j].maxY < minY) 
+		    continue;
+		    
+
+		if (l2bucket.buckets[j].maxZ <= value)
+		    continue;
+
+		const bucket = l2bucket.buckets[j];
+        	const len = l2bucket.buckets[j].triangles.length;
+        	for (let i = 0; i < len; i++) {
+        	        let newZ;
+        	        //let t = bucket.triangles[i];
+	    	
+
+            		// first a few quick bounding box checks 
+	        	if (bucket.triangles[i].minX > maxX)
+                            continue;
+                        if (bucket.triangles[i].minY > maxY)
+                            continue;
+                        if (bucket.triangles[i].maxX < minX)
+                            continue;
+                        if (bucket.triangles[i].maxY < minY)
                             continue;
                         if (bucket.triangles[i].maxZ <= value)
                             continue;
@@ -892,9 +964,46 @@ let tool_depth_of_cut = 0.1;
 let tool_stock_to_leave = 0.5;
 let tool_finishing_stepover = 0.1;
 
+class Tool {
+  constructor (_number, _diameter, _feedrate, _plungerate, _geometry, _depth_of_cut, _stock_to_leave = 0.0, _stepover = 0.0) 
+  {
+      this.number = _number;
+      this.diameter = 1.0 * _diameter;
+      this.feedrate = 1.0 * _feedrate;
+      this.plungerate = 1.0 * _plungerate;
+      this.geometry = _geometry;
+      this.depth_of_cut = 1.0 * _depth_of_cut;
+      this.stock_to_leave = 1.0 * _stock_to_leave;
+      this.stepover = this.diameter / 10.0;
+      this.name = _number.toString();
+      
+      if (_stepover > 0) {
+          this.stepover = 1.0 * _stepover;
+      }
+  }
+}
+
 
 
 let gcode_string = "";
+
+let tool_library = [];
+
+
+//   constructor (_number, _diameter, _feedrate, _plungerate, _geometry, _depth_of_cut, _stock_to_leave = 0.0, _stepover = 0.0) 
+
+function tool_factory()
+{
+    if (tool_library.length > 0) {
+        return;
+    }
+    tool_library.push(new Tool(18,   2, inch_to_mm(20), inch_to_mm(10), "flat", 1.0, 0.1, 0.2));
+    tool_library.push(new Tool(28, 0.5, inch_to_mm(50), inch_to_mm(20), "ball", 0.5, 0.0, 0.05)); 
+    tool_library.push(new Tool(27,   1, inch_to_mm(50), inch_to_mm(20), "ball", 0.5, 0.0, 0.1));
+    tool_library.push(new Tool(102, inch_to_mm(0.125), inch_to_mm(40), inch_to_mm(10), "flat", 1.0, 0.25));
+    tool_library.push(new Tool(101, inch_to_mm(0.125), inch_to_mm(40), inch_to_mm(10), "ball", 1.0, 0.25));
+    tool_library.push(new Tool(201, inch_to_mm(0.250), inch_to_mm(50), inch_to_mm(20), "flat", 1.0, 0.25));
+}
 
 function gcode_write(str)
 {
@@ -1096,71 +1205,23 @@ function gcode_select_tool(toolnr)
     gcode_cF = -1.0; 
     cache_prev_X = -50000.0;
     cache_prev_Y = -50000.0;
-    /* TODO: NEED TOOL DATABASE */
-    if (toolnr == 201) {
-        tool_diameter = inch_to_mm(0.25);
-        tool_feedrate = inch_to_mm(50);
-        tool_plungerate = inch_to_mm(10);
-        tool_geometry = "flat"
-        tool_nr = toolnr;
-        tool_name = toolnr.toString()
-        tool_depth_of_cut = inch_to_mm(0.039);
-        tool_stock_to_leave = 0.25;
-        return;
-    }    
-    if (toolnr == 101) {
-        tool_diameter = inch_to_mm(0.125);
-        tool_feedrate = inch_to_mm(30);
-        tool_plungerate = inch_to_mm(10);
-        tool_geometry = "ball"
-        tool_nr = toolnr;
-        tool_name = toolnr.toString()
-        tool_depth_of_cut = inch_to_mm(0.039);
-        tool_stock_to_leave = 0.25;
-        return;
-    }    
-    if (toolnr == 102) {
-        tool_diameter = inch_to_mm(0.125);
-        tool_feedrate = inch_to_mm(40);
-        tool_plungerate = inch_to_mm(10);
-        tool_geometry = "flat"
-        tool_nr = toolnr;
-        tool_name = toolnr.toString()
-        tool_depth_of_cut = 1;
-        tool_stock_to_leave = 0.25;
-        return;
-    }    
-    if (toolnr == 27) {
-        tool_diameter = 1;
-        tool_feedrate = inch_to_mm(30);
-        tool_plungerate = inch_to_mm(10);
-        tool_geometry = "ball"
-        tool_nr = toolnr;
-        tool_name = toolnr.toString()
-        tool_stock_to_leave = 0.0;
-        return;
-    }    
-    if (toolnr == 28) {
-        tool_diameter = 0.5;
-        tool_feedrate = inch_to_mm(30);
-        tool_plungerate = inch_to_mm(10);
-        tool_geometry = "ball"
-        tool_nr = toolnr;
-        tool_name = toolnr.toString()
-        tool_stock_to_leave = 0.0;
-        return;
-    }    
-    if (toolnr == 18) {
-        tool_diameter = 2;
-        tool_feedrate = inch_to_mm(20);
-        tool_plungerate = inch_to_mm(10);
-        tool_geometry = "flatl"
-        tool_nr = toolnr;
-        tool_name = toolnr.toString()
-        tool_stock_to_leave = 0.1;
-        return;
-    }    
-    console.log("UNKNOWN TOOL");    
+    tool_factory();
+    
+    for (let i = 0; i < tool_library.length; i++) {
+        if (tool_library[i].number == toolnr) {
+            tool_diameter = tool_library[i].diameter;
+            tool_feedrate = tool_library[i].feedrate;
+            tool_plungerate = tool_library[i].plungerate;
+            tool_geometry = tool_library[i].geometry;
+            tool_name = tool_library[i].name;
+            tool_nr = tool_library[i].number;
+            tool_depth_of_cut = tool_library[i].depth_of_cut;
+            tool_stock_to_leave = tool_library[i].stock_to_leave;
+            tool_finishing_stepover = tool_library[i].stepover;
+            return;
+        }
+    }
+    console.log("UNKNOWN TOOL ", toolnr);    
 }
 
 function gcode_change_tool(toolnr)
@@ -1280,7 +1341,7 @@ function push_segment_multilevel(X1, Y1, Z1, X2, Y2, Z2, direct_mill = 0.0001)
 }
 
 
-let ACC = 100.0;
+const ACC = 100.0;
 
 function geometry_at_distance(R)
 {
@@ -1895,7 +1956,9 @@ function reset_globals()
 
 function calculate_image() 
 {
-    
+
+    tool_factory();
+        
     startdate = Date.now();
     gcode_header();    
 
