@@ -31,10 +31,6 @@ function dist3(x1,y1,z1,x2,y2,z2)
 	return Math.sqrt((x1-x2)*(x1-x2)+(y1-y2)*(y1-y2)+(z1-z2)*(z1-z2));
 }
 
-function dist3sq(x1,y1,z1,x2,y2,z2)
-{
-	return ((x1-x2)*(x1-x2)+(y1-y2)*(y1-y2)+(z1-z2)*(z1-z2));
-}
 
 /* returns 1 if A and B are within 4 digits behind the decimal */
 function approx4(A, B) { 
@@ -44,6 +40,7 @@ function approx4(A, B) {
 }
 
 
+/* take a stored ieee float into a JS number */
 function data_f32_to_number(data, offset)
 {
     let u32value = (data.charCodeAt(offset + 0)    )  + (data.charCodeAt(offset + 1)<<8) + 
@@ -51,9 +48,6 @@ function data_f32_to_number(data, offset)
     let sign = (u32value & 0x80000000)?-1:1; // TODO: Does STL support negative numbers at all? 
     let mant = (u32value & 0x7FFFFF);
     let exp  = (u32value >> 23) & 0xFF;
-    
-//    console.log("sign " + sign + " mant " + mant + " exp " + exp + "\n");
-//    console.log("u32value " + u32value.toString(16));
     
     let value = 0.0;
     switch (exp) {
@@ -83,19 +77,26 @@ let global_maxZ = -600000000.0;
 let orientation = 0;
 
 class Triangle {
+  /* creates a triangle straight from binary STL data */
   constructor (data, offset)
   {
+    /* basic vertices */
     this.vertex = new Array(3);
     this.vertex[0] = new Array(3);
     this.vertex[1] = new Array(3);
     this.vertex[2] = new Array(3);
+    /* and the bounding box */
     this.minX = 6000000000.0;
     this.minY = 6000000000.0;
     this.maxX = -6000000000.0;
     this.maxY = -6000000000.0;
     this.minZ = 600000000.0;
     this.maxZ = -600000000.0;
+    /* status = 0 -> add to the bucket hierarchy later, status = 1 -> don't add (again) */
     this.status = 0;
+    
+    
+    /* first 12 bytes are the surface normal vector, only Z we'll use in a bit */
     
     this.vertex[0][0] = data_f32_to_number(data, offset + 12);
     this.vertex[0][1] = data_f32_to_number(data, offset + 16);
@@ -111,12 +112,13 @@ class Triangle {
     
     if (orientation == 0) {
         let Znorm =  data_f32_to_number(data, offset + 8);
-        /* the normal vector of the triangle points down, we'll never see it */
+        /* if the normal vector of the triangle points downwards, we'll never see it so we mark it as not interesting */
         if (Znorm < 0) {
             this.status = 1;
         }
     }
     
+    /* rotation options */
     if (orientation == 1) {
         let x,y,z;
         for (let i = 0; i < 3; i++) {
@@ -139,6 +141,8 @@ class Triangle {
             this.vertex[i][2] = -x;
         }
     }
+    
+    /* and now set the various min/max variables */
    
     this.minX = Math.min(this.vertex[0][0], this.vertex[1][0]); 
     this.minX = Math.min(this.minX,         this.vertex[2][0]); 
@@ -165,6 +169,10 @@ class Triangle {
     global_maxY = Math.max(global_maxY, this.maxY);
     global_maxZ = Math.max(global_maxZ, this.maxZ);
   }
+  
+  /* returns 1 if (X,Y) is within the triangle */
+  /* in the math sense, this is true if the three determinants are not of different signs */
+  /* a determinant of 0 means on the line, and does not count as opposing sign in any way */
   within_triangle(X, Y)
   {
   
@@ -187,22 +195,23 @@ class Triangle {
 	det2 = point_to_the_left(X, Y, this.vertex[1][0], this.vertex[1][1], this.vertex[2][0], this.vertex[2][1]);
 	det3 = point_to_the_left(X, Y, this.vertex[2][0], this.vertex[2][1], this.vertex[0][0], this.vertex[0][1]);
 
-//	has_neg = (det1 < 0) || (det2 < 0) || (det3 < 0);
+
         if (det1 < 0) { has_neg = 1; };
         if (det2 < 0) { has_neg = 1; };
         if (det3 < 0) { has_neg = 1; };
-//	has_pos = (det1 > 0) || (det2 > 0) || (det3 > 0);
+
         if (det1 > 0) { has_pos = 1; };
         if (det2 > 0) { has_pos = 1; };
         if (det3 > 0) { has_pos = 1; };
         
+        /* check if we have opposing signs */
         if (has_neg && has_pos)
             return 0;
         return 1;
 
-	return !(has_neg && has_pos);
   }
-   calc_Z(X, Y)
+  /* for (X,Y) inside the triangle (see previous function), calculate the Z of the intersection point */
+  calc_Z(X, Y)
   {
 	let det = (this.vertex[1][1] - this.vertex[2][1]) * 
 		    (this.vertex[0][0] - this.vertex[2][0]) + 
@@ -346,6 +355,20 @@ let triangles = []
 let buckets = []
 let l2buckets = []
 
+
+/*
+ * An STL file is supposed to be in the "all positive" quadrant, but there's no rule
+ * for how far away from the zero point the design is. This function just moves the
+ * whole design so that everything is positive, but that the zero point is really 
+ * the bottom left point.
+ *
+ * NOTE: This takes a "zoffset" option, that allows for a %age of the design to
+ * "sink" into the Z plane, so you can get negative values. That's ok since 
+ * the height functions later will ignore negative Z's
+ *
+ * This function does not update the bounding box; right after this function
+ * the design will be scaled and the final bounding box is updated there.
+ */
 function normalize_design_to_zero()
 {	
     let len = triangles.length;
@@ -380,7 +403,11 @@ function normalize_design_to_zero()
     global_minZ = 0.0;
 }
 
-function scale_design(desired_depth)
+
+/*
+ * Scale the design so that it fits in the stock of desired_width (X)  x desired_hight (Y) x desired_depth (Z)
+ */
+function scale_design()
 {	
     let len = triangles.length;
     
@@ -388,12 +415,13 @@ function scale_design(desired_depth)
     
     normalize_design_to_zero();
     
+    /* calculate the three different scale factors to make the design fit in the respective axis */
     let factorD = desired_depth / global_maxZ; 
     let factorW = desired_width / global_maxX; 
     let factorH = desired_height / global_maxY; 
-    
+
+    /* and the smallest scale factor ensures that the design fits in the stock */
     factor = Math.min(factorD, Math.min(factorW, factorH));
-    
     
     for (let i = 0; i < len; i++) {
         triangles[i].vertex[0][0] *= factor;
@@ -433,12 +461,18 @@ function scale_design(desired_depth)
     global_maxZ *= factor;    
 }
 
+/* helper inlined later; determinant is used to say if a point is to the left of a line */
 function  point_to_the_left(X, Y, AX, AY, BX, BY)
 {
 	return (BX-AX)*(Y-AY) - (BY-AY)*(X-AX);
 }
 
 
+/*
+ * "Bucket" is a collection of nearby triangles that have a joint bounding box.
+ * This allows for a peformance optimization, if the desired point is outside of
+ * the buckets bounding box, all triangles in the bucket can be skipped */
+ 
 class Bucket {
   constructor (lead_triangle)
   {
@@ -453,6 +487,10 @@ class Bucket {
   }
 }
 
+/*
+ * An L2Bucket is a "bucket of buckets" to allow whole groups of buckets to
+ * be skipped in our searches
+ */
 class L2Bucket {
   constructor (lead_triangle)
   {
@@ -470,6 +508,13 @@ class L2Bucket {
 
 let BUCKET_SIZE=64;
 let BUCKET_SIZE2=32;
+/* 
+ * Turn a list of triangles into a 2 level hierarchy of buckets/
+ *
+ * general algorithm: pick the first unassigned triangle. Define a "slop" area around
+ * it, and find more triangles to go into the same bucket that are within this slop area, 
+ * until the bucket is full.
+ */
 function make_buckets()
 {
 	let i;
@@ -589,8 +634,23 @@ function make_buckets()
 	}
 	console.log("Created " + l2buckets.length + " L2 buckets\n");
 	
+	/* and garbage collect the rest */
+	triangles = [];
 }
 
+
+/* Given an X and Y coordinate, find the height of the STL design.
+ * This function operates by traversing the bucket hierarchy 
+ * and only inspecting triangles whose lowest bucket bounding box 
+ * indicates that there might be a hit.
+ *
+ * the function takes a "value" optional argument, which is 
+ * the lowest value of height that is searched for; this is used
+ * for repeated searches for the same tool, so that whole buckets
+ * can be skipped if it's known they cannot add to a higher "height"
+ *
+ * "offset" is an additional offset, used for compensating for tool geometry
+ */
 function get_height(X, Y, value = -global_maxZ, offset = 0.0)
 {
         value = value + global_maxZ - offset;        
@@ -663,6 +723,17 @@ function get_height(X, Y, value = -global_maxZ, offset = 0.0)
 	return value - global_maxZ + offset;
 }
 
+/*
+ * Batch version of get_height(), instead of a specific (X,Y) it takes a center point
+ * and an array of offset pairs to this center point. In all other ways the function is the
+ * same as get_height(). The returned value is the highest point for any of the pairs in the array.
+ *
+ * Reason for this array version is computational efficiency for the common case of needing
+ * the max of a set of nearby points.
+ *
+ * Only use nearby points, for the general case the computational behavior of this function
+ * is dreadful... one ends up looking at all triangles not just close ones
+ */
 function get_height_array(minX, minY, maxX, maxY, _X, _Y, arr, value = -global_maxZ, offset = 0.0)
 {
         value = value + global_maxZ - offset;        
@@ -741,94 +812,13 @@ function get_height_array(minX, minY, maxX, maxY, _X, _Y, arr, value = -global_m
 	return value - global_maxZ + offset;
 }
 
-function get_heighest_point(X, Y, radius, value = -global_maxZ)
-{
-        value += global_maxZ;
-        
-        let minX = X - radius;
-        let maxX = X + radius;
-        let minY = Y - radius;
-        let maxY = Y + radius;
-//        let value = 0.0;
-	let l2bl = l2buckets.length;
-	
-	for (let k = 0; k < l2bl; k++) {
-	
-            let l2bucket = l2buckets[k];
 
-            if (l2bucket.minX > maxX)
-		        continue;
-            if (l2bucket.minY > maxY)
-                        continue;
-            if (l2bucket.maxX < minX)
-            		continue;
-            if (l2bucket.maxY < minY)
-                        continue;
-       
-            if (l2bucket.maxZ <= value)
-                    continue;
-
-            let bl = l2buckets[k].buckets.length;
-	
-            for (let j =0 ; j < bl; j++) {
-	        
-                if (l2bucket.buckets[j].minX > maxX)
-                    continue;
-                if (l2bucket.buckets[j].minY > maxY)
-                    continue;
-                if (l2bucket.buckets[j].maxX < minX)
-                    continue;
-                if (l2bucket.buckets[j].maxY < minY) 
-		    continue;
-		    
-
-		if (l2bucket.buckets[j].maxZ <= value)
-		    continue;
-
-		let bucket = l2bucket.buckets[j];
-        	let len = l2bucket.buckets[j].triangles.length;
-        	for (let i = 0; i < len; i++) {
-        	        let newZ;
-        	        //let t = bucket.triangles[i];
-
-                        let bt = bucket.triangles[i];
-
-            		// first a few quick bounding box checks 
-	        	if (bt.minX > maxX)
-                            continue;
-                        if (bt.minY > maxY)
-                            continue;
-                        if (bt.maxX < minX)
-                            continue;
-                        if (bt.maxY < minY)
-                            continue;
-                        if (bt.maxZ <= value)
-                            continue;
-                            
-                        
-                            
-                        for (let q = 0; q < 3; q++) {
-                            /* check if this point of the triangle is the heighest */
-                            if (bt.maxZ == bt.vertex[q][2]) {
-                                let active_R = dist(X, Y, bt.vertex[q][0], bt.vertex[q][1]);
-                                if (active_R <= radius) {
-                                    let offset =  -geometry_at_distance(active_R);
-                                    if (value < bt.maxZ + offset) {
-                                        value = bt.maxZ + offset;
-                                        cache_prev_X = bt.vertex[q][0];
-                                        cache_prev_Y = bt.vertex[q][1];
-                                    }
-                                }
-                            }
-                        }                        
-                }
-            }
-        }
-	return value - global_maxZ;
-}
-
-
-
+/*
+ * This function takes the raw data of an STL file, processes this data into ascii or binary triangles
+ * and sets up the various data structures (buckets etc) so that no other part of the code really
+ * has to know anything about STL... just about triangles that are already organized in a bucket
+ * hierarchy.
+ */
 function process_data(data)
 {
     let len = data.length;
@@ -863,7 +853,6 @@ function process_data(data)
         document.getElementById('list').innerHTML  = "Length mismatch " + data.length + " " + total_triangles;
         return;
     }
-//    document.getElementById('list').innerHTML  = "Parsing STL file";
     
     console.log("Start of parsing at " + (Date.now() - start));
     
@@ -874,7 +863,7 @@ function process_data(data)
 
     console.log("End of parsing at " + (Date.now() - start));
 
-    scale_design(desired_depth);    
+    scale_design();    
     update_gui_actuals();	
     make_buckets();
     console.log("End of buckets at " + (Date.now() - start));
@@ -941,14 +930,14 @@ function process_data_ascii(data)
 
     console.log("End of parsing at " + (Date.now() - start));
 
-    scale_design(desired_resolution);    
+    scale_design();    
+    update_gui_actuals();	
     make_buckets();
     console.log("End of buckets at " + (Date.now() - start));
 
     console.log("Scale " + (Date.now() - start));
-    
-//    document.getElementById('list').innerHTML  = "Number of triangles " + total_triangles + "mX " + global_maxX + " mY " + global_maxY;
 }
+
 
 function inch_to_mm(inch)
 {
@@ -961,6 +950,7 @@ function mm_to_inch(mm)
 }
 
 
+/* cache of global tool properties so that we don't; need to traverse datastructures for common things in the fast paths */
 let tool_diameter = inch_to_mm(0.25);
 let tool_feedrate = 0.0;
 let tool_plungerate = 0.0;
@@ -972,16 +962,24 @@ let tool_stock_to_leave = 0.5;
 let tool_finishing_stepover = 0.1;
 let tool_index = 0;
 
+
+/* ToolRings are created for each tool; they define a set of (X,Y) points relative to the center of
+ * where the height of the deisgn will get probed.
+ * A tool will have multiple such rings; each ring will be for one specific radius.
+ */
 class ToolRing {
     constructor (_R)
     {
         this.R = _R;
         this.points = [];
 
+        /* the normal wind directions N / S / E / W*/
         this.points.push(+1.0000 * _R);    this.points.push(+0.0000 * _R);
         this.points.push(+0.0000 * _R);    this.points.push(+1.0000 * _R);
         this.points.push(-1.0000 * _R);    this.points.push(-0.0000 * _R);
         this.points.push(-0.0000 * _R);    this.points.push(-1.0000 * _R);
+        
+        /* and the halfway points of those */
         
         this.points.push(+0.7071 * _R);    this.points.push(+0.7071 * _R);
         this.points.push(-0.7071 * _R);    this.points.push(+0.7071 * _R);
@@ -989,6 +987,8 @@ class ToolRing {
         this.points.push(+0.7071 * _R);    this.points.push(-0.7071 * _R);
         
         if (high_precision == 0 && _R <= 0.5) { return; };
+        
+        /* and the halfway points again */
         
         this.points.push(+0.9239 * _R);    this.points.push(+0.3827 * _R);
         this.points.push(+0.3827 * _R);    this.points.push(+0.9239 * _R);
@@ -1002,6 +1002,12 @@ class ToolRing {
     }
 }
 
+
+/* 
+ * Basic endmill data structure, has all the basic physical properties/sizes of the endmill
+ * as well as the rings for probing
+ */
+ 
 class Tool {
   constructor (_number, _diameter, _feedrate, _plungerate, _geometry, _depth_of_cut, _stock_to_leave = 0.0, _stepover = 0.0) 
   {
@@ -1021,27 +1027,20 @@ class Tool {
       }
 
       /* now precompute the points to sample for height */      
-      let R = _diameter / 2;
-      
+      let R = _diameter;
       let threshold = 0.4;
       if (high_precision) {
           threshold = 0.25;
       }
       
-      this.rings.push(new ToolRing(R));
-      R = R / 1.5;
-
-      if (R < threshold) {
-		return;
-      }
-      this.rings.push(new ToolRing(R));
-      R = R / 1.5;
-
-      if (R < threshold) {
-          return;
-      }
-      this.rings.push(new ToolRing(R));
       
+      while (R > 0.1) {
+            this.rings.push(new ToolRing(R));
+            R = R / 1.5;
+            if (R < threshold) {
+		break;
+            }
+      }
   }
 }
 
@@ -1054,6 +1053,7 @@ let tool_library = [];
 
 //   constructor (_number, _diameter, _feedrate, _plungerate, _geometry, _depth_of_cut, _stock_to_leave = 0.0, _stepover = 0.0) 
 
+/* Creates all the tools */
 function tool_factory()
 {
     if (tool_library.length > 0) {
@@ -1066,6 +1066,28 @@ function tool_factory()
     tool_library.push(new Tool(101, inch_to_mm(0.125), inch_to_mm(40), inch_to_mm(10), "ball", 1.0, 0.25));
     tool_library.push(new Tool(201, inch_to_mm(0.250), inch_to_mm(50), inch_to_mm(20), "flat", 1.0, 0.25));
 }
+
+
+
+
+/*
+ * GCODE helper library 
+ * (should move into its own .js file at some point once I figure out how that works *
+ *
+ * Consists of a set of very low level functions for gcode plumbing, and all functions
+ * are "direct" in that they emit gcode instantly, there's nothing doing operations ordering
+ * after this.
+ *
+ * The most useful general functions are
+ * gcode_retract()   -- get the endmill to a safe-to-move height 
+ * gcode_travel_to(X,Y) -- retracts (if needed) and then fast-moves to the location (X,Y)    (G0 in gcode speak)
+ * gcode_mill_to_3D(X, Y, Z) -- mill from the current location to (X, Y, Z)     (G1 in gcode speak)
+ * gcode_mill_down_to(Z) -- go straight down, first at G0 speed until the bit gets close to the material, then at plunge speed
+ * gcode_select_tool(tool nr) -- look up a tool in the database and select it -- does not write out gcode
+ * gcode_change_tool(tool nr) -- change a tool (internal caches) and write out the gcode for the toolchange   
+ */
+
+
 
 function gcode_write(str)
 {
@@ -1083,11 +1105,13 @@ let gcode_cY = 0.0;
 let gcode_cZ = 0.0;
 let gcode_cF = 0.0;
 
+/* In gcode we want numbers to always have 4 decimals */
 function gcode_float2str(value)
 {
     return value.toFixed(4);
 }
 
+/* Standard header to write at the start of the gcode */
 function gcode_header()
 {
     gcode_write("%");
@@ -1095,9 +1119,11 @@ function gcode_header()
     gcode_write("G90"); /* all relative to work piece zero */
     gcode_write("G0X0Y0Z" + gcode_float2str(safe_retract_height));
     gcode_cZ = safe_retract_height;
+    gcode_comment("Created by STL2NC");
     gcode_comment("FILENAME: " + filename);
 }
 
+/* And close off the gcode by turning off the spindle/etc */
 function gcode_footer()
 {
     gcode_write("M5");
@@ -1106,9 +1132,16 @@ function gcode_footer()
     gcode_write("%");
 }
 
+
+/* 
+ * before the first time setting up the tool we don't have to turn off the spindle since
+ * it's not on yet
+ */
+
 let gcode_first_toolchange = 1;
 
 let gcode_retract_count = 0;
+
 function gcode_retract()
 {
     gcode_write("G0Z" + gcode_float2str( safe_retract_height));
@@ -1116,6 +1149,12 @@ function gcode_retract()
     gcode_retract_count += 1;
 }
 
+
+/*
+* Moves the bit to some (X,Y) location at retract height. 
+ * This will first retract the bit if it is not already retracted,
+ * and then use the gcode G0 fast move command to go to (X,Y)
+ */
 function gcode_travel_to(X, Y)
 {
     if (gcode_cZ < safe_retract_height) {
@@ -1140,6 +1179,11 @@ function gcode_travel_to(X, Y)
     gcode_cY = Y;
 }
 
+/* 
+ * Internal helper to calculate what speed to mill at, which
+ * is either feedrate or plungerate, depending on if the horizontal
+ * or vertical element of the move dominates
+ */
 function toolspeed3d(cX, cY, cZ, X, Y, Z)
 {
 	let horiz = dist(cX, cY, X, Y);
@@ -1166,6 +1210,10 @@ function toolspeed3d(cX, cY, cZ, X, Y, Z)
 	/* when we get here, plunge rate dominates */
 	return tool_plungerate;
 }
+
+/* 
+ * Mill from the current location to (X,Y,Z)
+ */
 
 function gcode_mill_to_3D(X, Y, Z)
 {
@@ -1214,6 +1262,10 @@ function gcode_mill_to_3D(X, Y, Z)
         gcode_write("G" + command + sX + sY + sZ + sF);        
 }
 
+/* 
+ * Go straight down after a retract in the fastest possible way (faster tham mill_to_3D) by
+ * doing a combination of G0 and G1 moves
+ */
 function gcode_mill_down_to(Z)
 {
 	let toolspeed;
@@ -1293,6 +1345,26 @@ function gcode_change_tool(toolnr)
     gcode_write_toolchange();
 }
 
+
+
+
+/* 
+ * Segment API section
+ *
+ * Segments are moves you want to mill (X1,Y1,X1) -> (X2, Y2, Z2)
+ * each segment has an (optional) tolerance where the tolerance is used
+ * to avoid retracts if an adjacent segment is within this distance
+ *
+ * Two fundamental ways to create segments:
+ *
+ * push_segment(X1, Y1, Z1, X2, Y2, Z2) -- uncomplicated creation/queueing of a segment
+ * push_segment_multilevel(X1,Y1,Z1, X2,Y2,Z2) -- takes the active tools max depth of cut into account and will dynamically create multiple segments
+ * 
+ * Two ways to create gcode from the segment data:
+ * segments_to_gcode()  -- creates gcode while optimizing for fewest retracts (good for roughing etc)
+ * segments_to_gcode_quick() -- computationally simpler option, it just creates exactly in order of queueing (good for finishing that has no natural retracts)
+ */
+
 class Segment {
   constructor()
   {
@@ -1307,6 +1379,12 @@ class Segment {
 }
 
 
+/* 
+ * Internally the segment tooling has a set of "levels" where 0 is the deepest. In the gcode generation, the levels
+ * will be written top down (so high to low numerical). Think of a "level" as one depth of cut "layer" so that
+ * if a multilevel segment is created, each layer of this per depth of cut is stored in a separate level.
+ * Levels are what makes sure we cut the higher paths before the lower paths.
+ */
 let levels = [];
 
 
@@ -1318,6 +1396,11 @@ class Level {
   }
 }
 
+/* 
+ * Create a segment and push it, not honoring any depth-of-cut.
+ * If this segment is just an extension of the previously pushed segment,
+ * the segments may get merged into one larger segment for efficiency.
+ */
 function push_segment(X1, Y1, Z1, X2, Y2, Z2, level = 0.0, direct_mill = 0.0001)
 {
     if (X1 == X2 && Y1 == Y2 && Z1 == Z2) {
@@ -1359,6 +1442,13 @@ function push_segment(X1, Y1, Z1, X2, Y2, Z2, level = 0.0, direct_mill = 0.0001)
     
     levels[level].paths.push(seg);
 }
+
+/*
+ * Create a segment for a milling move, while keeping max Depth of Cut into account.
+ * This means that multiple segments (each at a higher level) may be generated
+ * as part of one API call. The higher-than-the-lowest levels are rounded such
+ * that there is a higher chance of merging these higher levels together.
+ */
 
 function push_segment_multilevel(X1, Y1, Z1, X2, Y2, Z2, direct_mill = 0.0001)
 {
@@ -1403,76 +1493,9 @@ function push_segment_multilevel(X1, Y1, Z1, X2, Y2, Z2, direct_mill = 0.0001)
     }         
 }
 
-
-const ACC = 100.0;
-
-function geometry_at_distance(R)
-{
-    if (tool_geometry == "ball") {
-        let orgR = tool_diameter / 2;
-	return orgR - Math.sqrt(orgR*orgR - R*R);
-    }
-    
-    return 0;
-}
-
-let cache_prev_X = -5000.0;
-let cache_prev_Y = -5000.0;
-
-function update_height(height, X, Y, offset)
-{
-
-    let prevheight = height;
-    let newheight = get_height(X, Y, height, offset) + offset;
-    
-    
-    if (newheight > prevheight) {
-//        newheight = Math.ceil(newheight*ACC)/ACC
-        cache_prev_X = X;
-        cache_prev_Y = Y;
-        height = newheight;
-    }
-
-    return height;
-
-
-//    return Math.max(height, get_height(X, Y) + offset);
-
-}
-
-function update_height_array(height, rr, X, Y, arr,  offset)
-{
-
-    let prevheight = height;
-    let newheight = get_height_array(X - rr,  Y - rr, X + rr, Y + rr, X, Y, arr, height, offset) + offset;
-    
-    
-    if (newheight > prevheight) {
-//        newheight = Math.ceil(newheight*ACC)/ACC
-        height = newheight;
-    }
-
-    return height;
-}
-
-function get_height_tool(X, Y, R)
-{	
-	let d = -global_maxZ, dorg;
-	let balloffset = 0.0;
-
-	d = update_height(d, X, Y, 0);
-	
-	const ringcount = tool_library[tool_index].rings.length;
-	for (let i = 0; i < ringcount ; i++) {
-	    let rr = tool_library[tool_index].rings[i].R;
-	    balloffset = -geometry_at_distance(rr);
-	    d = update_height_array(d, rr, X, Y, tool_library[tool_index].rings[i].points,  balloffset);
-	}
-	return Math.ceil(d*ACC)/ACC;
-
-}
-
-
+/* Create gcode from the queued segments, while trying to avoid retracts.
+ * maxlook is how hard to work on trying to avoid retracts.
+ */
 function segments_to_gcode(maxlook = 1)
 {
     for (let lev = levels.length - 1; lev >= 0; lev--) {
@@ -1555,6 +1578,9 @@ function segments_to_gcode(maxlook = 1)
     console.log("Total retract count", gcode_retract_count);
 }
 
+/* computationally more efficient way to generate gcode from the queued segments,
+ * but will not try to optimize for fewer retracts... useful for finishing passes
+ */
 function segments_to_gcode_quick()
 {
     for (let lev = levels.length - 1; lev >= 0; lev--) {
@@ -1563,10 +1589,8 @@ function segments_to_gcode_quick()
             
             if (dist3(gcode_cX, gcode_cY, gcode_cZ, segm.X1, segm.Y1, segm.Z1) > segm.direct_mill_distance) {
                 gcode_travel_to(segm.X1, segm.Y1);
-                gcode_mill_to_3D(segm.X1, segm.Y1, segm.Z1);
-//                console.log("cx ", gcode_cX, " X1 ", segm.X1);
-//                console.log("cy ", gcode_cY, " X1 ", segm.Y1);
-//                console.log("cz ", gcode_cZ, " X1 ", segm.Z1);
+                /* plunge */
+                gcode_mill_down_to(segm.Z1);
             } else {
                 if (dist3(gcode_cX, gcode_cY, gcode_cZ, segm.X1, segm.Y1, segm.Z1) > 0.00001) {
                     gcode_mill_to_3D(segm.X1, segm.Y1, segm.Z1);            
@@ -1580,9 +1604,97 @@ function segments_to_gcode_quick()
     console.log("Total retract count", gcode_retract_count);
 }
 
+
+let ACC = 50.0;
+
+
+/*
+ * Calculate how much higher than the center point the bit geometry is at distance R
+ *
+ * this obviously is a different formula for different endmill types 
+ */
+
+function geometry_at_distance(R)
+{
+    if (tool_geometry == "ball") {
+        let orgR = tool_diameter / 2;
+	return orgR - Math.sqrt(orgR*orgR - R*R);
+    }
+    
+    return 0;
+}
+
+let cache_prev_X = -5000.0;
+let cache_prev_Y = -5000.0;
+
+
+
+function update_height(height, X, Y, offset)
+{
+
+    let prevheight = height;
+    let newheight = get_height(X, Y, height, offset) + offset;
+    
+    
+    if (newheight > prevheight) {
+//        newheight = Math.ceil(newheight*ACC)/ACC
+        cache_prev_X = X;
+        cache_prev_Y = Y;
+        height = newheight;
+    }
+
+    return height;
+
+
+//    return Math.max(height, get_height(X, Y) + offset);
+
+}
+
+function update_height_array(height, rr, X, Y, arr,  offset)
+{
+
+    let prevheight = height;
+    let newheight = get_height_array(X - rr,  Y - rr, X + rr, Y + rr, X, Y, arr, height, offset) + offset;
+    
+    newheight = Math.ceil(newheight*ACC)/ACC
+    
+    if (newheight > prevheight) {
+        height = newheight;
+    }
+
+    return height;
+}
+
+
+/*
+ * Given the current tool, find how low the tool can go before it hits the model.
+ */
+function get_height_tool(X, Y, maxR)
+{	
+	let d = -global_maxZ, dorg;
+	let balloffset = 0.0;
+
+	d = update_height(d, X, Y, 0);
+	
+	const ringcount = tool_library[tool_index].rings.length;
+	for (let i = 0; i < ringcount ; i++) {
+	    let rr = tool_library[tool_index].rings[i].R;
+	    if (rr > maxR) { 
+	        continue;
+            }
+	    balloffset = -geometry_at_distance(rr);
+	    d = update_height_array(d, rr, X, Y, tool_library[tool_index].rings[i].points,  balloffset);
+	}
+	return Math.ceil(d*ACC)/ACC;
+
+}
+
+
+
+/* last percentage the gui was updated */
 let prev_pct = 0;
 
-
+/* one raster direction for roughing, front to back */
 function roughing_zig(X, deltaY)
 {
         let Y = -tool_diameter / 2;
@@ -1631,6 +1743,7 @@ function roughing_zig(X, deltaY)
     
  }
  
+/* the other raster direction for roughing, back to front */
 function roughing_zag(X, deltaY)
 {
         let Y = global_maxY + tool_diameter / 2;
@@ -1682,6 +1795,15 @@ function roughing_zag(X, deltaY)
 }
 
 
+/* 
+ * create a "cutout" toolpath around the model
+ *
+ * This is done to give the finishing endmill space to manouver in safely outside of the model
+ *
+ * box1 leaves a little "tab" behind to help work holding.
+ * box2 cuts away this tab
+ */
+
 function cutout_box1()
 {
     let minX = -tool_diameter / 2;
@@ -1713,6 +1835,7 @@ function cutout_box2()
 }
 
 
+/* roughing pass */
 function roughing_zig_zag(tool)
 {
     gcode_select_tool(tool);
@@ -1768,10 +1891,15 @@ function roughing_zig_zag(tool)
 }
 
 let halfway_counter = 0;
+/* left-to-right finishing pass */
 function finishing_zig(Y, deltaX)
 {
         let X = -tool_diameter / 2;
         let maxX = global_maxX + tool_diameter / 2;
+        let threshold = 0.6;
+        if (high_precision != 0) {
+            threshold = 0.3
+        }
         
         let prevX = X;
         let prevY = Y;
@@ -1781,7 +1909,7 @@ function finishing_zig(Y, deltaX)
         while (X <= maxX) {
             let Z = get_height_tool(X, Y, tool_diameter / 2);
             
-            if (Math.abs(prevZ - Z) > 0.6) {
+            if (Math.abs(prevZ - Z) > threshold) {
                 halfway_counter += 1;
                 let halfX = (X + prevX) / 2;
                 let halfZ = get_height_tool(halfX, Y, tool_diameter / 2);
@@ -1810,6 +1938,8 @@ function finishing_zig(Y, deltaX)
 
 }
 let prev_pct2 = 0;
+
+/* right to left finishing pass */
 function finishing_zag(Y, deltaX)
 {
         let X = global_maxX + tool_diameter / 2;
@@ -1820,12 +1950,16 @@ function finishing_zag(Y, deltaX)
         let prevX = global_maxX;
         
         let prevZ = newZ;
+        let threshold = 0.6;
+        if (high_precision != 0) {
+            threshold = 0.3
+        }
         
 //        gcode_travel_to(X, 0);
         while (X >= minX) {
             /* for roughing we look 2x the tool diameter as a stock-to-leave measure */
             let Z = get_height_tool(X, Y, tool_diameter / 2);
-            if (Math.abs(prevZ - Z) > 0.6) {
+            if (Math.abs(prevZ - Z) > threshold) {
                 halfway_counter += 1;
                 let halfX = (X + prevX) / 2;
                 let halfZ = get_height_tool(halfX, Y, tool_diameter / 2);
@@ -1864,6 +1998,8 @@ function finishing_zag(Y, deltaX)
         }
 }
 
+
+/* Finishing pass */
 function finishing_zig_zag(tool)
 {
 
@@ -1881,6 +2017,10 @@ function finishing_zig_zag(tool)
     
     deltaX = tool_finishing_stepover;
     deltaY = tool_finishing_stepover;
+    
+    if (high_precision == 1) {
+        deltaX = deltaX * 0.75;
+    }
     
     console.log("dX ", deltaX, "  dY ", deltaY);
     while (Y <= maxY) {
@@ -1918,6 +2058,7 @@ function finishing_zig_zag(tool)
 
 let startdate;
 
+/* update the gcode in the GUI */
 function update_gcode_on_website()
 {
     var pre = document.getElementById('outputpre')
@@ -1932,6 +2073,7 @@ function update_gcode_on_website()
 }
 
 
+/* Clear all global state so that you can load a new file */
 function reset_globals()
 {
     prev_pct = 0;
@@ -1956,6 +2098,8 @@ function reset_globals()
     halfway_counter = 0;
 }
 
+
+/* The main director function, this takes a design-in-buckets and goes all the way to gcode */
 function calculate_image() 
 {
 
@@ -1972,6 +2116,11 @@ function calculate_image()
     setTimeout(update_gcode_on_website, 0);
     
 }
+
+
+/*
+ * Series of onChange handers called by the HTML gui
+ */
 
 function RadioB(val)
 {
@@ -2193,8 +2342,10 @@ function handle_precision(val)
 {
     if (val == "high") {
         high_precision = 1;
+        ACC = 200.0;
     }  else {
         high_precision = 0;
+        ACC = 50.0;
     } 
 }
 
