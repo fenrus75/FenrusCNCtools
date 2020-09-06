@@ -36,6 +36,13 @@
             </select>
             
             <br />
+            Calculation precision :
+            <select name="precision" id="precision" onclick="handle_precision(this.value)">
+                <option value="normal">Normal</option>
+                <option value="high">High</option>
+            </select>
+            
+            <br />
             
             <br />
             STL Depth offset: (shifts the design up and down)<br />
@@ -48,6 +55,7 @@
             <tr><td>
             <label for="roughing">Roughing endmill</label></td><td>
             <select name="roughing" id="roughing" onclick="handle_roughing(this.value)">
+                <option value="0">No Roughing Pass</option>
                 <option value="18">#18 - 2mm diameter flat endmill</option>
                 <option value="102">#102 - One Eighth inch flat endmill</option>
                 <option value="201" selected>#201 - One Quarter inch flat endmill</option>

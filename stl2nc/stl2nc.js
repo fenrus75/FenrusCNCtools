@@ -14,6 +14,7 @@ let safe_retract_height = 2.0;
 let rippem = 18000.0;
 let filename = "";
 let gui_is_metric = 1;
+let high_precision = 0;
 
 let finishing_endmill = 27;
 let roughing_endmill = 201;
@@ -662,11 +663,12 @@ function get_height(X, Y, value = -global_maxZ, offset = 0.0)
 	return value - global_maxZ + offset;
 }
 
-function get_height_array(minX, minY, maxX, maxY, arr, value = -global_maxZ, offset = 0.0)
+function get_height_array(minX, minY, maxX, maxY, _X, _Y, arr, value = -global_maxZ, offset = 0.0)
 {
         value = value + global_maxZ - offset;        
 
 	const l2bl = l2buckets.length;
+	const points = arr.length / 2;
 	
 	for (var k = 0; k < l2bl; k++) {
 	
@@ -703,19 +705,23 @@ function get_height_array(minX, minY, maxX, maxY, arr, value = -global_maxZ, off
 
 		const bucket = l2bucket.buckets[j];
         	const len = l2bucket.buckets[j].triangles.length;
-        	for (let i = 0; i < len; i++) {
+        	
+        	for (let p = 0; p < points; p++) {
+        	    let X = _X + arr[p * 2];
+        	    let Y = _Y + arr[p * 2 + 1];
+        	    for (let i = 0; i < len; i++) {
         	        let newZ;
         	        //let t = bucket.triangles[i];
 	    	
 
             		// first a few quick bounding box checks 
-	        	if (bucket.triangles[i].minX > maxX)
+	        	if (bucket.triangles[i].minX > X)
                             continue;
-                        if (bucket.triangles[i].minY > maxY)
+                        if (bucket.triangles[i].minY > Y)
                             continue;
-                        if (bucket.triangles[i].maxX < minX)
+                        if (bucket.triangles[i].maxX < X)
                             continue;
-                        if (bucket.triangles[i].maxY < minY)
+                        if (bucket.triangles[i].maxY < Y)
                             continue;
                         if (bucket.triangles[i].maxZ <= value)
                             continue;
@@ -728,6 +734,7 @@ function get_height_array(minX, minY, maxX, maxY, arr, value = -global_maxZ, off
                         newZ = bucket.triangles[i].calc_Z(X, Y);
 
             		value = Math.max(newZ, value);
+                    }
                 }
             }
         }
@@ -963,6 +970,37 @@ let tool_nr = 0;
 let tool_depth_of_cut = 0.1;
 let tool_stock_to_leave = 0.5;
 let tool_finishing_stepover = 0.1;
+let tool_index = 0;
+
+class ToolRing {
+    constructor (_R)
+    {
+        this.R = _R;
+        this.points = [];
+
+        this.points.push(+1.0000 * _R);    this.points.push(+0.0000 * _R);
+        this.points.push(+0.0000 * _R);    this.points.push(+1.0000 * _R);
+        this.points.push(-1.0000 * _R);    this.points.push(-0.0000 * _R);
+        this.points.push(-0.0000 * _R);    this.points.push(-1.0000 * _R);
+        
+        this.points.push(+0.7071 * _R);    this.points.push(+0.7071 * _R);
+        this.points.push(-0.7071 * _R);    this.points.push(+0.7071 * _R);
+        this.points.push(-0.7071 * _R);    this.points.push(-0.7071 * _R);
+        this.points.push(+0.7071 * _R);    this.points.push(-0.7071 * _R);
+        
+        if (high_precision == 0 && _R <= 0.5) { return; };
+        
+        this.points.push(+0.9239 * _R);    this.points.push(+0.3827 * _R);
+        this.points.push(+0.3827 * _R);    this.points.push(+0.9239 * _R);
+        this.points.push(-0.3827 * _R);    this.points.push(+0.9239 * _R);
+        this.points.push(-0.9239 * _R);    this.points.push(+0.3827 * _R);
+
+        this.points.push(-0.9239 * _R);    this.points.push(-0.3827 * _R);
+        this.points.push(-0.3827 * _R);    this.points.push(-0.9239 * _R);
+        this.points.push(+0.3827 * _R);    this.points.push(-0.9239 * _R);
+        this.points.push(+0.9239 * _R);    this.points.push(-0.3827 * _R);
+    }
+}
 
 class Tool {
   constructor (_number, _diameter, _feedrate, _plungerate, _geometry, _depth_of_cut, _stock_to_leave = 0.0, _stepover = 0.0) 
@@ -976,10 +1014,34 @@ class Tool {
       this.stock_to_leave = 1.0 * _stock_to_leave;
       this.stepover = this.diameter / 10.0;
       this.name = _number.toString();
-      
+      this.rings = [];
+            
       if (_stepover > 0) {
           this.stepover = 1.0 * _stepover;
       }
+
+      /* now precompute the points to sample for height */      
+      let R = _diameter / 2;
+      
+      let threshold = 0.4;
+      if (high_precision) {
+          threshold = 0.25;
+      }
+      
+      this.rings.push(new ToolRing(R));
+      R = R / 1.5;
+
+      if (R < threshold) {
+		return;
+      }
+      this.rings.push(new ToolRing(R));
+      R = R / 1.5;
+
+      if (R < threshold) {
+          return;
+      }
+      this.rings.push(new ToolRing(R));
+      
   }
 }
 
@@ -1218,6 +1280,7 @@ function gcode_select_tool(toolnr)
             tool_depth_of_cut = tool_library[i].depth_of_cut;
             tool_stock_to_leave = tool_library[i].stock_to_leave;
             tool_finishing_stepover = tool_library[i].stepover;
+            tool_index = i;
             return;
         }
     }
@@ -1362,7 +1425,9 @@ function update_height(height, X, Y, offset)
     let prevheight = height;
     let newheight = get_height(X, Y, height, offset) + offset;
     
+    
     if (newheight > prevheight) {
+//        newheight = Math.ceil(newheight*ACC)/ACC
         cache_prev_X = X;
         cache_prev_Y = Y;
         height = newheight;
@@ -1375,101 +1440,34 @@ function update_height(height, X, Y, offset)
 
 }
 
+function update_height_array(height, rr, X, Y, arr,  offset)
+{
+
+    let prevheight = height;
+    let newheight = get_height_array(X - rr,  Y - rr, X + rr, Y + rr, X, Y, arr, height, offset) + offset;
+    
+    
+    if (newheight > prevheight) {
+//        newheight = Math.ceil(newheight*ACC)/ACC
+        height = newheight;
+    }
+
+    return height;
+}
+
 function get_height_tool(X, Y, R)
 {	
 	let d = -global_maxZ, dorg;
 	let balloffset = 0.0;
-	let r;
+
+	d = update_height(d, X, Y, 0);
 	
-
-
-	/* we track the previous heighest point and make sure we check that early */	
-	/*
-	r = dist(X, Y, cache_prev_X, cache_prev_Y)
-	if (r <= R) {
-        	balloffset = -geometry_at_distance(r);
-        	d = update_height(d, cache_prev_X, cache_prev_Y, balloffset);
-        }
-        */
-        /* get_heighest_point takes endmill geometry offset into account already */	
-//	d = get_heighest_point(X, Y, R, d);
-
-	d = update_height(d, X + 0.0000 * R, Y + 0.0000 * R, 0);
- 
-	balloffset = -geometry_at_distance(R);
-
-	d = update_height(d, X + 1.0000 * R, Y + 0.0000 * R,  balloffset);
-	d = update_height(d, X + 0.0000 * R, Y + 1.0000 * R,  balloffset);
-	d = update_height(d, X - 1.0000 * R, Y + 0.0000 * R,  balloffset);
-	d = update_height(d, X - 0.0000 * R, Y - 1.0000 * R,  balloffset);
-
-	dorg = d;
-	d = update_height(d, X + 0.7071 * R, Y + 0.7071 * R,  balloffset);
-	d = update_height(d, X - 0.7071 * R, Y + 0.7071 * R,  balloffset);
-	d = update_height(d, X - 0.7071 * R, Y - 0.7071 * R,  balloffset);
-	d = update_height(d, X + 0.7071 * R, Y - 0.7071 * R,  balloffset);
-
-	if (R < 0.6 && Math.abs(d-dorg) < 0.1)
-		return Math.ceil(d*ACC)/ACC;
-
-	d = update_height(d, X + 0.9239 * R, Y + 0.3827 * R,  balloffset);
-	d = update_height(d, X + 0.3827 * R, Y + 0.9239 * R,  balloffset);
-	d = update_height(d, X - 0.3872 * R, Y + 0.9239 * R,  balloffset);
-	d = update_height(d, X - 0.9239 * R, Y + 0.3827 * R,  balloffset);
-	d = update_height(d, X - 0.9239 * R, Y - 0.3827 * R,  balloffset);
-	d = update_height(d, X - 0.3827 * R, Y - 0.9239 * R,  balloffset);
-	d = update_height(d, X + 0.3827 * R, Y - 0.9239 * R,  balloffset);
-	d = update_height(d, X + 0.9239 * R, Y - 0.3827 * R,  balloffset);
-
-	R = R / 1.5;
-
-	if (R < 0.4)
-		return Math.ceil(d*ACC)/ACC;
-
-	balloffset = -geometry_at_distance(R);
-
-	d = update_height(d, X + 1.0000 * R, Y + 0.0000 * R,  balloffset);
-	d = update_height(d, X + 0.9239 * R, Y + 0.3827 * R,  balloffset);
-	d = update_height(d, X + 0.7071 * R, Y + 0.7071 * R,  balloffset);
-	d = update_height(d, X + 0.3827 * R, Y + 0.9239 * R,  balloffset);
-	d = update_height(d, X + 0.0000 * R, Y + 1.0000 * R,  balloffset);
-	d = update_height(d, X - 0.3872 * R, Y + 0.9239 * R,  balloffset);
-	d = update_height(d, X - 0.7071 * R, Y + 0.7071 * R,  balloffset);
-	d = update_height(d, X - 0.9239 * R, Y + 0.3827 * R,  balloffset);
-	d = update_height(d, X - 1.0000 * R, Y + 0.0000 * R,  balloffset);
-	d = update_height(d, X - 0.9239 * R, Y - 0.3827 * R,  balloffset);
-	d = update_height(d, X - 0.7071 * R, Y - 0.7071 * R,  balloffset);
-	d = update_height(d, X - 0.3827 * R, Y - 0.9239 * R,  balloffset);
-	d = update_height(d, X - 0.0000 * R, Y - 1.0000 * R,  balloffset);
-	d = update_height(d, X + 0.3827 * R, Y - 0.9239 * R,  balloffset);
-	d = update_height(d, X + 0.7071 * R, Y - 0.7071 * R,  balloffset);
-	d = update_height(d, X + 0.9239 * R, Y - 0.3827 * R,  balloffset);
-
-	R = R / 1.5;
-
-	if (R < 0.4)
-		return Math.ceil(d*ACC)/ACC;
-
-	balloffset = -geometry_at_distance(R);
-
-	d = update_height(d, X + 1.0000 * R, Y + 0.0000 * R,  balloffset);
-	d = update_height(d, X + 0.9239 * R, Y + 0.3827 * R,  balloffset);
-	d = update_height(d, X + 0.7071 * R, Y + 0.7071 * R,  balloffset);
-	d = update_height(d, X + 0.3827 * R, Y + 0.9239 * R,  balloffset);
-	d = update_height(d, X + 0.0000 * R, Y + 1.0000 * R,  balloffset);
-	d = update_height(d, X - 0.3872 * R, Y + 0.9239 * R,  balloffset);
-	d = update_height(d, X - 0.7071 * R, Y + 0.7071 * R,  balloffset);
-	d = update_height(d, X - 0.9239 * R, Y + 0.3827 * R,  balloffset);
-	d = update_height(d, X - 1.0000 * R, Y + 0.0000 * R,  balloffset);
-	d = update_height(d, X - 0.9239 * R, Y - 0.3827 * R,  balloffset);
-	d = update_height(d, X - 0.7071 * R, Y - 0.7071 * R,  balloffset);
-	d = update_height(d, X - 0.3827 * R, Y - 0.9239 * R,  balloffset);
-	d = update_height(d, X - 0.0000 * R, Y - 1.0000 * R,  balloffset);
-	d = update_height(d, X + 0.3827 * R, Y - 0.9239 * R,  balloffset);
-	d = update_height(d, X + 0.7071 * R, Y - 0.7071 * R,  balloffset);
-	d = update_height(d, X + 0.9239 * R, Y - 0.3827 * R,  balloffset);
-
-
+	const ringcount = tool_library[tool_index].rings.length;
+	for (let i = 0; i < ringcount ; i++) {
+	    let rr = tool_library[tool_index].rings[i].R;
+	    balloffset = -geometry_at_distance(rr);
+	    d = update_height_array(d, rr, X, Y, tool_library[tool_index].rings[i].points,  balloffset);
+	}
 	return Math.ceil(d*ACC)/ACC;
 
 }
@@ -1719,6 +1717,10 @@ function roughing_zig_zag(tool)
 {
     gcode_select_tool(tool);
     setTimeout(gcode_change_tool, 0, tool);
+    
+    if (tool == 0) {
+        return;
+    }
     
     let deltaX = tool_diameter / 2;
     let deltaY = tool_diameter / 8;
@@ -2185,6 +2187,15 @@ function handle_metric(val)
         gui_is_metric = 1;
     } 
     update_gui_dimensions();
+}
+
+function handle_precision(val)
+{
+    if (val == "high") {
+        high_precision = 1;
+    }  else {
+        high_precision = 0;
+    } 
 }
 
 
