@@ -1008,6 +1008,8 @@ class ToolRing {
  * as well as the rings for probing
  */
  
+const sqrt2 = Math.sqrt(2);
+ 
 class Tool {
   constructor (_number, _diameter, _feedrate, _plungerate, _geometry, _depth_of_cut, _stock_to_leave = 0.0, _stepover = 0.0) 
   {
@@ -1034,12 +1036,12 @@ class Tool {
       }
 
     
-      this.rings.push(new ToolRing((_diameter/2)-0.0001));
+//      this.rings.push(new ToolRing((_diameter/2)-0.0001));
       
       
       while (R > 0.1) {
             this.rings.push(new ToolRing(R));
-            R = R / 1.5;
+            R = R / sqrt2 - 0.0000001;
             if (R < threshold) {
 		break;
             }
@@ -1669,6 +1671,8 @@ function update_height_array(height, rr, X, Y, arr,  offset)
 }
 
 
+let first = 1;
+
 /*
  * Given the current tool, find how low the tool can go before it hits the model.
  */
@@ -1682,12 +1686,19 @@ function get_height_tool(X, Y, maxR)
 	const ringcount = tool_library[tool_index].rings.length;
 	for (let i = 0; i < ringcount ; i++) {
 	    let rr = tool_library[tool_index].rings[i].R;
+	    if (first) {
+        	    console.log("LOOKING ", rr);
+            }
 	    if (rr > maxR) { 
 	        continue;
+            }
+            if (first) {
+                console.log("USING ", rr);
             }
 	    balloffset = -geometry_at_distance(rr);
 	    d = update_height_array(d, rr, X, Y, tool_library[tool_index].rings[i].points,  balloffset);
 	}
+	first = 0;
 	return Math.ceil(d*ACC)/ACC;
 
 }
