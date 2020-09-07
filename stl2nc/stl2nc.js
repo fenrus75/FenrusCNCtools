@@ -1034,7 +1034,7 @@ class Tool {
       }
 
     
-      this.rings.push(new ToolRing((_diameter/2)-0.0001);
+      this.rings.push(new ToolRing((_diameter/2)-0.0001));
       
       
       while (R > 0.1) {
