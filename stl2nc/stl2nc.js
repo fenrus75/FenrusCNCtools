@@ -19,6 +19,10 @@ let high_precision = 0;
 let finishing_endmill = 27;
 let roughing_endmill = 201;
 
+let split_gcode = 0;
+
+let gcode_content = [];
+
 /* 2D distance function */
 function dist(x1,y1,x2,y2)
 {
@@ -1126,6 +1130,7 @@ function gcode_header()
     gcode_cZ = safe_retract_height;
     gcode_comment("Created by STL2NC");
     gcode_comment("FILENAME: " + filename);
+    gcode_first_toolchange = 1;
 }
 
 /* And close off the gcode by turning off the spindle/etc */
@@ -1135,6 +1140,8 @@ function gcode_footer()
     gcode_write("M30");
     gcode_comment("END");
     gcode_write("%");
+    gcode_content.push(gcode_string);
+    gcode_string = "";
 }
 
 
@@ -2076,13 +2083,26 @@ let startdate;
 function update_gcode_on_website()
 {
     var pre = document.getElementById('outputpre')
-    pre.innerHTML = gcode_string;
-    var link = document.getElementById('download')
-    link.innerHTML = 'Download ' + filename+".nc";
-    link.href = "#";
-    link.download = filename + ".nc";
-    link.href = "data:text/plain;base64," + btoa(gcode_string);
-    gcode_string = "";
+    pre.innerHTML = gcode_content[0];
+    
+    if (split_gcode == 1) {
+        var link = document.getElementById('download')
+        link.innerHTML = 'Download roughing-' + filename+".nc";
+        link.href = "#";
+        link.download = "roughing-" + filename + ".nc";
+        link.href = "data:text/plain;base64," + btoa(gcode_content[0]);
+        link = document.getElementById('download2')
+        link.innerHTML = 'Download finishing-' + filename+".nc";
+        link.href = "#";
+        link.download = "finishing-" + filename + ".nc";
+        link.href = "data:text/plain;base64," + btoa(gcode_content[1]);
+    } else {
+        var link = document.getElementById('download')
+        link.innerHTML = 'Download ' + filename+".nc";
+        link.href = "#";
+        link.download = filename + ".nc";
+        link.href = "data:text/plain;base64," + btoa(gcode_content[0]);
+    }
     console.log("Gcode calculation " + (Date.now() - startdate));
 }
 
@@ -2123,6 +2143,11 @@ function calculate_image()
     gcode_header();    
 
     roughing_zig_zag(roughing_endmill);
+    
+    if (split_gcode == 1) {
+        setTimeout(gcode_footer, 0);
+        setTimeout(gcode_header, 0);
+    }
 
     finishing_zig_zag(finishing_endmill);
 
@@ -2360,6 +2385,15 @@ function handle_precision(val)
     }  else {
         high_precision = 0;
         ACC = 50.0;
+    } 
+}
+
+function handle_bitsetter(val)
+{
+    if (val == "bitsetter") {
+        split_gcode = 0;
+    }  else {
+        split_gcode = 1;
     } 
 }
 

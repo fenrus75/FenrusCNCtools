@@ -43,6 +43,13 @@
             </select>
             
             <br />
+            Gcode files :
+            <select name="bitsetter" id="bitsetter" onclick="handle_bitsetter(this.value)">
+                <option value="bitsetter" selected>Bitsetter (single file)</option>
+                <option value="no-bitsetter">No Bitsetter (split files)</option>
+            </select>
+            
+            <br />
             
             <br />
             STL Depth offset: (shifts the design up and down)<br />
@@ -97,7 +104,8 @@
             </div>
             <hr />
 
-            <a href="" id="download"></a>
+            <a href="" id="download"></a><br>
+            <a href="" id="download2"></a>
             
         </div>
         <div width="100%">
