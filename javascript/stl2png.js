@@ -7,6 +7,8 @@
 let desired_resolution = 1024;
 let zoffset = 0;
 
+let outputfilename = "output.png";
+
 function data_f32_to_number(data, offset)
 {
     let u32value = (data.charCodeAt(offset + 0)    )  + (data.charCodeAt(offset + 1)<<8) + 
@@ -687,9 +689,9 @@ function  calculate_line(data, Y, elem, context, pixels)
     if (Y == global_maxY -1) {
         context.putImageData(pixels, 0, 0);
         var link = document.getElementById('download')
-        link.innerHTML = 'download image';
+        link.innerHTML = 'download image ' + outputfilename;
         link.href = "#";
-        link.download = "output.png";
+        link.download = outputfilename;
         link.href = canvas.toDataURL('image/png');
     }
 }
@@ -763,11 +765,21 @@ function load(evt)
     }    
 }
 
+function basename(path) {
+     return path.replace(/.*\//, '');
+}
+
 function handle(e) 
 {
     var files = this.files;
     for (var i = 0, f; f = files[i]; i++) {
         var reader = new FileReader();
+    	fn = basename(f.name);
+    	if (fn != "" && fn.includes(".stl")) {
+    		filename = fn;
+                outputfilename = filename.replace(".stl", ".png");
+    	}
+    	console.log("Output file is ", outputfilename, " from inputfile ", fn);
         reader.onloadend = load;
         reader.readAsBinaryString(f);
     }
