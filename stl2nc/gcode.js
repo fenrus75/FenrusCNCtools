@@ -17,8 +17,8 @@
 
 import * as tool from './tool.js';
 
-export let gcode_content = [];
-export let gcode_string = "";
+let gcode_content = [];
+let gcode_string = "";
 
 let safe_retract_height = 2.0;
 let rippem = 18000.0;
@@ -56,21 +56,16 @@ function gcode_write(str)
     gcode_string = gcode_string + str + "\n";
 }
 
-export function gcode_write_raw(str)
-{
-    gcode_string = gcode_string + str;
-}
-
 function gcode_comment(str)
 {
     gcode_string = gcode_string + "(" + str + ")\n";
 }
 
 
-export let gcode_cX = 0.0;
-export let gcode_cY = 0.0;
-export let gcode_cZ = 0.0;
-export let gcode_cF = 0.0;
+let gcode_cX = 0.0;
+let gcode_cY = 0.0;
+let gcode_cZ = 0.0;
+let gcode_cF = 0.0;
 
 export function reset_gcode_location()
 {
@@ -84,6 +79,8 @@ export function reset_gcode()
 {
     gcode_string = "";
     gcode_content = [];
+    gcode_retract_count = 0;
+    reset_gcode_location();
 }
 
 
@@ -165,37 +162,6 @@ export function gcode_travel_to(X, Y)
     gcode_cY = Y;
 }
 
-/* 
- * Internal helper to calculate what speed to mill at, which
- * is either feedrate or plungerate, depending on if the horizontal
- * or vertical element of the move dominates
- */
-function toolspeed3d(cX, cY, cZ, X, Y, Z)
-{
-	let horiz = dist(cX, cY, X, Y);
-	let d = dist3(cX, cY, cZ, X, Y, Z);
-	let vert = cZ - Z;
-	let time_horiz, time_vert;
-
-	time_horiz = horiz / tool.tool_feedrate;
-
-	/* if we're milling up, feedrate dominates by definition */
-	if (vert <= 0) {
-            return tool.tool_feedrate;
-	}
-
-	
-	/* scenario 1: feedrate dominates */
-	if (time_horiz > 0.000001) {
-		/* check if the effective plungerate is below max plung rate */
-		if (vert / time_horiz < tool.tool_plungerate) {
-			return tool.tool_feedrate;
-		}
-	}
-
-	/* when we get here, plunge rate dominates */
-	return tool.tool_plungerate;
-}
 
 /* 
  * Mill from the current location to (X,Y,Z)
@@ -214,7 +180,7 @@ export function gcode_mill_to_3D(X, Y, Z)
         }
 
 
-	toolspeed = toolspeed3d(gcode_cX, gcode_cY, gcode_cZ, X, Y, Z);
+	toolspeed = tool.toolspeed3d(gcode_cX, gcode_cY, gcode_cZ, X, Y, Z);
 
 	let sX = "";
 	let sY = "";
@@ -283,7 +249,7 @@ export function gcode_mill_down_to(Z)
 }
 
 
-export function gcode_write_toolchange()
+function gcode_write_toolchange()
 {
     if (gcode_first_toolchange == 0) {
         gcode_retract();
@@ -302,7 +268,6 @@ export function gcode_write_toolchange()
 
 export function gcode_change_tool(toolnr)
 {
-    console.log("CHANGE_TOOL", toolnr);
     tool.select_tool(toolnr);
     gcode_write_toolchange();
 }
@@ -335,3 +300,7 @@ export function update_gcode_on_website(filename)
     }
 }
 
+export function distance_from_current(X, Y, Z)
+{
+    return dist3(gcode_cX, gcode_cY, gcode_cZ, X, Y, Z);
+}

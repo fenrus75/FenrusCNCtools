@@ -196,8 +196,8 @@ export function segments_to_gcode(maxlook = 1)
           for (let seg = start; seg < max; seg++) {
             let segm = levels[lev].paths[seg];
             
-            if (dist3(gcode.gcode_cX, gcode.gcode_cY, gcode.gcode_cZ, segm.X1, segm.Y1, segm.Z1) < segm.direct_mill_distance) {
-                if (dist3(gcode.gcode_cX, gcode.gcode_cY, gcode.gcode_cZ, segm.X1, segm.Y1, segm.Z1) > 0.00001) {
+            if (gcode.distance_from_current(segm.X1, segm.Y1, segm.Z1) < segm.direct_mill_distance) {
+                if (gcode.distance_from_current(segm.X1, segm.Y1, segm.Z1) > 0.00001) {
                     gcode.gcode_mill_to_3D(segm.X1, segm.Y1, segm.Z1);            
                 }
                 found_one = 1;

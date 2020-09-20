@@ -171,3 +171,47 @@ export function select_tool(toolnr)
 }
 
 
+
+/* 2D distance function */
+function dist(x1,y1,x2,y2)
+{
+	return Math.sqrt((x1-x2)*(x1-x2)+(y1-y2)*(y1-y2));
+} 
+
+/* 3D distance function */
+function dist3(x1,y1,z1,x2,y2,z2)
+{
+	return Math.sqrt((x1-x2)*(x1-x2)+(y1-y2)*(y1-y2)+(z1-z2)*(z1-z2));
+}
+
+/* 
+ * Helper to calculate what speed to mill at, which
+ * is either feedrate or plungerate, depending on if the horizontal
+ * or vertical element of the move dominates
+ */
+export function toolspeed3d(cX, cY, cZ, X, Y, Z)
+{
+	let horiz = dist(cX, cY, X, Y);
+	let d = dist3(cX, cY, cZ, X, Y, Z);
+	let vert = cZ - Z;
+	let time_horiz, time_vert;
+
+	time_horiz = horiz / tool_feedrate;
+
+	/* if we're milling up, feedrate dominates by definition */
+	if (vert <= 0) {
+            return tool_feedrate;
+	}
+
+	
+	/* scenario 1: feedrate dominates */
+	if (time_horiz > 0.000001) {
+		/* check if the effective plungerate is below max plung rate */
+		if (vert / time_horiz < tool_plungerate) {
+			return tool_feedrate;
+		}
+	}
+
+	/* when we get here, plunge rate dominates */
+	return tool_plungerate;
+}
