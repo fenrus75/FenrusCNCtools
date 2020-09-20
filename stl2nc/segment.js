@@ -76,7 +76,7 @@ class Level {
  * If this segment is just an extension of the previously pushed segment,
  * the segments may get merged into one larger segment for efficiency.
  */
-export function push_segment(X1, Y1, Z1, X2, Y2, Z2, level = 0.0, direct_mill = 0.0001)
+export function push_segment(X1, Y1, Z1, X2, Y2, Z2, level = 0, direct_mill = 0.0001)
 {
     if (X1 == X2 && Y1 == Y2 && Z1 == Z2) {
         return;
@@ -133,7 +133,7 @@ export function push_segment_multilevel(X1, Y1, Z1, X2, Y2, Z2, direct_mill = 0.
     let mult = 0.5;
     let divider = 1/tool.tool_depth_of_cut;
     
-    let total_buckets = Math.ceil(stl.global_maxZ / (tool.tool_depth_of_cut/2)) + 2
+    let total_buckets = Math.ceil(stl.get_work_height() / (tool.tool_depth_of_cut/2)) + 2
     
     if (X1 == X2 && Y1 == Y2 && Z1 == Z2) {
         return;

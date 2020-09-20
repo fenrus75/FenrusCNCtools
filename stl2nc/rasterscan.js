@@ -11,21 +11,6 @@ let roughing_endmill = 201;
 let finishing_endmill = 27;
 let split_gcode = 0;
 
-/*
- * Calculate how much higher than the center point the bit geometry is at distance R
- *
- * this obviously is a different formula for different endmill types 
- */
-
-function geometry_at_distance(R)
-{
-    if (tool.tool_geometry == "ball") {
-        let orgR = tool.tool_diameter / 2;
-	return orgR - Math.sqrt(orgR*orgR - R*R);
-    }
-    
-    return 0;
-}
 
 
 function update_height(height, X, Y, offset)
@@ -70,7 +55,7 @@ let first = 1;
  */
 function get_height_tool(X, Y, maxR)
 {	
-	let d = -stl.global_maxZ, dorg;
+	let d = -stl.get_work_depth(), dorg;
 	let balloffset = 0.0;
 
 	d = update_height(d, X, Y, 0);
@@ -81,7 +66,7 @@ function get_height_tool(X, Y, maxR)
 	    if (rr > maxR) { 
 	        continue;
             }
-	    balloffset = -geometry_at_distance(rr);
+	    balloffset = -tool.geometry_at_distance(rr);
 	    d = update_height_array(d, rr, X, Y, tool.tool_library[tool.tool_index].rings[i].points,  balloffset);
 	}
 	first = 0;
@@ -97,21 +82,21 @@ let prev_pct = 0;
 /* one raster direction for roughing, front to back */
 function roughing_zig(X, deltaY)
 {
-        let Y = -tool.tool_diameter / 2;
+        let Y = -tool.radius();
         
         let prevX = X;
         let prevY = Y;
-        let prevZ = get_height_tool(X, Y, 1.5 * tool.tool_diameter / 2) + tool.tool_stock_to_leave;;
-        let maxY = stl.global_maxY + tool.tool_diameter / 2;
+        let prevZ = get_height_tool(X, Y, 1.5 * tool.radius()) + tool.tool_stock_to_leave;;
+        let maxY = stl.get_work_height() + tool.radius();
         
 //        gcode_travel_to(X, 0);
         while (Y <= maxY) {
             /* for roughing we look 2x the tool diameter as a stock-to-leave measure */
-            let Z = get_height_tool(X, Y, 1.5 * tool.tool_diameter / 2) + tool.tool_stock_to_leave;
+            let Z = get_height_tool(X, Y, 1.5 * tool.radius()) + tool.tool_stock_to_leave;
             if (Math.abs(prevZ - Z) > 0.6) {
                 halfway_counter += 1;
                 let halfY = (Y + prevY) / 2;
-                let halfZ = get_height_tool(X, halfY, 1.5 * tool.tool_diameter / 2) + tool.tool_stock_to_leave;
+                let halfZ = get_height_tool(X, halfY, 1.5 * tool.radius()) + tool.tool_stock_to_leave;
                 segment.push_segment_multilevel(prevX, prevY, prevZ, X, halfY, halfZ, tool.tool_diameter * 0.7);
                 prevY = halfY;
                 prevZ = halfZ;
@@ -134,7 +119,7 @@ function roughing_zig(X, deltaY)
                 Y = maxY;
             }
         }    
-        let pct = (Math.round(X/stl.global_maxX * 100));
+        let pct = (Math.round(X/stl.get_work_width() * 100));
         if (pct > prev_pct + 10 || pct > 99) {
             var elem = document.getElementById("BarRoughing");
             elem.style.width = pct + "%";
@@ -146,24 +131,24 @@ function roughing_zig(X, deltaY)
 /* the other raster direction for roughing, back to front */
 function roughing_zag(X, deltaY)
 {
-        let Y = stl.global_maxY + tool.tool_diameter / 2;
+        let Y = stl.get_work_height() + tool.radius();
         
-        let newZ = get_height_tool(X, Y, 1.5 * tool.tool_diameter / 2) + tool.tool_stock_to_leave;;
+        let newZ = get_height_tool(X, Y, 1.5 * tool.radius()) + tool.tool_stock_to_leave;;
         let prevX = X;
         let prevY = Y;
-        let minY = -tool.tool_diameter / 2;
+        let minY = -tool.radius();
         
         let prevZ = newZ;
         
 //        gcode_travel_to(X, 0);
         while (Y >= minY) {
             /* for roughing we look 2x the tool diameter as a stock-to-leave measure */
-            let Z = get_height_tool(X, Y, 1.5 * tool.tool_diameter / 2) + tool.tool_stock_to_leave;
+            let Z = get_height_tool(X, Y, 1.5 * tool.radius()) + tool.tool_stock_to_leave;
 
             if (Math.abs(prevZ - Z) > 0.6) {
                 halfway_counter += 1;
                 let halfY = (Y + prevY) / 2;
-                let halfZ = get_height_tool(X, halfY, 1.5 * tool.tool_diameter / 2) + tool.tool_stock_to_leave;
+                let halfZ = get_height_tool(X, halfY, 1.5 * tool.radius()) + tool.tool_stock_to_leave;
                 segment.push_segment_multilevel(prevX, prevY, prevZ, X, halfY, halfZ, tool.tool_diameter * 0.7);
                 prevY = halfY;
                 prevZ = halfZ;
@@ -184,7 +169,7 @@ function roughing_zag(X, deltaY)
                 Y = minY;
             }
         }
-        let pct = (Math.round(X/stl.global_maxX * 100));
+        let pct = (Math.round(X/stl.get_work_width() * 100));
         if (pct > prev_pct + 10 || pct > 99) {
             var elem = document.getElementById("BarRoughing");
             elem.style.width = pct + "%";
@@ -206,12 +191,12 @@ function roughing_zag(X, deltaY)
 
 function cutout_box1()
 {
-    let minX = -tool.tool_diameter / 2;
-    let minY = -tool.tool_diameter / 2;
-    let maxX = stl.global_maxX + tool.tool_diameter / 2;
-    let maxY = stl.global_maxY + tool.tool_diameter / 2;
+    let minX = -tool.radius();
+    let minY = -tool.radius();
+    let maxX = stl.get_work_width() + tool.radius();
+    let maxY = stl.get_work_height() + tool.radius();
     
-    let maxZ = -stl.global_maxZ + tool.tool_depth_of_cut * 0.5;
+    let maxZ = -stl.get_work_depth() + tool.tool_depth_of_cut * 0.5;
     
     segment.push_segment_multilevel(minX, minY, maxZ, minX, maxY, maxZ, tool.tool_diameter / 1.9);
     segment.push_segment_multilevel(minX, maxY, maxZ, maxX, maxY, maxZ, tool.tool_diameter / 1.9);
@@ -221,12 +206,12 @@ function cutout_box1()
 
 function cutout_box2()
 {
-    let minX = -tool.tool_diameter / 2;
-    let minY = -tool.tool_diameter / 2;
-    let maxX = stl.global_maxX + tool.tool_diameter / 2;
-    let maxY = stl.global_maxY + tool.tool_diameter / 2;
+    let minX = -tool.radius();
+    let minY = -tool.radius();
+    let maxX = stl.get_work_width() + tool.radius();
+    let maxY = stl.get_work_height() + tool.radius();
     
-    let maxZ = -stl.global_maxZ;
+    let maxZ = -stl.get_work_depth();
     
     segment.push_segment(minX, minY, maxZ, minX, maxY, maxZ, 0);
     segment.push_segment(minX, maxY, maxZ, maxX, maxY, maxZ, 0);
@@ -260,11 +245,11 @@ function roughing_zig_zag(_tool)
     }
     
     console.log("tool diameter is ", tool.tool_diameter);
-    let deltaX = tool.tool_diameter / 2;
+    let deltaX = tool.radius();
     let deltaY = tool.tool_diameter / 8;
     let X = -tool.tool_diameter / 4;
     let lastX = X;
-    let maxX = stl.global_maxX + tool.tool_diameter / 4;
+    let maxX = stl.get_work_width() + tool.tool_diameter / 4;
     
     if (deltaY > 0.5) {
         deltaY = 0.5;
@@ -276,7 +261,7 @@ function roughing_zig_zag(_tool)
 
         setTimeout(roughing_zig, 0, X, deltaY);        
         
-        if (X == stl.global_maxX) {
+        if (X == stl.get_work_width()) {
             break;
         }
         X = X + deltaX;
@@ -309,8 +294,8 @@ let halfway_counter = 0;
 /* left-to-right finishing pass */
 function finishing_zig(Y, deltaX)
 {
-        let X = -tool.tool_diameter / 2;
-        let maxX = stl.global_maxX + tool.tool_diameter / 2;
+        let X = -tool.radius();
+        let maxX = stl.get_work_width() + tool.radius();
         let threshold = 0.6;
         if (high_precision != 0) {
             threshold = 0.3
@@ -318,16 +303,16 @@ function finishing_zig(Y, deltaX)
         
         let prevX = X;
         let prevY = Y;
-        let prevZ = get_height_tool(X, Y, tool.tool_diameter / 2);
+        let prevZ = get_height_tool(X, Y, tool.radius());
         
 //        gcode_travel_to(X, 0);
         while (X <= maxX) {
-            let Z = get_height_tool(X, Y, tool.tool_diameter / 2);
+            let Z = get_height_tool(X, Y, tool.radius());
             
             if (Math.abs(prevZ - Z) > threshold) {
                 halfway_counter += 1;
                 let halfX = (X + prevX) / 2;
-                let halfZ = get_height_tool(halfX, Y, tool.tool_diameter / 2);
+                let halfZ = get_height_tool(halfX, Y, tool.radius());
                 segment.push_segment(prevX, prevY, prevZ, halfX, Y, halfZ, 0, 5);
                 prevX = halfX;
                 prevZ = halfZ;
@@ -357,12 +342,12 @@ let prev_pct2 = 0;
 /* right to left finishing pass */
 function finishing_zag(Y, deltaX)
 {
-        let X = stl.global_maxX + tool.tool_diameter / 2;
-        let minX = -tool.tool_diameter / 2;
+        let X = stl.get_work_width() + tool.radius();
+        let minX = -tool.radius();
         
-        let newZ = get_height_tool(X, Y, tool.tool_diameter / 2) ;
+        let newZ = get_height_tool(X, Y, tool.radius()) ;
         let prevY = Y;
-        let prevX = stl.global_maxX;
+        let prevX = stl.get_work_width();
         
         let prevZ = newZ;
         let threshold = 0.6;
@@ -373,11 +358,11 @@ function finishing_zag(Y, deltaX)
 //        gcode_travel_to(X, 0);
         while (X >= minX) {
             /* for roughing we look 2x the tool diameter as a stock-to-leave measure */
-            let Z = get_height_tool(X, Y, tool.tool_diameter / 2);
+            let Z = get_height_tool(X, Y, tool.radius());
             if (Math.abs(prevZ - Z) > threshold) {
                 halfway_counter += 1;
                 let halfX = (X + prevX) / 2;
-                let halfZ = get_height_tool(halfX, Y, tool.tool_diameter / 2);
+                let halfZ = get_height_tool(halfX, Y, tool.radius());
                 segment.push_segment(prevX, prevY, prevZ, halfX, Y, halfZ, 0, 5);
                 prevX = halfX;
                 prevZ = halfZ;
@@ -399,7 +384,7 @@ function finishing_zag(Y, deltaX)
                 X = minX;
             }
         }
-        let pct = (Math.round(Y/stl.global_maxY * 100));
+        let pct = (Math.round(Y/stl.get_work_height() * 100));
         if (pct > prev_pct2 + 5 || pct > 99) {
             if (pct > 100) {
                 pct = 100;
@@ -421,8 +406,8 @@ function finishing_zig_zag(_tool)
     setTimeout(gcode.gcode_change_tool, 0, _tool);
     tool.select_tool(_tool);
         
-    let minY = -tool.tool_diameter / 2;
-    let maxY = stl.global_maxY + tool.tool_diameter / 2;
+    let minY = -tool.radius();
+    let maxY = stl.get_work_height() + tool.radius();
     
     
     let deltaX = tool.tool_diameter / 10;

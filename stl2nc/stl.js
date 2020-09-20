@@ -41,11 +41,24 @@ function data_f32_to_number(data, offset)
 let global_minX = 600000000.0;
 let global_minY = 600000000.0;
 let global_minZ = 600000000.0;
-export let global_maxX = -600000000.0;
-export let global_maxY = -600000000.0;
-export let global_maxZ = -600000000.0;
+let global_maxX = -600000000.0;
+let global_maxY = -600000000.0;
+let global_maxZ = -600000000.0;
 
 let orientation = 0;
+
+export function get_work_width()
+{
+    return global_maxX;
+}
+export function get_work_height()
+{
+    return global_maxY;
+}
+export function get_work_depth()
+{
+    return global_maxZ;
+}
 
 
 class Triangle {

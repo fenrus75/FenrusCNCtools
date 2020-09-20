@@ -215,3 +215,24 @@ export function toolspeed3d(cX, cY, cZ, X, Y, Z)
 	/* when we get here, plunge rate dominates */
 	return tool_plungerate;
 }
+
+/*
+ * Calculate how much higher than the center point the bit geometry is at distance R
+ *
+ * this obviously is a different formula for different endmill types 
+ */
+
+export function geometry_at_distance(R)
+{
+    if (tool_geometry == "ball") {
+        let orgR = radius();
+	return orgR - Math.sqrt(orgR*orgR - R*R);
+    }
+    
+    return 0;
+}
+
+export function radius()
+{
+  return tool_diameter / 2;
+}
