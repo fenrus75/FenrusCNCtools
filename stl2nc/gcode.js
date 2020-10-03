@@ -226,7 +226,7 @@ export function gcode_mill_down_to(Z)
 
         if (gcode_cZ == Z)
             return;
-	toolspeed = tool.tool_plungerate;
+	toolspeed = tool.plungerate();
 	
 	let Z2 = Z + tool.tool_depth_of_cut * 1.5;
 	
@@ -255,7 +255,7 @@ function gcode_write_toolchange()
         gcode_retract();
         gcode_write("M5");
     }
-    gcode_write("M6 T" + tool.tool_name);
+    gcode_write("M6 T" + tool.name());
     gcode_write("M3 S" + rippem.toString());
     gcode_write("G0 X0Y0");
     gcode_cX = 0.0;

@@ -3,10 +3,10 @@
 import * as gcode from './gcode.js';
 
 export let tool_diameter = inch_to_mm(0.25);
-export let tool_feedrate = 0.0;
-export let tool_plungerate = 0.0;
-export let tool_geometry = "";
-export let tool_name = "";
+let tool_feedrate = 0.0;
+let tool_plungerate = 0.0;
+let tool_geometry = "";
+let tool_name = "";
 export let tool_nr = 0;
 export let tool_depth_of_cut = 0.1;
 export let tool_stock_to_leave = 0.5;
@@ -235,4 +235,14 @@ export function geometry_at_distance(R)
 export function radius()
 {
   return tool_diameter / 2;
+}
+
+export function name()
+{
+  return tool_name;
+}
+
+export function plungerate()
+{
+  return tool_plungerate;
 }
