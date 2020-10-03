@@ -172,31 +172,6 @@ function G0(x, y, z, feed)
 }
 
 
-/*
- * given a path and a feedrate, calculate the cutter engagement
- * and return an adjuste feedrate based on this engagement
- */
-function adjusted_feed(feed, X1,Y1,Z1, X2,Y2,Z2) 
-{
-	
-	let [load, lout] = area_load(X1, Y1, Z1, X2, Y2, Z2);
-
-	
-	if (load >= 0 && load <= 1.01) {
-		var load2 = load;
-		load2 = load2 * 2;
-		feed = Math.floor(0.1 * feed / load2) * 10;
-		if (feed > currentfset * speedlimit / 100) {
-			feed = currentfset * speedlimit / 100;
-		}
-//		emit_output("(LOAD IS " + load + " FEED IS " + feed + "LOUT IS " + lout + ")");
-	}
-		
-	return [feed, lout];
-}	
-
-
-
 function G1(x, y, z, feed) 
 {
 	let orgfeed = feed;
@@ -299,7 +274,7 @@ function handle_XYZ_line(line)
 	newX = currentx;
 	newY = currenty;
 	newZ = currentz;
-	newF = currentfset;
+	newF = currentf;
 	let idx;
 		
 	idx = line.indexOf("X");
@@ -315,7 +290,8 @@ function handle_XYZ_line(line)
 	idx = line.indexOf("F")
 	if (idx >= 0) {
 		newF = parseFloat(line.substring(idx + 1));	
-		currentfset = newF;
+		if (newF == 0) /* Bug in f360*/
+			newF == currentf;
 	}
 
 
@@ -337,6 +313,7 @@ function handle_XYZ_line(line)
 		currentx = newX;
 		currenty = newY;
 		currentz = newZ;
+		currentf = newF;
 		return;
 	}
 	
