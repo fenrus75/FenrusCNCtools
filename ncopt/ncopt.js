@@ -49,7 +49,7 @@ let currentf = 0.0;
 let currentfout = 0.0;
 let glevel = '0';
 let gout = '';
-
+let metric = 1;
 
 let diameter = 0.0;
 let filename = "output.nc";
@@ -72,6 +72,13 @@ let count_rapidtop = 0;
 let count_rapidplunge = 0;
 
 
+
+function mm_to_coord(mm)
+{
+	if (metric > 0)
+		return mm;
+	return mm / 25.4;
+}
 
 /*
  * Allocate the 2D array of 5x5mm blocks.
@@ -288,7 +295,7 @@ function G1(x, y, z, feed, line)
 		/* Are we pluging straight down ?*/
 		if (currentx == x && currenty == y && z < currentz) {
 			/* Find the previous deepest point at this (X, Y) ad back off by 0.2mm */
-			let targetZ = depth_at_XY(x, y) + 0.2;
+			let targetZ = depth_at_XY(x, y) + mm_to_coord(0.2);
 			/* and make sure that this isn't deeper than we want to go in the first place */
 			targetZ = Math.max(targetZ, z);
 			/* if this Z is above our estination... rapid to there as an extra command */
@@ -296,6 +303,7 @@ function G1(x, y, z, feed, line)
 				let s2 = "G0Z" + targetZ.toFixed(4);
 				gout = "G0";
 				emit_output(s2);
+				currentz = targetZ;
 				count_rapidplunge++;
 			}
 		}
@@ -444,6 +452,11 @@ function tool_change(line)
  */
 function handle_G_line(line)
 {
+	if (line.includes("G20"))
+		metric = 0;
+	if (line.includes("G21"))
+		metric = 1;
+		
 	if (line[1] == '3') glevel = '3';
 	if (line[1] == '2') glevel = '2';
 	if (line[1] == '1') glevel = '1';
