@@ -64,6 +64,10 @@ function G0(x, y, z, feed)
 	global_minX = Math.min(global_minX, x);
 	global_minY = Math.min(global_minY, y);
 	global_minZ = Math.min(global_minZ, z);
+	/* If there are rapids below the total maxZ... that counts */
+	if ((currentx != x || currenty != y) && z < global_maxZ) {
+		global_maxZlevel = Math.max(global_maxZlevel, z);
+	}
 	
 	let s = "G0";
 	if (x != currentx)
