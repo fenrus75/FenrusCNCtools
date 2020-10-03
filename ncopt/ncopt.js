@@ -15,7 +15,7 @@ let global_maxZ = 0.0;
  * maxZlevel is different from maxZ in that it tries to track only places where moves happen 
  * to distinguish the height where the final retract happens into
  */
-let global_maxZlevel = 0.0;
+let global_maxZlevel = -500000.0;
 let global_minX = 5000000.0;
 let global_minY = 5000000.0;
 let global_minZ = 5000000.0;
@@ -46,7 +46,9 @@ let currentx = 0.0;
 let currenty = 0.0;
 let currentz = 0.0;
 let currentf = 0.0;
+let currentfout = 0.0;
 let glevel = '0';
+let gout = '';
 
 
 let diameter = 0.0;
@@ -181,15 +183,31 @@ function emit_output(line)
 	if (!line.includes("\n")) {
 		outputtext = outputtext + "\n";
 	}
+	if (line[0] == 'G') {
+		gout= line[0] + line[1];
+	}
 }
 
+
+function g_of_line(line)
+{
+	if (line[0] == 'G')
+		return line[0] + line[1];
+	return "G" + glevel;	
+}
+
+function FtoString(rate)
+{
+	rate = Math.round(rate * 10000) / 10000;
+	return "" + rate;
+}
 
 /*
  * Handle a "G0" (rapid move) command in the input gcode.
  * Handling involves updating teh global bounding box
  * and then writing the output.
  */
-function G0(x, y, z) 
+function G0(x, y, z, line) 
 {
 
 	global_maxX = Math.max(global_maxX, x);
@@ -204,15 +222,25 @@ function G0(x, y, z)
 	}
 	
 	let s = "G0";
+
+	if (gout == "G0")
+		s = "";
 	if (x != currentx)
-		s += "X" + x.toFixed(4);
+		s += "X" + FtoString(x);
 	if (y != currenty)
-		s += "Y" + y.toFixed(4);
+		s += "Y" + FtoString(y);
 	if (z != currentz)
-		s += "Z" + z.toFixed(4);
+		s += "Z" + FtoString(z);
 		
+
+
+	if (gout == "G0" && g_of_line(line) == "G0") {
+		emit_output(line);
 		
-	emit_output(s);
+	} else { 
+		emit_output(s);
+	}
+	gout = "G0";
 	
 	currentx = x;
 	currenty = y;
@@ -229,7 +257,7 @@ function G0(x, y, z)
  * - applying the rapidplunge optimization in case this goes straight down 
  */
  
-function G1(x, y, z, feed) 
+function G1(x, y, z, feed, line) 
 {
 	let orgfeed = feed;
 	global_maxX = Math.max(global_maxX, x);
@@ -266,6 +294,7 @@ function G1(x, y, z, feed)
 			/* if this Z is above our estination... rapid to there as an extra command */
 			if (targetZ < currentz) {
 				let s2 = "G0Z" + targetZ.toFixed(4);
+				gout = "G0";
 				emit_output(s2);
 				count_rapidplunge++;
 			}
@@ -275,17 +304,27 @@ function G1(x, y, z, feed)
 	}
 	
 	
+	let thisout = s;
 	if (x != currentx)
-		s += "X" + x.toFixed(4);
+		s += " X" + FtoString(x);
 	if (y != currenty)
-		s += "Y" + y.toFixed(4);
+		s += " Y" + FtoString(y);
 	if (z != currentz)
-		s += "Z" + z.toFixed(4);
-	if (feed != currentf)
-		s += "F" + feed.toFixed(4);
+		s += " Z" + FtoString(z);
+	if (feed != currentfout && thisout != "G0") {
+		s += " F" + Math.round(feed);
+		currentfout = feed;
+	}
 	
-	emit_output(s);
-	
+
+	if (gout == thisout && g_of_line(line) == thisout && currentf == feed) {
+		emit_output(line);
+		
+	} else { 
+		gout = thisout;
+		emit_output(s);
+	}
+
 	currentx = x;
 	currenty = y;
 	currentz = z;
@@ -383,15 +422,16 @@ function handle_XYZ_line(line)
 		currentx = newX;
 		currenty = newY;
 		currentz = newZ;
-		currentf = newF;
+		currentf = -1.0;
+		currentfout = -1.0;
 		return;
 	}
 	
 	/* G0/G1 we can do clever things with */	
 	if (glevel == '1') 
-		G1(newX, newY, newZ, newF);
+		G1(newX, newY, newZ, newF, line);
 	else
-		G0(newX, newY, newZ);
+		G0(newX, newY, newZ, line);
 }
 
 function tool_change(line)
@@ -408,10 +448,13 @@ function handle_G_line(line)
 	if (line[1] == '2') glevel = '2';
 	if (line[1] == '1') glevel = '1';
 	if (line[1] == '0') glevel = '0';
-	if (line[1] == '1' || line[1] == '0')
+	
+	if ((line[1] == '1' || line[1] == '0') && (line[2] < '0' || line[2] > '9'))
 		return handle_XYZ_line(line);
 
 	/* G line we don't need to process, just pass through */
+	currentf = -1.0;
+	currentfout = -1.0;
 	emit_output(line);
 }
 
@@ -520,6 +563,7 @@ function process_data(data)
     currenty = 0.0;
     currentz = 0.0;
     currentf = 0.0;
+    currentfout = 0.0;
     diameter = 0.0;
     glevel = '0';
     let stepsize = 1;
