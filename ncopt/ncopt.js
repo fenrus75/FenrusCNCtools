@@ -5,39 +5,62 @@
 */
 
 
-let xoffset = 0.0;
-let yoffset = 0.0;
-let array_xmax;
-let array_ymax;
+
+/* 
+ * Global state trackers that track the bounding box of where the gcode goes */
 let global_maxX = 0.0;
 let global_maxY = 0.0;
 let global_maxZ = 0.0;
+/*
+ * maxZlevel is different from maxZ in that it tries to track only places where moves happen 
+ * to distinguish the height where the final retract happens into
+ */
 let global_maxZlevel = 0.0;
 let global_minX = 5000000.0;
 let global_minY = 5000000.0;
 let global_minZ = 5000000.0;
+
+
+/*
+ * array2D state variables. We have a 2D array, indexed by X,Y in work coordinates, in
+ * blocks of 5mm x 5mm..
+ * This 2D array contains a list of points that got visited in each of these blocks.
+ *
+ * This is used to quickly look up if a point previously was visited and what the Z was
+ * in the previous visit.
+ */
+let xoffset = 0.0;
+let yoffset = 0.0;
+let array_xmax;
+let array_ymax;
+let array2D;
+
+
+
+/*
+ * GCode stateful tracking. GCode G is a stateful command set, 
+ * where we need to track both the level of the G code as well as X Y Z and F
+ * since commands we read or write are incremental.
+ */
 let currentx = 0.0;
 let currenty = 0.0;
 let currentz = 0.0;
 let currentf = 0.0;
-let currentfset = 0.0;
-let diameter = 0.0;
-let depthofcut = 0.0;
-let array2D;
 let glevel = '0';
+
+
+let diameter = 0.0;
 let filename = "output.nc";
-let speedlimit = 100.0;
+
 let dryrun = 1;
 let isF360 = 0;
 
-let scalefactor = 3.0;
 
-let maxload = 1500;
-
+/* Variable into which output gcode is collected */
 let outputtext = "";
 
 
-
+/* optimization enable flags and matching counters */
 let optimization_retract = 1;
 let optimization_rapidtop = 1;
 let optimization_rapidplunge = 1;
@@ -47,7 +70,18 @@ let count_rapidtop = 0;
 let count_rapidplunge = 0;
 
 
+
+/*
+ * Allocate the 2D array of 5x5mm blocks.
+ *
+ * This array is used for storing "points", which are destinations that the gcode has visited
+ * and their matching height.
+ *
+ * This is used to find (for plunges) what the previous deepest point was for that given (X,Y)
+ * location.
+ */
 function allocate_2D_array(minX, minY, maxX, maxY) {
+	/* arrays are nicer if they start at 0 so calculate an offset */
 	xoffset = - Math.floor(minX / 5.0);
 	yoffset = - Math.floor(minY / 5.0);
 	array_xmax = yoffset + Math.ceil(maxX / 5.0) + 4
@@ -72,9 +106,17 @@ function Position(X, Y, Z) {
 	this.Z = Z;
 }
 
+/* 
+ * For every move (G1) record the (X,Y,Z) so that in the future we can find the
+ * deepest Z given an (X,Y)
+ *
+ */
 function record_move_to(X, Y, Z) 
 {
-
+	/* 
+	 * While doing the initial pass through the gcode, we don't have the 
+	 * array yet to store Positionse into 
+	 */
 	if (dryrun > 0) {
 		return;
 	}
@@ -94,10 +136,11 @@ function record_move_to(X, Y, Z)
 
 /*
  * returns the depth at a specific X,Y given past cuts.
- * once a cut at "threshold" depth is found, the search is stopped
- * as the objective has been reached
+ *
+ * This is the simplified version that only look at end-points of cuts, not
+ * the whole path long the gcode.
  */
-function depth_at_XY(X, Y, threshold)
+function depth_at_XY(X, Y)
 {
 	var depth = global_maxZ;
 	var m;
@@ -129,6 +172,9 @@ function depth_at_XY(X, Y, threshold)
 }
 
 
+/*
+ * Add "line" to the pending gcode output pile
+ */
 function emit_output(line)
 {
 	outputtext = outputtext + line;
@@ -138,7 +184,12 @@ function emit_output(line)
 }
 
 
-function G0(x, y, z, feed) 
+/*
+ * Handle a "G0" (rapid move) command in the input gcode.
+ * Handling involves updating teh global bounding box
+ * and then writing the output.
+ */
+function G0(x, y, z) 
 {
 
 	global_maxX = Math.max(global_maxX, x);
@@ -159,8 +210,6 @@ function G0(x, y, z, feed)
 		s += "Y" + y.toFixed(4);
 	if (z != currentz)
 		s += "Z" + z.toFixed(4);
-	if (feed != currentf)
-		s += "F" + feed.toFixed(4);
 		
 		
 	emit_output(s);
@@ -168,10 +217,18 @@ function G0(x, y, z, feed)
 	currentx = x;
 	currenty = y;
 	currentz = z;
-	currentf = feed;
 }
 
 
+/* Handle a "G1" (cutting move) in the gcode input.
+ *
+ * This involves 
+ * - updating the bounding box.
+ * - applying the retract optimization in case the G1 only goes straight up
+ * - applying the rapidtop optimization when the move is at or above the level for rapids
+ * - applying the rapidplunge optimization in case this goes straight down 
+ */
+ 
 function G1(x, y, z, feed) 
 {
 	let orgfeed = feed;
@@ -188,25 +245,32 @@ function G1(x, y, z, feed)
 	let s = "G1";
 	
 	if (optimization_retract == 1 && x == currentx && y == currenty && z > currentz) {
+		/* This is a move straight up -- we can just use G0*/
 		s = "G0";
 		count_retract++;
 	}
 	
-	if (optimization_rapidtop == 1 && z >= global_maxZlevel) {
+	if (optimization_rapidtop == 1 && z >= global_maxZlevel && currentz >= global_maxZlevel) {
+		/* we're cutting at or above the level where we want to do only rapid moves */
 		s = "G0";
 		count_rapidtop++;
 	}
 	
 	if (optimization_rapidplunge == 1 && dryrun == 0) {
+		/* Are we pluging straight down ?*/
 		if (currentx == x && currenty == y && z < currentz) {
+			/* Find the previous deepest point at this (X, Y) ad back off by 0.2mm */
 			let targetZ = depth_at_XY(x, y) + 0.2;
+			/* and make sure that this isn't deeper than we want to go in the first place */
 			targetZ = Math.max(targetZ, z);
+			/* if this Z is above our estination... rapid to there as an extra command */
 			if (targetZ < currentz) {
 				let s2 = "G0Z" + targetZ.toFixed(4);
 				emit_output(s2);
 				count_rapidplunge++;
 			}
 		}
+		/* We want to remember this (X,Y) with this depth for the future */
 		record_move_to(x, y, z);
 	}
 	
@@ -248,6 +312,7 @@ function handle_comment(line)
 	if (line.includes("Fusion 360")) {
 		isF360 = 1;
 	}
+	/* Carbide Create tells us the size of the stock nicely in comments */
 	if (line.includes("stockMax:")) {
 		l = line.replace("(stockMax:","");
 		global_maxX = parseFloat(l);
@@ -268,6 +333,8 @@ function handle_comment(line)
 	}
 }
 
+/*
+ * We got a line with X Y Z etc coordinates */
 function handle_XYZ_line(line)
 {
 	let newX, newY, newZ, newF;
@@ -276,7 +343,9 @@ function handle_XYZ_line(line)
 	newZ = currentz;
 	newF = currentf;
 	let idx;
-		
+	
+	
+	/* parse the x/y/z/f */	
 	idx = line.indexOf("X");
 	if (idx >= 0) {
 		newX = parseFloat(line.substring(idx + 1));	
@@ -290,11 +359,12 @@ function handle_XYZ_line(line)
 	idx = line.indexOf("F")
 	if (idx >= 0) {
 		newF = parseFloat(line.substring(idx + 1));	
-		if (newF == 0) /* Bug in f360*/
+		if (newF == 0) /* Bug in F360 as of Oct/2020  */
 			newF == currentf;
 	}
 
 
+	/* update the bounding box */
 	global_maxX = Math.max(global_maxX, newX);
 	global_maxY = Math.max(global_maxY, newY);
 	global_maxZ = Math.max(global_maxZ, newZ);
@@ -307,7 +377,7 @@ function handle_XYZ_line(line)
 	global_minY = Math.min(global_minY, newY);
 	global_minZ = Math.min(global_minZ, newZ);
 
-	/* arc commands are pass through */
+	/* arc commands are pass through .. nothing smart we can do */
 	if (glevel == '2' || glevel == '3') {
 		emit_output(line);
 		currentx = newX;
@@ -317,14 +387,11 @@ function handle_XYZ_line(line)
 		return;
 	}
 	
-	
-	if (depthofcut == 0 && newZ < 0)
-		depthofcut = -newZ;
-		
+	/* G0/G1 we can do clever things with */	
 	if (glevel == '1') 
 		G1(newX, newY, newZ, newF);
 	else
-		G0(newX, newY, newZ, newF);
+		G0(newX, newY, newZ);
 }
 
 function tool_change(line)
@@ -332,6 +399,9 @@ function tool_change(line)
 	emit_output(line);
 }
 
+/*
+ * Lines that start with G0/1 matter, all others we just pass through 
+ */
 function handle_G_line(line)
 {
 	if (line[1] == '3') glevel = '3';
@@ -345,6 +415,9 @@ function handle_G_line(line)
 	emit_output(line);
 }
 
+/* 
+ * Process one line of gcode input, demultiplex the different commands 
+ */
 function process_line(line)
 {
 	if (line == "")
