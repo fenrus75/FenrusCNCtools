@@ -40,10 +40,93 @@ let outputtext = "";
 
 let optimization_retract = 1;
 let optimization_rapidtop = 1;
-
+let optimization_rapidplunge = 1;
 
 let count_retract = 0;
 let count_rapidtop = 0;
+let count_rapidplunge = 0;
+
+
+function allocate_2D_array(minX, minY, maxX, maxY) {
+	xoffset = - Math.floor(minX / 5.0);
+	yoffset = - Math.floor(minY / 5.0);
+	array_xmax = yoffset + Math.ceil(maxX / 5.0) + 4
+	array_ymax = yoffset + Math.ceil(maxY / 5.0) + 4
+	
+	var x, y;
+
+	array2D = new Array(array_ymax + 1)
+	for (y = 0; y <= array_ymax; y++) {
+		array2D[y] = new Array(array_xmax + 1)
+		for (x = 0; x <= array_xmax; x++) {
+			array2D[y][x] = [];
+		}	
+	}
+	
+}
+
+
+function Position(X, Y, Z) {
+	this.X = X;
+	this.Y = Y;
+	this.Z = Z;
+}
+
+function record_move_to(X, Y, Z) 
+{
+
+	if (dryrun > 0) {
+		return;
+	}
+	var move = new Position(X, Y, Z);
+	
+	var minx, miny;
+	
+	minx = Math.floor(X/5.0) + xoffset;
+	miny = Math.floor(Y/5.0) + yoffset;
+	
+	if (minx < 0) minx = 0;
+	if (miny < 0) miny = 0;
+	if (minx >= array_xmax) minx = array_xmax - 1;
+	if (miny >= array_ymax) miny = array_ymax - 1;
+	array2D[miny][minx].push(move);
+}
+
+/*
+ * returns the depth at a specific X,Y given past cuts.
+ * once a cut at "threshold" depth is found, the search is stopped
+ * as the objective has been reached
+ */
+function depth_at_XY(X, Y, threshold)
+{
+	var depth = global_maxZ;
+	var m;
+	
+	
+	var ax, ay;
+	
+	ax = Math.floor(X/5.0) + xoffset;
+	ay = Math.floor(Y/5.0) + yoffset;
+	
+	if (ax < 0) ax = 0;
+	if (ay < 0) ay = 0;
+	if (ax >= array_xmax) ax = array_xmax - 1;
+	if (ay >= array_ymax) ay = array_ymax - 1;
+	
+	var arr = array2D[ay][ax];
+	
+	var len = arr.length -1;
+	
+	for (var i = len; i >= 0; i--) {
+		m = arr[i];
+		var d;
+
+		if (X == m.X && Y == m.Y)
+			depth = Math.min(depth, m.Z);
+	}
+
+	return depth;
+}
 
 
 function emit_output(line)
@@ -137,6 +220,19 @@ function G1(x, y, z, feed)
 	if (optimization_rapidtop == 1 && z >= global_maxZlevel) {
 		s = "G0";
 		count_rapidtop++;
+	}
+	
+	if (optimization_rapidplunge == 1 && dryrun == 0) {
+		if (currentx == x && currenty == y && z < currentz) {
+			let targetZ = depth_at_XY(x, y) + 0.2;
+			targetZ = Math.max(targetZ, z);
+			if (targetZ < currentz) {
+				let s2 = "G0Z" + targetZ.toFixed(4);
+				emit_output(s2);
+				count_rapidplunge++;
+			}
+		}
+		record_move_to(x, y, z);
 	}
 	
 	
@@ -349,6 +445,7 @@ function log_optimizations()
 	console.log("Optimization statistic");
 	console.log("   retract-to-G0 optimization      :", count_retract);
 	console.log("   rapids at top of design         :", count_rapidtop);
+	console.log("   rapid plunge                    :", count_rapidplunge);
 }
 
 
@@ -389,13 +486,16 @@ function process_data(data)
     	process_line(lines[i]);
     }
     outputtext = "";
+    count_retract = 0;
+    count_rapidtop = 0;
+    count_rapidplunge = 0;
     
     if (global_maxZlevel < 0.04) {
     	global_maxZlevel = global_maxZ;
     }
     
     log_dimensions();
-//    allocate_2D_array(global_minX, global_minY, global_maxX, global_maxY);
+    allocate_2D_array(global_minX, global_minY, global_maxX, global_maxY);
     /* and then for real */
     dryrun = 0;    
     stepsize = Math.round((lines.length + 1)/100);
@@ -479,5 +579,17 @@ function optRapidTop(value)
 	console.log("optimization_rapidtop is set to ", optimization_rapidtop);
 }
 
+function optRapidPlunge(value)
+{
+	if (value == true) {
+		optimization_rapidplunge = 1;
+	}
+	if (value == false) {
+		optimization_rapidplunge = 0;
+	}
+	console.log("optimization_rapidplunge is set to ", optimization_rapidplunge);
+}
+
 window.optRetract = optRetract;
 window.optRapidTop = optRapidTop;
+window.optRapidPlunge = optRapidPlunge;
