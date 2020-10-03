@@ -12,6 +12,7 @@ let array_ymax;
 let global_maxX = 0.0;
 let global_maxY = 0.0;
 let global_maxZ = 0.0;
+let global_maxZlevel = 0.0;
 let global_minX = 5000000.0;
 let global_minY = 5000000.0;
 let global_minZ = 5000000.0;
@@ -38,9 +39,11 @@ let outputtext = "";
 
 
 let optimization_retract = 1;
+let optimization_rapidtop = 1;
 
 
 let count_retract = 0;
+let count_rapidtop = 0;
 
 
 function emit_output(line)
@@ -62,9 +65,6 @@ function G0(x, y, z, feed)
 	global_minY = Math.min(global_minY, y);
 	global_minZ = Math.min(global_minZ, z);
 	
-	if (dryrun > 0)
-		return;
-		
 	let s = "G0";
 	if (x != currentx)
 		s += "X" + x.toFixed(4);
@@ -116,18 +116,23 @@ function G1(x, y, z, feed)
 	global_maxX = Math.max(global_maxX, x);
 	global_maxY = Math.max(global_maxY, y);
 	global_maxZ = Math.max(global_maxZ, z);
+	if (currentx != x || currenty != y) {
+		global_maxZlevel = Math.max(global_maxZlevel, z);
+	}
 	global_minX = Math.min(global_minX, x);
 	global_minY = Math.min(global_minY, y);
 	global_minZ = Math.min(global_minZ, z);
 	
-	if (dryrun > 0)
-		return;
-		
 	let s = "G1";
 	
 	if (optimization_retract == 1 && x == currentx && y == currenty && z > currentz) {
 		s = "G0";
 		count_retract++;
+	}
+	
+	if (optimization_rapidtop == 1 && z >= global_maxZlevel) {
+		s = "G0";
+		count_rapidtop++;
 	}
 	
 	
@@ -174,6 +179,10 @@ function handle_comment(line)
 		let idx = l.indexOf(",");
 		l = l.substring(idx + 1);
 		global_maxY = parseFloat(l);
+		idx = l.indexOf(",");
+		l = l.substring(idx + 1);
+		global_maxZ = parseFloat(l);
+		global_maxZlevel = global_maxZ + 0.0001;
 //		console.log("new maX/Y " + global_maxX+ " " + global_maxY + "\n");		
 	}
 	
@@ -192,14 +201,7 @@ function handle_XYZ_line(line)
 	newZ = currentz;
 	newF = currentfset;
 	let idx;
-	
-	/* arc commands are pass through */
-	if (glevel == '2' || glevel == '3') {
-		emit_output(line);
-		return;
-	}
-	
-	
+		
 	idx = line.indexOf("X");
 	if (idx >= 0) {
 		newX = parseFloat(line.substring(idx + 1));	
@@ -220,6 +222,11 @@ function handle_XYZ_line(line)
 	global_maxX = Math.max(global_maxX, newX);
 	global_maxY = Math.max(global_maxY, newY);
 	global_maxZ = Math.max(global_maxZ, newZ);
+	
+	if ((newX != currentx || newY != currenty) && glevel != '0') {
+		global_maxZlevel = Math.max(global_maxZlevel, newZ);
+	}
+	
 	global_minX = Math.min(global_minX, newX);
 	global_minY = Math.min(global_minY, newY);
 	global_minZ = Math.min(global_minZ, newZ);
@@ -227,6 +234,9 @@ function handle_XYZ_line(line)
 	/* arc commands are pass through */
 	if (glevel == '2' || glevel == '3') {
 		emit_output(line);
+		currentx = newX;
+		currenty = newY;
+		currentz = newZ;
 		return;
 	}
 	
@@ -327,13 +337,14 @@ function log_dimensions()
 	console.log("Detected dimensions:");
 	console.log("    X : ", global_minX, " - ", global_maxX);
 	console.log("    Y : ", global_minX, " - ", global_maxY);
-	console.log("    Z : ", global_minZ, " - ", global_maxZ);
+	console.log("    Z : ", global_minZ, " - ", global_maxZ, "   with movement at ", global_maxZlevel);
 }
 
 function log_optimizations()
 {
 	console.log("Optimization statistic");
 	console.log("   retract-to-G0 optimization      :", count_retract);
+	console.log("   rapids at top of design         :", count_rapidtop);
 }
 
 
@@ -350,6 +361,7 @@ function process_data(data)
     global_maxX = -500000.0;
     global_maxY = -500000.0;
     global_maxZ = -500000.0;
+    global_maxZlevel = -500000.0;
     global_minX = 5000000.0;
     global_minY = 5000000.0;
     global_minZ = 5000000.0;
@@ -373,6 +385,10 @@ function process_data(data)
     	process_line(lines[i]);
     }
     outputtext = "";
+    
+    if (global_maxZlevel < 0.04) {
+    	global_maxZlevel = global_maxZ;
+    }
     
     log_dimensions();
 //    allocate_2D_array(global_minX, global_minY, global_maxX, global_maxY);
@@ -448,4 +464,16 @@ function optRetract(value)
 	console.log("optimization_retract is set to ", optimization_retract);
 }
 
+function optRapidTop(value)
+{
+	if (value == true) {
+		optimization_rapidtop = 1;
+	}
+	if (value == false) {
+		optimization_rapidtop = 0;
+	}
+	console.log("optimization_rapidtop is set to ", optimization_rapidtop);
+}
+
 window.optRetract = optRetract;
+window.optRapidTop = optRapidTop;
