@@ -435,3 +435,17 @@ function Speedlimit(value)
 
 
 document.getElementById('files').onchange = handle;
+
+
+function optRetract(value)
+{
+	if (value == true) {
+		optimization_retract = 1;
+	}
+	if (value == false) {
+		optimization_retract = 0;
+	}
+	console.log("optimization_retract is set to ", optimization_retract);
+}
+
+window.optRetract = optRetract;
