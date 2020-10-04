@@ -80,7 +80,7 @@ function mm_to_coord(mm)
 	return mm / 25.4;
 }
 
-/*
+/**
  * Allocate the 2D array of 5x5mm blocks.
  *
  * This array is used for storing "points", which are destinations that the gcode has visited
@@ -88,6 +88,13 @@ function mm_to_coord(mm)
  *
  * This is used to find (for plunges) what the previous deepest point was for that given (X,Y)
  * location.
+ * 
+ * Manipulates global array2D array
+ * 
+ * @param {Number} minX		Description of param
+ * @param {Number} minY		Description of param
+ * @param {Number} maxX		Description of param
+ * @param {Number} maxY		Description of param
  */
 function allocate_2D_array(minX, minY, maxX, maxY) {
 	/* arrays are nicer if they start at 0 so calculate an offset */
@@ -180,9 +187,11 @@ function depth_at_XY(X, Y)
 	return depth;
 }
 
-
-/*
+/**
  * Add "line" to the pending gcode output pile
+ * Manipulates global outputtext and gout variables
+ * 
+ * @param {Number} line 	Line number of g-code being processed
  */
 function emit_output(line)
 {
@@ -209,10 +218,17 @@ function FtoString(rate)
 	return "" + rate;
 }
 
-/*
+/**
  * Handle a "G0" (rapid move) command in the input gcode.
- * Handling involves updating teh global bounding box
+ * Handling involves updating the global bounding box
  * and then writing the output.
+ * 
+ * Manipulates global vars global_max(X/Y/Z) and global_min(X/Y/Z)
+ * 
+ * @param {Number} x	X co-ordinate
+ * @param {Number} y	Y co-ordinate
+ * @param {Number} z	Z co-ordinate
+ * @param {Number} line	Line number in g-code
  */
 function G0(x, y, z, line) 
 {
@@ -554,7 +570,12 @@ function log_optimizations()
 	console.log("   rapid plunge                    :", count_rapidplunge);
 }
 
-
+/**
+ * Main processing function which works through the supplied gcode, inspects
+ * and modifies it as necessary
+ * 
+ * @param {string} data 
+ */
 function process_data(data)
 {
     let lines = data.split("\n")
