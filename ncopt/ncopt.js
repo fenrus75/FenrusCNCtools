@@ -218,6 +218,49 @@ function FtoString(rate)
 	return "" + rate;
 }
 
+let logcount = 0;
+function line_the_same(line1, line2)
+{
+	let l1 = "";
+	let l2 = "";
+	
+	for (let i = 0; i < line1.length; i++) {
+		if (line1[i] == " ")
+			continue;
+		if (line1[i] == "\t")
+			continue;
+		if (line1[i] == "\n")
+			continue;
+		if (line1.charCodeAt(i) == 13)
+			continue;
+		l1 = l1 + line1[i];
+	}
+	for (let i = 0; i < line2.length; i++) {
+		if (line2[i] == " ")
+			continue;
+		if (line2[i] == "\t")
+			continue;
+		if (line2[i] == "\n")
+			continue;
+		if (line2[i] == "\d")
+			continue;
+		if (line2.charCodeAt(i) == 13)
+			continue;
+		l2 = l2 + line2[i];
+	}
+	
+
+	
+	if (l1.length != l2.length) {
+		return 0;
+	}
+	if (l1 != l2) {
+		return 0;
+	}
+	return 1;
+}
+
+
 /**
  * Handle a "G0" (rapid move) command in the input gcode.
  * Handling involves updating the global bounding box
@@ -256,13 +299,14 @@ function G0(x, y, z, line)
 		s += "Z" + FtoString(z);
 		
 
-
 	if (gout == "G0" && g_of_line(line) == "G0") {
 		emit_output(line);
-		
 	} else { 
-		emit_output(s);
-	}
+		if (line_the_same(s, line)) {
+			s = line;
+		}
+               emit_output(s);
+        }
 	gout = "G0";
 	
 	currentx = x;
@@ -341,10 +385,17 @@ function G1(x, y, z, feed, line)
 	}
 	
 
-	if (gout == thisout && g_of_line(line) == thisout && currentf == feed) {
+	if (gout == thisout && g_of_line(line) == thisout && currentf == feed && 0) {
 		emit_output(line);
 		
 	} else { 
+		if (line_the_same(s, line)) {
+			s = line;
+		} else {
+			if (line_the_same(s, thisout + line) && gout == thisout) {
+				s = line;
+			}
+		}
 		gout = thisout;
 		emit_output(s);
 	}
