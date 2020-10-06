@@ -42,11 +42,15 @@ function process_data(data)
 	        phase = 2;
         }
         
-        if (line.includes("M06") || line.includes("M6")) {
+        if (line.includes("M06") || line.includes("M6") || line.includes("M0")) {
             let index = line.indexOf("T");
             let bit = "";
+            if (line.includes("M0")) {
+    		toolchanges = toolchanges + 1;
+            }
             if (index >= 0) {
                 bit = line.substring(index + 1);
+                console.log("TOOL CHANGE" , line, " to bit ", bit);
                 filenames[toolchanges] = toolchanges.toString() + "-" + bit + "-" + filename;
             }
                 
@@ -67,6 +71,7 @@ function process_data(data)
     
     for (let i = 0; i <= toolchanges; i++) {
             if (typeof(filenames[i]) == "undefined") {
+                console.log("NO FILENAME");
                 continue;
             };
             var link = document.getElementById('download' + i.toString())
