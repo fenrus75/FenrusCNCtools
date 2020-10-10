@@ -132,9 +132,10 @@ export function tool_factory()
     if (tool_library.length > 0) {
         return;
     }
-    tool_library.push(new Tool(18,   2, inch_to_mm(20), inch_to_mm(10), "flat", 1.0, 0.1, 0.2));
-    tool_library.push(new Tool(28, 0.5, inch_to_mm(50), inch_to_mm(20), "ball", 0.5, 0.0, 0.05)); 
-    tool_library.push(new Tool(27,   1, inch_to_mm(50), inch_to_mm(20), "ball", 0.5, 0.0, 0.1));
+    tool_library.push(new Tool(18,   2.0, inch_to_mm(20), inch_to_mm(10), "flat", 1.0, 0.1, 0.2));
+    tool_library.push(new Tool(19,   1.5, inch_to_mm(15), inch_to_mm(7), "flat", 1.0, 0.1, 0.2));
+    tool_library.push(new Tool(28,   0.5, inch_to_mm(50), inch_to_mm(20), "ball", 0.5, 0.0, 0.05)); 
+    tool_library.push(new Tool(27,   1.0, inch_to_mm(50), inch_to_mm(20), "ball", 0.5, 0.0, 0.1));
     tool_library.push(new Tool(102, inch_to_mm(0.125), inch_to_mm(40), inch_to_mm(10), "flat", 1.0, 0.25));
     tool_library.push(new Tool(101, inch_to_mm(0.125), inch_to_mm(40), inch_to_mm(10), "ball", 1.0, 0.25));
     tool_library.push(new Tool(201, inch_to_mm(0.250), inch_to_mm(50), inch_to_mm(20), "flat", 1.0, 0.25));
