@@ -125,7 +125,7 @@ export function push_segment(X1, Y1, Z1, X2, Y2, Z2, level = 0, direct_mill = 0.
  * that there is a higher chance of merging these higher levels together.
  */
 
-export function push_segment_multilevel(X1, Y1, Z1, X2, Y2, Z2, direct_mill = 0.0001)
+export function push_segment_multilevel(X1, Y1, Z1, X2, Y2, Z2, direct_mill = 0.0001, skip_bottom = 0)
 {
     let z1 = Z1;
     let z2 = Z2;
@@ -150,7 +150,9 @@ export function push_segment_multilevel(X1, Y1, Z1, X2, Y2, Z2, direct_mill = 0.
             dZ = Math.round(dZ);
             l = total_buckets - dZ;
         }
-        push_segment(X1, Y1, z1, X2, Y2, z2, l, direct_mill);
+        if (skip_bottom < 1 || l > 0) {
+            push_segment(X1, Y1, z1, X2, Y2, z2, l, direct_mill);
+        }
         z1 = Math.ceil( (z1 + mult * tool.tool_depth_of_cut) * divider) / divider;
         z2 = Math.ceil( (z2 + mult * tool.tool_depth_of_cut) * divider) / divider;
         

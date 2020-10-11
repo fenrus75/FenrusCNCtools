@@ -103,7 +103,7 @@ function roughing_zig(X, deltaY)
             } 
             
 
-            segment.push_segment_multilevel(prevX, prevY, prevZ, X, Y, Z, tool.tool_diameter * 0.7);
+            segment.push_segment_multilevel(prevX, prevY, prevZ, X, Y, Z, tool.tool_diameter * 0.7, 1);
             
             
             prevY = Y;
@@ -155,7 +155,7 @@ function roughing_zag(X, deltaY)
             } 
             
 
-            segment.push_segment_multilevel(prevX, prevY, prevZ, X, Y, Z, tool.tool_diameter * 0.7);
+            segment.push_segment_multilevel(prevX, prevY, prevZ, X, Y, Z, tool.tool_diameter * 0.7, 1);
             
             
             prevY = Y;
