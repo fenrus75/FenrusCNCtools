@@ -428,7 +428,7 @@ function handle_comment(line)
 	}
 	/* Carbide Create tells us the size of the stock nicely in comments */
 	if (line.includes("stockMax:")) {
-		l = line.replace("(stockMax:","");
+		let l = line.replace("(stockMax:","");
 		global_maxX = parseFloat(l);
 		let idx = l.indexOf(",");
 		l = l.substring(idx + 1);
@@ -441,8 +441,8 @@ function handle_comment(line)
 	}
 	
 	if (line.includes("(TOOL/MILL,")) {
-		lastmillline = line;
-		l = line.replace("(TOOL/MILL,","");
+		let lastmillline = line;
+		let l = line.replace("(TOOL/MILL,","");
 		diameter = parseFloat(l);
 	}
 }
