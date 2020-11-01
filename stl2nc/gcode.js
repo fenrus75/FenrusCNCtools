@@ -73,6 +73,8 @@ let gcode_cY = 0.0;
 let gcode_cZ = 0.0;
 let gcode_cF = 0.0;
 
+let gcode_G = "9";
+
 export function reset_gcode_location()
 {
     gcode_cX = -40000;
@@ -136,6 +138,7 @@ export function gcode_retract()
     gcode_write("G0Z" + gcode_float2str( safe_retract_height));
     gcode_cZ = safe_retract_height;
     gcode_retract_count += 1;
+    gcode_G="0";
 }
 
 
@@ -166,6 +169,7 @@ export function gcode_travel_to(X, Y)
     gcode_write("G0" + sX + sY);
     gcode_cX = X;
     gcode_cY = Y;
+    gcode_G = "0";
 }
 
 
@@ -222,7 +226,13 @@ export function gcode_mill_to_3D(X, Y, Z)
 	    gcode_cF = toolspeed;
         }
         
-        gcode_write("G" + command + sX + sY + sZ + sF);        
+        if (command == gcode_G) {
+            gcode_write(sX + sY + sZ + sF);        
+        } else {
+            gcode_write("G" + command + sX + sY + sZ + sF);        
+        }
+        
+        gcode_G = command;
 }
 
 /* 
@@ -256,6 +266,7 @@ export function gcode_mill_down_to(Z)
         gcode_write("G1" + sZ + sF);        
         gcode_cZ = Z;
         gcode_cF = toolspeed;
+        gcode_G = "1";
 
 }
 
@@ -269,6 +280,7 @@ function gcode_write_toolchange()
     gcode_write("M6 T" + tool.name());
     gcode_write("M3 S" + rippem.toString());
     gcode_write("G0 X0Y0");
+    gcode_G = "0";
     gcode_cX = 0.0;
     gcode_cY = 0.0;
     gcode_cF = -1.0;
