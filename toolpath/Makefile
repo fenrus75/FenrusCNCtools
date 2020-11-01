@@ -10,11 +10,11 @@ WOBJS := parse_csv.wo linalg.wo tooldepth.wo toollib.wo gcode.wo toolpath.wo inp
 
 %.o : %.c toolpath.h Makefile
 	    @echo "Compiling: $< => $@"
-	    @gcc $(CFLAGS) -march=native  -ffunction-sections  -Wall -W -O3 -flto -g2 -c $< -o $@
+	    @gcc $(CFLAGS) -march=native  -ffunction-sections -fdump-rtl-bbpart  -Wall -W -O3 -g2 -c $< -o $@
 
 %.o : %.cpp toolpath.h print.h tool.h Makefile scene.h fenrus.h endmill.h
 	    @echo "Compiling: $< => $@"
-	    @g++ $(CFLAGS) -O3  -flto  -march=native -frounding-math -ffunction-sections -fno-common -Wno-address-of-packed-member -Wall -W -g2 -c $< -o $@
+	    @g++ $(CFLAGS) -O3 -fdump-tree-cfg-blocks -fsched-verbose=3   -march=native -frounding-math -ffunction-sections -fno-common -Wno-address-of-packed-member -Wall -W -g2 -c $< -o $@
 
 %.fo : %.c toolpath.h Makefile
 	    @echo "Compiling: $< => $@"

@@ -50,6 +50,12 @@ function approx4(A, B) {
 		return 1; 
 	return 0; 
 }
+function approx2(A, B) { 
+	if (Math.abs(A-B) < 0.01) 
+		return 1; 
+	return 0; 
+}
+
 
 function gcode_write(str)
 {
@@ -173,9 +179,14 @@ export function gcode_mill_to_3D(X, Y, Z)
 	let command;
 	
 	command = "1";
+	
+	/* check if we're within rounding */
+	if (approx2(gcode_cX, X) && approx2(gcode_cY, Y) && approx2(gcode_cZ, Z)) {
+	    return;
+        }
 
 	/* if all we do is straight go up, we can use G0 instead of G1 for speed */
-	if (approx4(gcode_cX, X) && approx4(gcode_cY, Y) && (Z > gcode_cZ)) {
+	if (approx2(gcode_cX, X) && approx2(gcode_cY, Y) && (Z > gcode_cZ)) {
 	    command = "0";
         }
 
