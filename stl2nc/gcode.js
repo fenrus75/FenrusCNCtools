@@ -84,10 +84,10 @@ export function reset_gcode()
 }
 
 
-/* In gcode we want numbers to always have 4 decimals */
+/* In gcode we want numbers to always have 2 decimals */
 function gcode_float2str(value)
 {
-    return value.toFixed(4);
+    return value.toFixed(2);
 }
 
 /* Standard header to write at the start of the gcode */
