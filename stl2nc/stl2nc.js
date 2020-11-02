@@ -145,9 +145,9 @@ export function handle_stepover(val)
 {
     let news = parseFloat(val);
     if (gui_is_metric) {
-        tool.set_stepover(news);
+        tool.set_stepover_gui(news);
     } else {
-        tool.set_stepover(inch_to_mm(news));
+        tool.set_stepover_gui(inch_to_mm(news));
     }
     
 }

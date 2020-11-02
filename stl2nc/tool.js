@@ -14,6 +14,7 @@ export let tool_finishing_stepover = 0.1;
 export let tool_index = 0;
 
 let high_precision = 0;
+let manual_stepover = 0;
 
 function inch_to_mm(inch)
 {
@@ -27,7 +28,18 @@ function mm_to_inch(mm)
 
 export function set_stepover(so)
 {
+  if (manual_stepover > 0) {
+    return;
+  }
   tool_finishing_stepover = so;
+  console.log("Setting stepover to ", tool_finishing_stepover);
+}
+
+export function set_stepover_gui(so)
+{
+  tool_finishing_stepover = so;
+  manual_stepover = 1;
+  console.log("Setting stepover to (gui)", tool_finishing_stepover, manual_stepover);
 }
 
 
@@ -163,7 +175,9 @@ export function select_tool(toolnr)
             tool_nr = tool_library[i].number;
             tool_depth_of_cut = tool_library[i].depth_of_cut;
             tool_stock_to_leave = tool_library[i].stock_to_leave;
-            tool_finishing_stepover = tool_library[i].stepover;
+            if (manual_stepover == 0) {
+              tool_finishing_stepover = tool_library[i].stepover;
+            }
             tool_index = i;
             return;
         }

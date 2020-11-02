@@ -501,7 +501,6 @@ export function set_finishing_endmill(m)
     finishing_endmill = Math.floor(parseFloat(m));
     tool.select_tool(finishing_endmill);
     tool.set_stepover(tool.tool_diameter / 10);
-    console.log("Setting stepover to ", tool_finishing_stepover);
 }
 
 export function set_split_gcode(split)
