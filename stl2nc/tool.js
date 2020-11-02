@@ -16,6 +16,8 @@ export let tool_index = 0;
 let high_precision = 0;
 let manual_stepover = 0;
 
+let material_multiplier = 1.0;
+
 function inch_to_mm(inch)
 {
     return Math.ceil( (inch * 25.4) *1000)/1000;
@@ -42,7 +44,16 @@ export function set_stepover_gui(so)
   console.log("Setting stepover to (gui)", tool_finishing_stepover, manual_stepover);
 }
 
-
+export function set_material_multiplier(so)
+{
+  material_multiplier = so;
+  if (material_multiplier <= 0.05) {
+    material_multiplier = 1.0;
+  }
+  if (material_multiplier > 10) {
+    material_multiplier = 10.0;
+  }
+}
 
 /* ToolRings are created for each tool; they define a set of (X,Y) points relative to the center of
  * where the height of the deisgn will get probed.
@@ -168,12 +179,12 @@ export function select_tool(toolnr)
     for (let i = 0; i < tool_library.length; i++) {
         if (tool_library[i].number == toolnr) {
             tool_diameter = tool_library[i].diameter;
-            tool_feedrate = tool_library[i].feedrate;
-            tool_plungerate = tool_library[i].plungerate;
+            tool_feedrate = tool_library[i].feedrate * material_multiplier;
+            tool_plungerate = tool_library[i].plungerate * Math.sqrt(material_multiplier);
             tool_geometry = tool_library[i].geometry;
             tool_name = tool_library[i].name;
             tool_nr = tool_library[i].number;
-            tool_depth_of_cut = tool_library[i].depth_of_cut;
+            tool_depth_of_cut = tool_library[i].depth_of_cut * Math.sqrt(material_multiplier);
             tool_stock_to_leave = tool_library[i].stock_to_leave;
             if (manual_stepover == 0) {
               tool_finishing_stepover = tool_library[i].stepover;

@@ -276,6 +276,11 @@ export function handle_bitsetter(val)
     } 
 }
 
+export function handle_multiplier(val)
+{
+    tool.set_material_multiplier(val);
+}
+
 
 document.getElementById('files').onchange = handle;
 
@@ -289,6 +294,7 @@ window.handle_height = handle_height;
 window.handle_depth = handle_depth;
 window.handle_roughing = handle_roughing;
 window.handle_finishing = handle_finishing;
+window.handle_multiplier = handle_multiplier;
 window.OffsetB = OffsetB;
 window.RadioB = RadioB;
 
