@@ -100,7 +100,7 @@ export function push_segment(X1, Y1, Z1, X2, Y2, Z2, level = 0, direct_mill = 0.
             return;
         }
 
-        if (prev.Y1== Y1 && prev.Z1 == prev.Z2 && Z1 == Z2 && prev.X2 == X1 && prev.Z1 == Z1 && Y1 == Y2) {
+        if (prev.Y1== Y1 && prev.Z1 == prev.Z2 && Z1 == Z2 && approx4(prev.X2, X1) && prev.Z1 == Z1 && Y1 == Y2) {
             levels[level].paths[levels[level].paths.length - 1].X2 = X2;
             return;
         }
