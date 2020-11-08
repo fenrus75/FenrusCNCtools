@@ -24,10 +24,20 @@ let safe_retract_height = 2.0;
 let rippem = 18000.0;
 
 let split_gcode = 0;
+let slow_m3 = 0;
 
 export function set_split_gcode(v)
 {
     split_gcode = v;
+}
+
+export function set_router(v)
+{
+    if (v > 0) {
+        slow_m3 = 0;
+    } else {
+        slow_m3 = 1;
+    }
 }
 
 
@@ -279,6 +289,9 @@ function gcode_write_toolchange()
     }
     gcode_write("M6 T" + tool.name());
     gcode_write("M3 S" + rippem.toString());
+    if (slow_m3 > 0) {
+        gcode_write("G4P5.0");
+    }
     gcode_write("G0 X0Y0");
     gcode_G = "0";
     gcode_cX = 0.0;

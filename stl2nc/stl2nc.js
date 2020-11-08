@@ -276,6 +276,16 @@ export function handle_bitsetter(val)
     } 
 }
 
+export function handle_router(val)
+{
+    if (val == "router") {
+        gcode.set_router(1);
+    }  else {
+        gcode.set_router(0);
+    } 
+}
+
+
 export function handle_multiplier(val)
 {
     tool.set_material_multiplier(val);
@@ -287,6 +297,7 @@ document.getElementById('files').onchange = handle;
 /* Glue to handle html vs javascript modules */
 window.handle_metric = handle_metric;
 window.handle_bitsetter = handle_bitsetter;
+window.handle_router = handle_router;
 window.handle_stepover = handle_stepover;
 window.handle_precision = handle_precision;
 window.handle_width = handle_width;
