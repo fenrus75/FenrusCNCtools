@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>STL2NC - javascript edition</title>
+    <link rel="stylesheet" type="text/css" href="stlnc2nc.css">
+</head>
+<body>
+
+    <div valign="top" style="font-family: Arial;">
+        <h1>STL to GCODE CAM tool</h1>
+        <p>
+            This website lets you wrap existing gcode over an STL file bac
+            to gcode for use with Shapeoko CNC machines
+        </p>
+        <p>
+            All computation happens local
+            and inside your browser, no information is uploaded or sent
+            over the internet. For large files this can take 10+ seconds before the
+            results show up.
+        </p>
+        <div id="orient">
+            Orientation:<br />
+            <input type="radio" value="top" name="or" id="top" checked onclick="RadioB(this.value)"><label for="top">Top</label>
+            <input type="radio" value="front" name="or" id="front" onclick="RadioB(this.value)"><label for="front">Front</label>
+            <input type="radio" value="side" name="or" id="side" onclick="RadioB(this.value)"><label for="side">Side</label>
+            <br />
+            <br />
+            <table>
+            <tr><td>Stock width:</td><td><input type="text" value="120" onChange="handle_width(this.value)" id="width">&nbsp;<label id="widthmm">mm</label></input></td><td>&nbsp;&nbsp;</td><td>Design width:</td><td><label id="resultwidth"></label></td></tr>
+            <tr><td>Stock height:</td><td> <input type="text" value="120" onChange="handle_height(this.value)" id="height">&nbsp;<label id="heightmm">mm</label></input></td><td>&nbsp;&nbsp;</td><td>Design height:</td><td><label id="resultheight"></label></td></tr>
+            <tr><td>Stock depth: </td><td> <input type="text" value="12" onChange="handle_depth(this.value)" id="depth">&nbsp;<label id="depthmm">mm</label></input></td><td>&nbsp;&nbsp;</td><td>Design depth:</td><td><label id="resultdepth"></label></td></tr>
+            </table>
+            Units in :
+            <select name="metric" id="metric" onclick="handle_metric(this.value)">
+                <option value="metric">Metric</option>
+                <option value="imperial">Imperial</option>
+            </select>
+            
+            <br />
+            Calculation precision :
+            <select name="precision" id="precision" onclick="handle_precision(this.value)">
+                <option value="normal">Normal</option>
+                <option value="high">High</option>
+            </select>
+            
+            <br />
+            Router type :
+            <select name="router" id="router" onclick="handle_router(this.value)">
+                <option value="router" selected>Dewalt/Makita/Carbide3D Router</option>
+                <option value="spindle">Spindle</option>
+            </select>
+            
+            <br />
+            
+            <br />
+            STL Depth offset: (shifts the design up and down)<br />
+            <input type="text" value="0" onChange="OffsetB(this.value)"/>percent
+            <br />
+        </div>
+        <div>
+            <br />
+            <form>
+                STL file: <input type="file" id="files" name="files[]"/><br/>
+                GCODE file: <input type="file" id="gcodefiles" name="gcodefiles[]"/>
+                <output id="list"></output>
+            </form>
+
+            <br />
+            <hr />
+            <p>
+            Toolpath calculation
+            </p>
+            <div id="ProgressRoughing">
+                <div id="Bar"></div>
+            </div><br>
+
+            <div id="ProgressRoughing">
+                <div id="BarRoughing"></div>
+            </div><br>
+
+            <div id="ProgressRoughing">
+                <div id="BarFinishing"></div>
+            </div><br>
+
+            <hr />
+
+            <a href="" id="download"></a>            
+        </div>
+        <div width="100%">
+            <pre id="outputpre"></pre>
+        </div>
+    </div>
+
+    <script type="module" src="stlnc2nc.js"></script>
+</body>
+</html>
