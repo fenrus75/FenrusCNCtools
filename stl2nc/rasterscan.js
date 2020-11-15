@@ -92,14 +92,10 @@ function roughing_zig(X, deltaY)
 //        gcode_travel_to(X, 0);
         while (Y <= maxY) {
             /* for roughing we look 2x the tool diameter as a stock-to-leave measure */
-            let Z = get_height_tool(X, Y, 1.5 * tool.radius()) + tool.tool_stock_to_leave;
+            let Z = get_height_tool(X, Y, 1.8 * tool.radius()) + tool.tool_stock_to_leave;
             if (Math.abs(prevZ - Z) > 0.6) {
-                halfway_counter += 1;
-                let halfY = (Y + prevY) / 2;
-                let halfZ = get_height_tool(X, halfY, 1.5 * tool.radius()) + tool.tool_stock_to_leave;
-                segment.push_segment_multilevel(prevX, prevY, prevZ, X, halfY, halfZ, tool.tool_diameter * 0.7);
-                prevY = halfY;
-                prevZ = halfZ;
+                segment.push_segment_multilevel(prevX, prevY, prevZ, X, prevY, Z, tool.tool_diameter * 0.7, 1);
+                prevZ = Z;
             } 
             
 
@@ -143,15 +139,11 @@ function roughing_zag(X, deltaY)
 //        gcode_travel_to(X, 0);
         while (Y >= minY) {
             /* for roughing we look 2x the tool diameter as a stock-to-leave measure */
-            let Z = get_height_tool(X, Y, 1.5 * tool.radius()) + tool.tool_stock_to_leave;
+            let Z = get_height_tool(X, Y, 1.8 * tool.radius()) + tool.tool_stock_to_leave;
 
             if (Math.abs(prevZ - Z) > 0.6) {
-                halfway_counter += 1;
-                let halfY = (Y + prevY) / 2;
-                let halfZ = get_height_tool(X, halfY, 1.5 * tool.radius()) + tool.tool_stock_to_leave;
-                segment.push_segment_multilevel(prevX, prevY, prevZ, X, halfY, halfZ, tool.tool_diameter * 0.7);
-                prevY = halfY;
-                prevZ = halfZ;
+                segment.push_segment_multilevel(prevX, prevY, prevZ, X, prevY, Z, tool.tool_diameter * 0.7, 1);
+                prevZ = Z;
             } 
             
 
