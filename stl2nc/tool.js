@@ -60,7 +60,7 @@ export function set_material_multiplier(so)
  * A tool will have multiple such rings; each ring will be for one specific radius.
  */
 class ToolRing {
-    constructor (_R)
+    constructor (_R, is_radius)
     {
         this.R = _R;
         this.points = [];
@@ -71,11 +71,18 @@ class ToolRing {
         this.points.push(-1.0000 * _R);    this.points.push(-0.0000 * _R);
         this.points.push(-0.0000 * _R);    this.points.push(-1.0000 * _R);
         
-        let angle = 0.1;
+        let angle = 0.2 * Math.random();
         let delta = 6.28 / 5;
         if (_R > 1) { delta = delta / 2; };
-        if (_R > 2) { delta = delta / 2; };
-        if (_R > 4) { delta = delta / 2; };
+        if (_R > 2) { delta = delta / 1.75; };
+        if (_R > 4) { delta = delta / 1.75; };
+        if (_R > 6) { delta = delta / 1.75; };
+        
+        if (high_precision)
+          delta = delta / 2;
+        
+        if (is_radius > 0)
+            delta = delta / 2.1;
         while (angle < 2 * 3.1415) {
           this.points.push(Math.sin(angle) * _R);    this.points.push(Math.cos(angle) * _R);
           angle = angle + delta;
@@ -84,6 +91,18 @@ class ToolRing {
 }
 
 
+function print_rings(nr, rings)
+{
+	const ringcount = rings.length;
+        console.log("Tool nr ", nr);
+	for (let i = 0; i < ringcount ; i++) {
+          const pointcount = rings[i].points.length;
+          for (let p = 0; p < pointcount; p+=2) {
+            console.log(rings[i].points[p] + ", " + rings[i].points[p+1] + ", ");
+          } 
+	}
+
+}
 /* 
  * Basic endmill data structure, has all the basic physical properties/sizes of the endmill
  * as well as the rings for probing
@@ -111,22 +130,28 @@ class Tool {
 
       /* now precompute the points to sample for height */      
       let R = _diameter;
-      let threshold = 0.4;
+      let threshold = 0.3;
       if (high_precision) {
-          threshold = 0.25;
+          threshold = 0.15;
       }
 
     
-//      this.rings.push(new ToolRing((_diameter/2)-0.0001));
+      this.rings.push(new ToolRing((_diameter/2)-0.0001, 1));
       
       
       while (R > 0.1) {
-            this.rings.push(new ToolRing(R));
-            R = R / sqrt2 - 0.0000001;
+            this.rings.push(new ToolRing(R, 0));
+            if (R > 0.4) {
+              R = R / sqrt2 - 0.0000001;
+            } else {
+              R = R - 0.1;
+            }
             if (R < threshold) {
 		break;
             }
       }
+      
+//      print_rings(_number, this.rings);
   }
 }
 
