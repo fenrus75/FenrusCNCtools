@@ -236,7 +236,7 @@ function roughing_zig_zag(_tool)
         return;
     }
     
-    console.log("tool diameter is ", tool.tool_diameter);
+    console.log("roughing tool diameter is ", tool.tool_diameter);
     let deltaX = tool.radius();
     let deltaY = tool.tool_diameter / 8;
     let X = -tool.tool_diameter / 4;

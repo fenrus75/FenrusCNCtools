@@ -71,26 +71,15 @@ class ToolRing {
         this.points.push(-1.0000 * _R);    this.points.push(-0.0000 * _R);
         this.points.push(-0.0000 * _R);    this.points.push(-1.0000 * _R);
         
-        /* and the halfway points of those */
-        
-        this.points.push(+0.7071 * _R);    this.points.push(+0.7071 * _R);
-        this.points.push(-0.7071 * _R);    this.points.push(+0.7071 * _R);
-        this.points.push(-0.7071 * _R);    this.points.push(-0.7071 * _R);
-        this.points.push(+0.7071 * _R);    this.points.push(-0.7071 * _R);
-        
-        if (high_precision == 0 && _R <= 0.5) { return; };
-        
-        /* and the halfway points again */
-        
-        this.points.push(+0.9239 * _R);    this.points.push(+0.3827 * _R);
-        this.points.push(+0.3827 * _R);    this.points.push(+0.9239 * _R);
-        this.points.push(-0.3827 * _R);    this.points.push(+0.9239 * _R);
-        this.points.push(-0.9239 * _R);    this.points.push(+0.3827 * _R);
-
-        this.points.push(-0.9239 * _R);    this.points.push(-0.3827 * _R);
-        this.points.push(-0.3827 * _R);    this.points.push(-0.9239 * _R);
-        this.points.push(+0.3827 * _R);    this.points.push(-0.9239 * _R);
-        this.points.push(+0.9239 * _R);    this.points.push(-0.3827 * _R);
+        let angle = 0.1;
+        let delta = 6.28 / 5;
+        if (_R > 1) { delta = delta / 2; };
+        if (_R > 2) { delta = delta / 2; };
+        if (_R > 4) { delta = delta / 2; };
+        while (angle < 2 * 3.1415) {
+          this.points.push(Math.sin(angle) * _R);    this.points.push(Math.cos(angle) * _R);
+          angle = angle + delta;
+        }        
     }
 }
 
@@ -185,7 +174,7 @@ export function select_tool(toolnr)
             tool_name = tool_library[i].name;
             tool_nr = tool_library[i].number;
             tool_depth_of_cut = tool_library[i].depth_of_cut * Math.sqrt(material_multiplier);
-            tool_stock_to_leave = tool_library[i].stock_to_leave;
+            tool_stock_to_leave = tool_library[i].stock_to_leave * Math.sqrt(material_multiplier);
             if (manual_stepover == 0) {
               tool_finishing_stepover = tool_library[i].stepover;
             }
