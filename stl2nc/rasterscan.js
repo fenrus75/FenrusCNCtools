@@ -94,7 +94,7 @@ function roughing_zig(X, deltaY)
             /* for roughing we look 2x the tool diameter as a stock-to-leave measure */
             let Z = get_height_tool(X, Y, 1.8 * tool.radius()) + tool.tool_stock_to_leave;
             if (Math.abs(prevZ - Z) > 0.6) {
-                segment.push_segment_multilevel(prevX, prevY, prevZ, X, prevY, Z, tool.tool_diameter * 0.7, 1);
+                segment.push_segment_multilevel(prevX, prevY, prevZ, X, prevY, Math.max(Z, prevZ), tool.tool_diameter * 0.7, 1);
                 prevZ = Z;
             } 
             
@@ -142,7 +142,7 @@ function roughing_zag(X, deltaY)
             let Z = get_height_tool(X, Y, 1.8 * tool.radius()) + tool.tool_stock_to_leave;
 
             if (Math.abs(prevZ - Z) > 0.6) {
-                segment.push_segment_multilevel(prevX, prevY, prevZ, X, prevY, Z, tool.tool_diameter * 0.7, 1);
+                segment.push_segment_multilevel(prevX, prevY, prevZ, X, prevY, Math.max(Z, prevZ), tool.tool_diameter * 0.7, 1);
                 prevZ = Z;
             } 
             
