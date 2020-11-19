@@ -29,6 +29,17 @@ let dryrun = 1;
 
 
 
+function inch_to_mm(inch)
+{
+    return Math.ceil( (inch * 25.4) *1000)/1000;
+}
+
+function mm_to_inch(mm)
+{
+    return Math.ceil(mm / 25.4 * 1000)/1000;
+}
+
+
 /* Variable into which output gcode is collected */
 let outputtext = "";
 
@@ -82,7 +93,7 @@ function FtoString(rate)
  * @param {Number} y	Y co-ordinate
  * @param {Number} z	Z co-ordinate
  * @param {Number} line	Line number in g-code
- */
+l */
 function G0(x, y, z) 
 {
 	let s = "G0";
@@ -192,12 +203,21 @@ function flush_buffer()
 	}
 }
 
+function get_height(x, y)
+{
+	if (metric > 0) {
+		return stl.get_height(x, y);
+	}
+	
+	return mm_to_inch(stl.get_height(inch_to_mm(x), inch_to_mm(y)));
+}
+
 function G1(x, y, z, feed) 
 {
 	let l = 0;
 	let d = dist2(currentx, currenty, x, y);
 	if (d <= 0.025) {
-		let newZ = z + stl.get_height(x, y);
+		let newZ = z + get_height(x, y);
 		if (z > 0)
 			newZ = z;
 		emitG1(x,y,newZ,feed);
@@ -208,6 +228,8 @@ function G1(x, y, z, feed)
 		return;
 	}
 	let stepsize = 0.025 / d;
+	if (metric == 0)
+	 	stepsize = mm_to_inch(stepsize);
 	let cX = currentx;
 	let cY = currenty;
 	let cZ = currentz;
@@ -222,7 +244,7 @@ function G1(x, y, z, feed)
 		let newZ = cZ + dZ * l;
 		
 		if (newZ <= 0) {
-			newZ += stl.get_height(newX, newY);
+			newZ += get_height(newX, newY);
 		}
 		
 		bufferG1(newX, newY, newZ, feed);
@@ -230,7 +252,7 @@ function G1(x, y, z, feed)
 	}
 	
 	flush_buffer();
-	let newZ = z + stl.get_height(x, y);
+	let newZ = z + get_height(x, y);
 	if (z > 0)
 		newZ = z;
 	emitG1(x,y,newZ,feed);
@@ -295,10 +317,14 @@ function handle_XYZ_line(line)
  */
 function handle_G_line(line)
 {
-	if (line.includes("G20"))
+	if (line.includes("G20")) {
 		metric = 0;
-	if (line.includes("G21"))
+		console.log("Switching to empire units");
+	}
+	if (line.includes("G21")) {
 		metric = 1;
+		console.log("Using metric systemk");
+	}
 		
 	if (line[1] == '3') glevel = '3';
 	if (line[1] == '2') glevel = '2';
