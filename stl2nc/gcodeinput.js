@@ -39,6 +39,13 @@ function mm_to_inch(mm)
     return Math.ceil(mm / 25.4 * 1000)/1000;
 }
 
+function to_mm(inch)
+{
+	if (metric)
+		return inch;
+	return inch_to_mm(inch);
+}
+
 
 /* Variable into which output gcode is collected */
 let outputtext = "";
@@ -159,10 +166,10 @@ function bufferG1(x, y, z, feed)
 	if (ppV > 0 && pV > 0) {
 		let d1 = dist2(ppX, ppY, pX, pY);
 		let d2 = dist2(ppX, ppY, x, y);
-		if (d2 > 0 && d2 < 0.5) {
+		if (d2 > 0 && to_mm(d2) < 0.5) {
 			let l = d1/d2;
 			let newZ = ppZ + l * (z - ppZ);
-			if (approx2(newZ, pZ)) {
+			if (approx2(to_mm(newZ), to_mm(pZ))) {
 				pX = x;
 				pY = y;
 				pZ = z;
