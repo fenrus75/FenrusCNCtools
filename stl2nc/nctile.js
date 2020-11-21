@@ -9,7 +9,7 @@ import * as gcodetile from './gcodetile.js';
 
 let desired_width = 120.0;
 let desired_height = 120.0;
-let desired_overcut = 6.0;
+let desired_overlap = 0;
 let filename = "";
 let gui_is_metric = 1;
 
@@ -73,7 +73,7 @@ function load_gcode(evt)
     
     
     if (evt.target.readyState == FileReader.DONE) {
-        gcodetile.process_data(filename, evt.target.result, desired_width, desired_height, desired_overcut);    
+        gcodetile.process_data(filename, evt.target.result, desired_width, desired_height, desired_overlap);    
         console.log("End of gcode processing " + (Date.now() - start));
     }    
 }
@@ -125,6 +125,20 @@ export function handle_height(val)
     console.log("Setting height to ", desired_height);
 }
 
+export function handle_overlap(val)
+{
+    let news = parseFloat(val);
+    if (news > 0) {
+        if (gui_is_metric) {
+            desired_overlap = news;
+        } else {
+            desired_overlap = inch_to_mm(news);
+        }
+    }
+    console.log("Setting overlap to ", desired_overlap);
+}
+
+
 
 function update_gui_dimensions()
 {
@@ -150,6 +164,16 @@ function update_gui_dimensions()
         link.value = mm_to_inch(desired_height);
         linkmm.innerHTML = "inch";
     }
+
+    link  = document.getElementById('overlap')
+    linkmm = document.getElementById('overlapmm')
+    if (gui_is_metric) {
+        link.value = desired_overlap;
+        linkmm.innerHTML = "mm";
+    } else {
+        link.value = mm_to_inch(desired_overlap);
+        linkmm.innerHTML = "inch";
+    }
 }
 
 
@@ -170,4 +194,5 @@ document.getElementById('gcodefiles').onchange = handle_gcode;
 window.handle_metric = handle_metric;
 window.handle_width = handle_width;
 window.handle_height = handle_height;
+window.handle_overlap = handle_overlap;
 
