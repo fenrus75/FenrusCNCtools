@@ -1,0 +1,317 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>NCTILE - Tile GCode files</title>
+    <link rel="stylesheet" type="text/css" href="stl2nc.css">
+</head>
+<body>
+
+    <div valign="top" style="font-family: Arial;">
+        <h1>NCTILE - Tile GCode files</h1>
+        <p>
+            This website lets tile an existing gcode file into
+            smaller areas for use with Shapeoko CNC machines
+        </p>
+        <p>
+            This tool requires that the zero of the original gcode is set in
+            the lower left corner.
+        </p>
+        <p>
+            All computation happens local
+            and inside your browser, no information is uploaded or sent
+            over the internet. For large files this can take 10+ seconds before the
+            results show up.
+        </p>
+        <div id="orient">
+            <table>
+            <tr><td>Tile width:</td><td><input type="text" value="120" onChange="handle_width(this.value)" id="width">&nbsp;<label id="widthmm">mm</label></input></td><td>&nbsp;&nbsp;</td><td>Tile # (horizontal):</td><td><label id="resultwidth"></label></td></tr>
+            <tr><td>Tile height:</td><td> <input type="text" value="120" onChange="handle_height(this.value)" id="height">&nbsp;<label id="heightmm">mm</label></input></td><td>&nbsp;&nbsp;</td><td>Tile # (vertical):</td><td><label id="resultheight"></label></td></tr>
+            </table>
+            Units in :
+            <select name="metric" id="metric" onclick="handle_metric(this.value)">
+                <option value="metric">Metric</option>
+                <option value="imperial">Imperial</option>
+            </select>
+            
+        </div>
+        <div>
+            <br />
+            <form>
+                GCODE file: <input type="file" id="gcodefiles" name="gcodefiles[]"/>
+                <output id="list"></output>
+            </form>
+
+            <br />
+            <hr />
+            <p>
+            Tile calculation
+            </p>
+            <div id="ProgressRoughing">
+                <div id="Bar"></div>
+            </div><br>
+
+            <a href="" id="download_1_1"></a>            
+            <a href="" id="download_1_2"></a>            
+            <a href="" id="download_1_3"></a>            
+            <a href="" id="download_1_4"></a>            
+            <a href="" id="download_1_5"></a>            
+            <a href="" id="download_1_6"></a>            
+            <a href="" id="download_1_7"></a>            
+            <a href="" id="download_1_8"></a>            
+            <a href="" id="download_1_9"></a>            
+            <a href="" id="download_1_10"></a>            
+            <a href="" id="download_1_11"></a>            
+            <a href="" id="download_1_12"></a>            
+            <a href="" id="download_1_13"></a>            
+            <a href="" id="download_1_14"></a>            
+            <a href="" id="download_1_15"></a>            
+            <a href="" id="download_1_16"></a>            
+            <a href="" id="download_2_1"></a>            
+            <a href="" id="download_2_2"></a>            
+            <a href="" id="download_2_3"></a>            
+            <a href="" id="download_2_4"></a>            
+            <a href="" id="download_2_5"></a>            
+            <a href="" id="download_2_6"></a>            
+            <a href="" id="download_2_7"></a>            
+            <a href="" id="download_2_8"></a>            
+            <a href="" id="download_2_9"></a>            
+            <a href="" id="download_2_10"></a>            
+            <a href="" id="download_2_11"></a>            
+            <a href="" id="download_2_12"></a>            
+            <a href="" id="download_2_13"></a>            
+            <a href="" id="download_2_14"></a>            
+            <a href="" id="download_2_15"></a>            
+            <a href="" id="download_2_16"></a>            
+            <a href="" id="download_3_1"></a>            
+            <a href="" id="download_3_2"></a>            
+            <a href="" id="download_3_3"></a>            
+            <a href="" id="download_3_4"></a>            
+            <a href="" id="download_3_5"></a>            
+            <a href="" id="download_3_6"></a>            
+            <a href="" id="download_3_7"></a>            
+            <a href="" id="download_3_8"></a>            
+            <a href="" id="download_3_9"></a>            
+            <a href="" id="download_3_10"></a>            
+            <a href="" id="download_3_11"></a>            
+            <a href="" id="download_3_12"></a>            
+            <a href="" id="download_3_13"></a>            
+            <a href="" id="download_3_14"></a>            
+            <a href="" id="download_3_15"></a>            
+            <a href="" id="download_3_16"></a>            
+            <a href="" id="download_4_1"></a>            
+            <a href="" id="download_4_2"></a>            
+            <a href="" id="download_4_3"></a>            
+            <a href="" id="download_4_4"></a>            
+            <a href="" id="download_4_5"></a>            
+            <a href="" id="download_4_6"></a>            
+            <a href="" id="download_4_7"></a>            
+            <a href="" id="download_4_8"></a>            
+            <a href="" id="download_4_9"></a>            
+            <a href="" id="download_4_10"></a>            
+            <a href="" id="download_4_11"></a>            
+            <a href="" id="download_4_12"></a>            
+            <a href="" id="download_4_13"></a>            
+            <a href="" id="download_4_14"></a>            
+            <a href="" id="download_4_15"></a>            
+            <a href="" id="download_4_16"></a>            
+            <a href="" id="download_5_1"></a>            
+            <a href="" id="download_5_2"></a>            
+            <a href="" id="download_5_3"></a>            
+            <a href="" id="download_5_4"></a>            
+            <a href="" id="download_5_5"></a>            
+            <a href="" id="download_5_6"></a>            
+            <a href="" id="download_5_7"></a>            
+            <a href="" id="download_5_8"></a>            
+            <a href="" id="download_5_9"></a>            
+            <a href="" id="download_5_10"></a>            
+            <a href="" id="download_5_11"></a>            
+            <a href="" id="download_5_12"></a>            
+            <a href="" id="download_5_13"></a>            
+            <a href="" id="download_5_14"></a>            
+            <a href="" id="download_5_15"></a>            
+            <a href="" id="download_5_16"></a>            
+            <a href="" id="download_6_1"></a>            
+            <a href="" id="download_6_2"></a>            
+            <a href="" id="download_6_3"></a>            
+            <a href="" id="download_6_4"></a>            
+            <a href="" id="download_6_5"></a>            
+            <a href="" id="download_6_6"></a>            
+            <a href="" id="download_6_7"></a>            
+            <a href="" id="download_6_8"></a>            
+            <a href="" id="download_6_9"></a>            
+            <a href="" id="download_6_10"></a>            
+            <a href="" id="download_6_11"></a>            
+            <a href="" id="download_6_12"></a>            
+            <a href="" id="download_6_13"></a>            
+            <a href="" id="download_6_14"></a>            
+            <a href="" id="download_6_15"></a>            
+            <a href="" id="download_6_16"></a>            
+            <a href="" id="download_7_1"></a>            
+            <a href="" id="download_7_2"></a>            
+            <a href="" id="download_7_3"></a>            
+            <a href="" id="download_7_4"></a>            
+            <a href="" id="download_7_5"></a>            
+            <a href="" id="download_7_6"></a>            
+            <a href="" id="download_7_7"></a>            
+            <a href="" id="download_7_8"></a>            
+            <a href="" id="download_7_9"></a>            
+            <a href="" id="download_7_10"></a>            
+            <a href="" id="download_7_11"></a>            
+            <a href="" id="download_7_12"></a>            
+            <a href="" id="download_7_13"></a>            
+            <a href="" id="download_7_14"></a>            
+            <a href="" id="download_7_15"></a>            
+            <a href="" id="download_7_16"></a>            
+            <a href="" id="download_8_1"></a>            
+            <a href="" id="download_8_2"></a>            
+            <a href="" id="download_8_3"></a>            
+            <a href="" id="download_8_4"></a>            
+            <a href="" id="download_8_5"></a>            
+            <a href="" id="download_8_6"></a>            
+            <a href="" id="download_8_7"></a>            
+            <a href="" id="download_8_8"></a>            
+            <a href="" id="download_8_9"></a>            
+            <a href="" id="download_8_10"></a>            
+            <a href="" id="download_8_11"></a>            
+            <a href="" id="download_8_12"></a>            
+            <a href="" id="download_8_13"></a>            
+            <a href="" id="download_8_14"></a>            
+            <a href="" id="download_8_15"></a>            
+            <a href="" id="download_8_16"></a>            
+            <a href="" id="download_9_1"></a>            
+            <a href="" id="download_9_2"></a>            
+            <a href="" id="download_9_3"></a>            
+            <a href="" id="download_9_4"></a>            
+            <a href="" id="download_9_5"></a>            
+            <a href="" id="download_9_6"></a>            
+            <a href="" id="download_9_7"></a>            
+            <a href="" id="download_9_8"></a>            
+            <a href="" id="download_9_9"></a>            
+            <a href="" id="download_9_10"></a>            
+            <a href="" id="download_9_11"></a>            
+            <a href="" id="download_9_12"></a>            
+            <a href="" id="download_9_13"></a>            
+            <a href="" id="download_9_14"></a>            
+            <a href="" id="download_9_15"></a>            
+            <a href="" id="download_9_16"></a>            
+            <a href="" id="download_10_1"></a>            
+            <a href="" id="download_10_2"></a>            
+            <a href="" id="download_10_3"></a>            
+            <a href="" id="download_10_4"></a>            
+            <a href="" id="download_10_5"></a>            
+            <a href="" id="download_10_6"></a>            
+            <a href="" id="download_10_7"></a>            
+            <a href="" id="download_10_8"></a>            
+            <a href="" id="download_10_9"></a>            
+            <a href="" id="download_10_10"></a>            
+            <a href="" id="download_10_11"></a>            
+            <a href="" id="download_10_12"></a>            
+            <a href="" id="download_10_13"></a>            
+            <a href="" id="download_10_14"></a>            
+            <a href="" id="download_10_15"></a>            
+            <a href="" id="download_10_16"></a>            
+            <a href="" id="download_11_1"></a>            
+            <a href="" id="download_11_2"></a>            
+            <a href="" id="download_11_3"></a>            
+            <a href="" id="download_11_4"></a>            
+            <a href="" id="download_11_5"></a>            
+            <a href="" id="download_11_6"></a>            
+            <a href="" id="download_11_7"></a>            
+            <a href="" id="download_11_8"></a>            
+            <a href="" id="download_11_9"></a>            
+            <a href="" id="download_11_10"></a>            
+            <a href="" id="download_11_11"></a>            
+            <a href="" id="download_11_12"></a>            
+            <a href="" id="download_11_13"></a>            
+            <a href="" id="download_11_14"></a>            
+            <a href="" id="download_11_15"></a>            
+            <a href="" id="download_11_16"></a>            
+            <a href="" id="download_12_1"></a>            
+            <a href="" id="download_12_2"></a>            
+            <a href="" id="download_12_3"></a>            
+            <a href="" id="download_12_4"></a>            
+            <a href="" id="download_12_5"></a>            
+            <a href="" id="download_12_6"></a>            
+            <a href="" id="download_12_7"></a>            
+            <a href="" id="download_12_8"></a>            
+            <a href="" id="download_12_9"></a>            
+            <a href="" id="download_12_10"></a>            
+            <a href="" id="download_12_11"></a>            
+            <a href="" id="download_12_12"></a>            
+            <a href="" id="download_12_13"></a>            
+            <a href="" id="download_12_14"></a>            
+            <a href="" id="download_12_15"></a>            
+            <a href="" id="download_12_16"></a>            
+            <a href="" id="download_13_1"></a>            
+            <a href="" id="download_13_2"></a>            
+            <a href="" id="download_13_3"></a>            
+            <a href="" id="download_13_4"></a>            
+            <a href="" id="download_13_5"></a>            
+            <a href="" id="download_13_6"></a>            
+            <a href="" id="download_13_7"></a>            
+            <a href="" id="download_13_8"></a>            
+            <a href="" id="download_13_9"></a>            
+            <a href="" id="download_13_10"></a>            
+            <a href="" id="download_13_11"></a>            
+            <a href="" id="download_13_12"></a>            
+            <a href="" id="download_13_13"></a>            
+            <a href="" id="download_13_14"></a>            
+            <a href="" id="download_13_15"></a>            
+            <a href="" id="download_13_16"></a>            
+            <a href="" id="download_14_1"></a>            
+            <a href="" id="download_14_2"></a>            
+            <a href="" id="download_14_3"></a>            
+            <a href="" id="download_14_4"></a>            
+            <a href="" id="download_14_5"></a>            
+            <a href="" id="download_14_6"></a>            
+            <a href="" id="download_14_7"></a>            
+            <a href="" id="download_14_8"></a>            
+            <a href="" id="download_14_9"></a>            
+            <a href="" id="download_14_10"></a>            
+            <a href="" id="download_14_11"></a>            
+            <a href="" id="download_14_12"></a>            
+            <a href="" id="download_14_13"></a>            
+            <a href="" id="download_14_14"></a>            
+            <a href="" id="download_14_15"></a>            
+            <a href="" id="download_14_16"></a>            
+            <a href="" id="download_15_1"></a>            
+            <a href="" id="download_15_2"></a>            
+            <a href="" id="download_15_3"></a>            
+            <a href="" id="download_15_4"></a>            
+            <a href="" id="download_15_5"></a>            
+            <a href="" id="download_15_6"></a>            
+            <a href="" id="download_15_7"></a>            
+            <a href="" id="download_15_8"></a>            
+            <a href="" id="download_15_9"></a>            
+            <a href="" id="download_15_10"></a>            
+            <a href="" id="download_15_11"></a>            
+            <a href="" id="download_15_12"></a>            
+            <a href="" id="download_15_13"></a>            
+            <a href="" id="download_15_14"></a>            
+            <a href="" id="download_15_15"></a>            
+            <a href="" id="download_15_16"></a>            
+            <a href="" id="download_16_1"></a>            
+            <a href="" id="download_16_2"></a>            
+            <a href="" id="download_16_3"></a>            
+            <a href="" id="download_16_4"></a>            
+            <a href="" id="download_16_5"></a>            
+            <a href="" id="download_16_6"></a>            
+            <a href="" id="download_16_7"></a>            
+            <a href="" id="download_16_8"></a>            
+            <a href="" id="download_16_9"></a>            
+            <a href="" id="download_16_10"></a>            
+            <a href="" id="download_16_11"></a>            
+            <a href="" id="download_16_12"></a>            
+            <a href="" id="download_16_13"></a>            
+            <a href="" id="download_16_14"></a>            
+            <a href="" id="download_16_15"></a>            
+            <a href="" id="download_16_16"></a>            
+        </div>
+        <div width="100%">
+            <pre id="outputpre"></pre>
+        </div>
+    </div>
+
+    <script type="module" src="nctile.js"></script>
+</body>
+</html>
