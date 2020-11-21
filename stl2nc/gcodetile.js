@@ -353,7 +353,7 @@ function handle_G_line(line)
 	}
 	if (line.includes("G21")) {
 		metric = 1;
-		console.log("Using metric systemk");
+		console.log("Using metric system");
 	}
 		
 	if (line[1] == '3') glevel = '3';
@@ -504,6 +504,11 @@ export function process_data(filename, data, tile_width, tile_height, overcut)
     
     let tilesX = Math.ceil(boundX2 / tile_width);
     let tilesY = Math.ceil(boundY2 / tile_height);
+
+    link  = document.getElementById('resultwidth')
+    link.innerHTML =  tilesX;
+    link  = document.getElementById('resultheight')
+    link.innerHTML =  tilesY;
     console.log("Number of tiles: ", tilesX, " x ", tilesY);
     
     for (let tY = 0; tY < tilesY; tY++) {
