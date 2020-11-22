@@ -141,6 +141,9 @@ function emitG1(glevel, x, y, z, feed)
 		currentfout = feed;
 	}
 	
+	if (thisout == "G0")
+		currentfout = -1;
+	
 	gout = thisout;
 	
 	currentxout = x;
