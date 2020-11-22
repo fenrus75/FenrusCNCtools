@@ -128,6 +128,9 @@ function emitG1(glevel, x, y, z, feed)
 
 	let s = "G" + glevel;
 	let thisout = s;
+	
+	if (feed <= 0)
+		feed = 50;
 	if (gout == thisout)
 		s = "";
 	if (x != currentxout)
@@ -136,13 +139,11 @@ function emitG1(glevel, x, y, z, feed)
 		s += "Y" + FtoString(y);
 	if (z != currentzout)
 		s += "Z" + FtoString(z);
-	if (feed != currentfout && thisout != "G0") {
+	if (thisout != "G0") {
+//	if (feed != currentfout && thisout != "G0") {
 		s += "F" + Math.round(feed);
 		currentfout = feed;
 	}
-	
-	if (thisout == "G0")
-		currentfout = -1;
 	
 	gout = thisout;
 	
@@ -177,7 +178,7 @@ function flush_buffer()
 		if ( (currentxout != pX1) || (currentyout != pY1) || (currentzout != pZ1)) {
 			retract();
 			emitG1("0", pX1, pY1, currentzout, pF);
-			emitG1("1", pX1, pY1, pZ1, pF);
+			emitG1("1", pX1, pY1, pZ1, pF/4);
 		}
 		emitG1(pG, pX2, pY2, pZ2, pF);
 		pV = 0;
@@ -369,8 +370,6 @@ function handle_G_line(line)
 		return handle_XYZ_line(line);
 
 	/* G line we don't need to process, just pass through */
-	currentfin = -1.0;
-	currentfout = -1.0;
 	emit_output(line);
 }
 
