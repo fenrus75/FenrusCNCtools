@@ -173,8 +173,8 @@ function flush_buffer()
 	if (pV > 0) {
 		if ( (currentxout != pX1) || (currentyout != pY1) || (currentzout != pZ1)) {
 			retract();
-			emitG1("0", pX1, pY1, currentzout);
-			emitG1("1", pX1, pY1, pZ1);
+			emitG1("0", pX1, pY1, currentzout, pF);
+			emitG1("1", pX1, pY1, pZ1, pF);
 		}
 		emitG1(pG, pX2, pY2, pZ2, pF);
 		pV = 0;
