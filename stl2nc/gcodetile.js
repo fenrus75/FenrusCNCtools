@@ -163,7 +163,7 @@ function dist3(X1, Y1, Z1, X2, Y2, Z2)
 }
 
 
-let pX1, pX2, pY1, pY2, pZ1, pZ2, pF, pG, pV = 0;
+let pX1, pX2, pY1, pY2, pZ1, pZ2, pF = 100, pG, pV = 0;
 
 
 function retract()
