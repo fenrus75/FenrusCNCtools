@@ -176,6 +176,7 @@ export function tool_factory()
     tool_library.push(new Tool(102, inch_to_mm(0.125), inch_to_mm(40), inch_to_mm(10), "flat", 1.0, 0.25));
     tool_library.push(new Tool(101, inch_to_mm(0.125), inch_to_mm(40), inch_to_mm(10), "ball", 1.0, 0.25));
     tool_library.push(new Tool(201, inch_to_mm(0.250), inch_to_mm(50), inch_to_mm(20), "flat", 1.0, 0.25));
+    tool_library.push(new Tool(91,  inch_to_mm(0.50),  inch_to_mm(50), inch_to_mm(20), "flat", 2.0, 0.3));
 }
 
 
