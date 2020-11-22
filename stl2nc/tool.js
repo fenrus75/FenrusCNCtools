@@ -173,11 +173,11 @@ export function tool_factory()
     }
     tool_library.push(new Tool(18,   2.0, inch_to_mm(20), inch_to_mm(10), "flat", 1.0, 0.1, 0.2));
     tool_library.push(new Tool(19,   1.5, inch_to_mm(15), inch_to_mm(7), "flat", 1.0, 0.1, 0.2));
-    tool_library.push(new Tool(28,   0.5, inch_to_mm(50), inch_to_mm(20), "ball", 0.5, 0.0, 0.05)); 
-    tool_library.push(new Tool(27,   1.0, inch_to_mm(50), inch_to_mm(20), "ball", 0.5, 0.0, 0.1));
+    tool_library.push(new Tool(27,   1.0, inch_to_mm(50), inch_to_mm(30), "ball", 0.5, 0.0, 0.1));
+    tool_library.push(new Tool(28,   0.5, inch_to_mm(50), inch_to_mm(30), "ball", 0.5, 0.0, 0.05)); 
     tool_library.push(new Tool(91,  inch_to_mm(0.50),  inch_to_mm(70), inch_to_mm(20), "flat", 2.0, 0.3));
-    tool_library.push(new Tool(101, inch_to_mm(0.125), inch_to_mm(40), inch_to_mm(10), "ball", 1.0, 0.25));
-    tool_library.push(new Tool(102, inch_to_mm(0.125), inch_to_mm(40), inch_to_mm(10), "flat", 1.0, 0.25));
+    tool_library.push(new Tool(101, inch_to_mm(0.125), inch_to_mm(40), inch_to_mm(20), "ball", 1.0, 0.25));
+    tool_library.push(new Tool(102, inch_to_mm(0.125), inch_to_mm(40), inch_to_mm(20), "flat", 1.0, 0.25));
     tool_library.push(new Tool(201, inch_to_mm(0.250), inch_to_mm(50), inch_to_mm(20), "flat", 1.0, 0.25));
 }
 
@@ -241,8 +241,8 @@ export function toolspeed3d(cX, cY, cZ, X, Y, Z)
 
 	time_horiz = horiz / tool_feedrate;
 
-	/* if we're milling up, feedrate dominates by definition */
-	if (vert <= 0) {
+	/* if we're milling up or only slightly down, feedrate dominates by definition */
+	if (vert <= horiz) {
             return tool_feedrate;
 	}
 
