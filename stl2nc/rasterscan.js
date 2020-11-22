@@ -491,6 +491,7 @@ export function set_precision(p)
 export function set_roughing_endmill(m)
 {
     roughing_endmill = Math.floor(parseFloat(m));
+    console.log("Roughing endmill is ", roughing_endmill);
 }
 export function set_finishing_endmill(m)
 {

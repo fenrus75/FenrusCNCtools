@@ -290,7 +290,7 @@ function gcode_write_toolchange()
     gcode_write("M6 T" + tool.name());
     gcode_write("M3 S" + rippem.toString());
     if (slow_m3 > 0) {
-        gcode_write("G4P5.0");
+        gcode_write("G4P10.0");
     }
     gcode_write("G0 X0Y0");
     gcode_G = "0";
