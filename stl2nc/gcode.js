@@ -114,8 +114,8 @@ export function gcode_header(filename)
     gcode_write("%");
     gcode_write("G21"); /* milimeters not imperials */
     gcode_write("G90"); /* all relative to work piece zero */
-    gcode_write("G0X0Y0Z" + gcode_float2str(safe_retract_height));
-    gcode_cZ = safe_retract_height;
+//    gcode_write("G0X0Y0Z" + gcode_float2str(safe_retract_height));
+    gcode_cZ = 4 * safe_retract_height;
     gcode_comment("Created by STL2NC");
     gcode_comment("FILENAME: " + filename);
     gcode_first_toolchange = 1;
