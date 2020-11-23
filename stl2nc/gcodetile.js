@@ -547,6 +547,7 @@ export function process_data(filename, data, tile_width, tile_height, overcut)
 		currentyout = -50000.0;
 		currentzout = 2 * boundZ2;
 		currentfout = 50.0;
+		forcefout = 1;
 
 	    	minX = (tX * tile_width) - overcut;
 	    	maxX = (tX + 1) * tile_width + overcut;
