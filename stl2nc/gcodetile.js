@@ -18,7 +18,8 @@ let currentfin = 0.0;
 let currentxout = 0.0;
 let currentyout = 0.0;
 let currentzout = 0.0;
-let currentfout = 0.0;
+let currentfout = 50.0;
+let forcefout = 0;
 
 let glevel = '0';
 let gout = '';
@@ -60,6 +61,15 @@ function segment_in_box(x1, y1, x2, y2)
 	return 1;
 }
 
+function segment_outside_box(x1, y1, x2, y2)
+{
+	if ((x1 < tileminX - cutmargin) && (x2 < tileminX - cutmargin)) return 1;
+	if ((y1 < tileminY - cutmargin) && (y2 < tileminY - cutmargin)) return 1;
+	if ((x1 > tilemaxX + cutmargin) && (x2 > tilemaxX + cutmargin)) return 1;
+	if ((y1 > tilemaxY + cutmargin) && (y2 > tilemaxY + cutmargin)) return 1;
+	return 0;
+}
+
 
 
 function inch_to_mm(inch)
@@ -77,6 +87,13 @@ function to_mm(inch)
 	if (metric)
 		return inch;
 	return inch_to_mm(inch);
+}
+
+function from_mm(mm)
+{
+	if (metric)
+		return mm;
+	return mm_to_inch(mm);
 }
 
 
@@ -134,15 +151,19 @@ function emitG1(glevel, x, y, z, feed)
 	if (gout == thisout)
 		s = "";
 	if (x != currentxout)
-		s += "X" + FtoString(x);
+		s += "X" + FtoString(from_mm(x));
 	if (y != currentyout)
-		s += "Y" + FtoString(y);
+		s += "Y" + FtoString(from_mm(y));
 	if (z != currentzout)
-		s += "Z" + FtoString(z);
+		s += "Z" + FtoString(from_mm(z));
 	if (thisout != "G0") {
-//	if (feed != currentfout && thisout != "G0") {
-		s += "F" + Math.round(feed);
+		if (feed != currentfout || forcefout) {
+			s += "F" + Math.round(from_mm(feed));
+		}
 		currentfout = feed;
+		forcefout = 0;
+	} else {
+		forcefout = 1;
 	}
 	
 	gout = thisout;
@@ -181,6 +202,8 @@ function flush_buffer()
 			emitG1("1", pX1, pY1, pZ1, pF/4);
 		}
 		emitG1(pG, pX2, pY2, pZ2, pF);
+		pZ1 = 0;
+		pZ2 = 0;
 		pV = 0;
 	}
 }
@@ -222,6 +245,11 @@ function G1(glevel, x, y, z, feed)
 {
 	let l = 0;
 	let d = dist2(currentxin, currentyin, x, y);
+	
+	/* cheap early opt-out */
+	if (segment_outside_box(currentxin - minX, currentyin - minY, x - minX, y - minY))
+		return;
+		
 	if (d <= 0.025) {
 		flush_buffer();
 		bufferG1(glevel, currentxin - minX, currentyin - minY, currentzin, x - minX, y - minY ,z, feed);
@@ -284,17 +312,17 @@ function handle_XYZ_line(line)
 	/* parse the x/y/z/f */	
 	idx = line.indexOf("X");
 	if (idx >= 0) {
-		newX = parseFloat(line.substring(idx + 1));	
+		newX = to_mm(parseFloat(line.substring(idx + 1)));	
 	}
 	idx = line.indexOf("Y");
 	if (idx >= 0)
-		newY = parseFloat(line.substring(idx + 1));	
+		newY = to_mm(parseFloat(line.substring(idx + 1)));	
 	idx = line.indexOf("Z");
 	if (idx >= 0)
-		newZ = parseFloat(line.substring(idx + 1));	
+		newZ = to_mm(parseFloat(line.substring(idx + 1)));	
 	idx = line.indexOf("F")
 	if (idx >= 0) {
-		newF = parseFloat(line.substring(idx + 1));	
+		newF = to_mm(parseFloat(line.substring(idx + 1)));	
 		if (newF == 0) /* Bug in F360 as of Oct/2020  */
 			newF == currentfin;
 	}
@@ -329,7 +357,7 @@ function handle_XYZ_line_scan(line)
 		newY = to_mm(parseFloat(line.substring(idx + 1)));	
 	idx = line.indexOf("Z");
 	if (idx >= 0)
-		newZ = parseFloat(line.substring(idx + 1));	
+		newZ = to_mm(parseFloat(line.substring(idx + 1)));	
 		
 	if (newX > boundX2)
 		boundX2 = newX;
@@ -473,14 +501,6 @@ export function process_data(filename, data, tile_width, tile_height, overcut)
     
     var start;
     
-    currentxin = 0.0;
-    currentyin = 0.0;
-    currentzin = 0.0;
-    currentfin = 0.0;
-    currentxout = -50000.0;
-    currentyout = -50000.0;
-    currentzout = -50000.0;
-    currentfout = -50000.0;
     
     boundX1 = 0.0;
     boundX2 = -60000000.0;
@@ -502,6 +522,8 @@ export function process_data(filename, data, tile_width, tile_height, overcut)
     for (let i = 0; i < len; i += 1) {
     	process_line_scan(lines[i]);
     }
+    
+    currentzin = 2 * boundZ2;
 
     console.log("Bounding box: (",boundX1," , ", boundY1, ") x (", boundX2, " , ", boundY2, ")   maxZ ", boundZ2);
     
@@ -516,6 +538,16 @@ export function process_data(filename, data, tile_width, tile_height, overcut)
     
     for (let tY = 0; tY < tilesY; tY++) {
 	    for (let tX = 0; tX < tilesX; tX++) {
+
+	    	currentxin = 0.0;
+		currentyin = 0.0;
+		currentzin = 2 * boundZ2;
+		currentfin = 50.0;
+		currentxout = -50000.0;
+		currentyout = -50000.0;
+		currentzout = 2 * boundZ2;
+		currentfout = 50.0;
+
 	    	minX = (tX * tile_width) - overcut;
 	    	maxX = (tX + 1) * tile_width + overcut;
 	    	minY = tY * tile_height - overcut;
