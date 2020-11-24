@@ -287,6 +287,7 @@ function gcode_write_toolchange()
         gcode_retract();
         gcode_write("M5");
     }
+    gcode_comment("TOOL/MILL," + tool.tool_diameter + ",0,1.0,0");
     gcode_write("M6 T" + tool.name());
     gcode_write("M3 S" + rippem.toString());
     if (slow_m3 > 0) {
