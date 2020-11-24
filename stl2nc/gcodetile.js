@@ -463,6 +463,16 @@ function process_line_scan(line)
 		return;
 	let code = " ";
 	code = line[0];
+
+	/* make sure the cutmargin is at least the tool radius of the largest tool */
+	if (line.includes("(TOOL/MILL,")) {
+		let lastmillline = line;
+		let l = line.replace("(TOOL/MILL,","");
+		let diameter = parseFloat(l);
+		if (diameter / 2 > cutmargin) {
+			cutmargin = diameter / 2 + 0.2;
+		}
+	}
 	
 	switch (code) {
 		case 'X':
