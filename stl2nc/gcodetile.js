@@ -247,8 +247,13 @@ function G1(glevel, x, y, z, feed)
 	let d = dist2(currentxin, currentyin, x, y);
 	
 	/* cheap early opt-out */
-	if (segment_outside_box(currentxin - minX, currentyin - minY, x - minX, y - minY))
+	if (segment_outside_box(currentxin - minX, currentyin - minY, x - minX, y - minY)) {
+		currentxin = x;
+		currentyin = y;
+		currentzin = z;
+		currentfin = feed;
 		return;
+	}
 		
 	if (d <= 0.025) {
 		flush_buffer();
