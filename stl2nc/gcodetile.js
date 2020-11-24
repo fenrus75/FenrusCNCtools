@@ -339,12 +339,13 @@ function handle_XYZ_line(line)
 	}
 
 	if (glevel == '2' || glevel == '3') {
+		handle_arc_line(line);
 		console.log("ARC DETECTED");
 	}
 	
 	/* G0/G1 we can do clever things with */	
 	if (glevel == '1' || glevel == '0')  {
-		G1(glevel, newX, newY, newZ, newF, line);
+		G1(glevel, newX, newY, newZ, newF);
 	}
 }
 
@@ -386,6 +387,99 @@ function handle_XYZ_line_scan(line)
 	currentyin = newY;
 }
 
+function get_phi(rX,rY,aX,aY)
+{
+	aX -= rX;
+	aY -= rY;
+	let len = Math.sqrt(aX * aX + aY * aY);
+	aX /= len;
+	aY /= len;
+	let phi = Math.atan2(aY,aX);
+	return phi;
+}
+
+function handle_arc_line(line)
+{
+	let newX, newY, newZ, newF;
+	let newI, newJ, newK, newRx, newRy;
+	newX = currentxin;
+	newY = currentyin;
+	newZ = currentzin;
+	newF = currentfin;
+	newI = 0;
+	newJ = 0;
+	newK = 0;
+	let idx;
+	let clockwise = 1;
+	
+	let deltaphi = 0.1;
+	
+	if (line.includes("G3")) {
+		deltaphi = 0.1;
+		clockwise = 0;
+	}
+	
+	
+	idx = line.indexOf("X");
+	if (idx >= 0)
+		newX = to_mm(parseFloat(line.substring(idx + 1)));	
+	idx = line.indexOf("Y");
+	if (idx >= 0)
+		newY = to_mm(parseFloat(line.substring(idx + 1)));	
+	idx = line.indexOf("Z");
+	if (idx >= 0)
+		newZ = to_mm(parseFloat(line.substring(idx + 1)));	
+	idx = line.indexOf("I");
+	if (idx >= 0)
+		newI = to_mm(parseFloat(line.substring(idx + 1)));	
+	idx = line.indexOf("J");
+	if (idx >= 0)
+		newJ = to_mm(parseFloat(line.substring(idx + 1)));	
+	idx = line.indexOf("K");
+	if (idx >= 0)
+		newK = to_mm(parseFloat(line.substring(idx + 1)));	
+	idx = line.indexOf("F")
+	if (idx >= 0)
+		newF = to_mm(parseFloat(line.substring(idx + 1)));	
+		
+	newRx = currentxin + newI;
+	newRy = currentyin + newJ;
+	
+	let start_phi = get_phi(newRx, newRy, currentxin, currentyin);
+	let end_phi = get_phi(newRx, newRy, newX, newY);	
+	
+	let radius = dist2(newRx, newRy, newX, newY);
+	
+	if (clockwise) {
+	
+		if (start_phi < end_phi) {
+			start_phi += 2 * 3.1415;
+		}
+	
+		let phi = start_phi;
+		
+		while (phi > end_phi) {
+			G1("1", newRx + radius * Math.cos(phi), newRy + radius * Math.sin(phi), newZ, newF);
+			phi -= deltaphi;
+		}
+	} else {
+		if (start_phi > end_phi) {
+			start_phi -= 2 * 3.1415;
+		}
+	
+		let phi = start_phi;
+		while (phi < end_phi) {
+			G1("1", newRx + radius * Math.cos(phi), newRy + radius * Math.sin(phi), newZ, newF);
+			phi += deltaphi;
+		}
+	}
+	G1("1", newX, newY, newZ, newF);	
+		
+//	console.log("ARC X Y Z I J K " + newX + " " + newY + " " + newZ + " " + newI + " " + newJ + "  phi " + start_phi + " -> " + end_phi + " \n");
+//	G1(newX, newY, newZ, newF);
+}
+
+
 /*
  * Lines that start with G0/1 matter, all others we just pass through 
  */
@@ -407,6 +501,9 @@ function handle_G_line(line)
 	
 	if ((line[1] == '1' || line[1] == '0') && (line[2] < '0' || line[2] > '9'))
 		return handle_XYZ_line(line);
+		
+	if ((line[1] == '2' || line[1] == '3') && (line[2] < '0' || line[2] > '9'))
+		return handle_arc_line(line);
 
 	/* G line we don't need to process, just pass through */
 	emit_output(line);
