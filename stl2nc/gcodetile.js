@@ -19,6 +19,7 @@ let currentxout = 0.0;
 let currentyout = 0.0;
 let currentzout = 0.0;
 let currentfout = 50.0;
+let lastplungespeed = 50;
 let forcefout = 0;
 
 let glevel = '0';
@@ -199,7 +200,7 @@ function flush_buffer()
 		if ( (currentxout != pX1) || (currentyout != pY1) || (currentzout != pZ1)) {
 			retract();
 			emitG1("0", pX1, pY1, currentzout, pF);
-			emitG1("1", pX1, pY1, pZ1, pF/4);
+			emitG1("1", pX1, pY1, pZ1, lastplungespeed);
 		}
 		emitG1(pG, pX2, pY2, pZ2, pF);
 		pZ1 = 0;
@@ -245,6 +246,11 @@ function G1(glevel, x, y, z, feed)
 {
 	let l = 0;
 	let d = dist2(currentxin, currentyin, x, y);
+	
+	
+	if (currentxin == x && currentyin == y && z < currentzin) {
+		lastplungespeed = feed;
+	}
 	
 	/* cheap early opt-out */
 	if (segment_outside_box(currentxin - minX, currentyin - minY, x - minX, y - minY)) {
