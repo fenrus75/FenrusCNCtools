@@ -7,17 +7,21 @@
 <body>
 
     <div valign="top" style="font-family: Arial;">
-        <h1>STL to GCODE CAM tool</h1>
+        <h1>STL to PNG and GCODE conversion tool</h1>
         <p>
-            This website lets you convert STL files to Gcode
-            for use with Shapeoko CNC machines
-        </p>
-        <p>
+        
+        <table>
+        <tr><td width="33%" valign=top>
+            This website lets you convert STL files to PNG files for use
+            with Carbide Create Pro, and will also generate Gcode
+            for use directly with Shapeoko CNC machines.
+        </td><td width="33%">&nbsp;</td><td valign=top>
             All computation happens local
             and inside your browser, no information is uploaded or sent
             over the internet. For large files this can take 10+ seconds before the
             results show up.
-        </p>
+        </td></tr></table>
+        <br/>
         <div id="orient">
             Orientation of the viewpoint:<br />
             <input type="radio" value="top" name="or" id="top" checked onclick="RadioB(this.value)"><label for="top">View from the Top downwards</label></br>
@@ -103,24 +107,39 @@
 
             <br />
             <hr />
-            <p>
-            Roughing toolpath calculation
-            </p>
+            <table width="100%">
+            <tr><td width="15%">PNG image</td><td>
+            <div id="ProgressPNG">
+                <div id="BarPNG"></div>
+            </div>
+            </td></tr>
+            <tr><td>
+            Roughing toolpath
+            </td><td>
             <div id="ProgressRoughing">
                 <div id="BarRoughing"></div>
-            </div><br>
-            <p>
-            Finishing toolpath calculation
-            </p>
+            </div>
+            </td></tr>
+            <tr><td>
+            Finishing toolpath
+            </td><td>
             <div id="ProgressFinishing">
                 <div id="BarFinishing"></div>
             </div>
+            </td></tr>
+            </table>
             <hr />
 
+            <a href="" id="downloadpng"></a><br>
             <a href="" id="download"></a><br>
             <a href="" id="download2"></a>
             
+            
         </div>
+        <div width="100%">
+            <canvas id="canvas"></canvas>
+        </div>
+
         <div width="100%">
             <pre id="outputpre"></pre>
         </div>

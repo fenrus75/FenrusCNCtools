@@ -118,7 +118,14 @@ function roughing_zig(X, deltaY)
             }
         }    
         let pct = (Math.round(X/stl.get_work_width() * 100));
+        pct = Math.min(pct, 100.0);
         if (pct > prev_pct + 10 || pct > 99) {
+            if (pct > 100) {
+                pct = 100;
+            }
+            if (pct < 0) {
+                pct = 0;
+            }
             var elem = document.getElementById("BarRoughing");
             elem.style.width = pct + "%";
             prev_pct = pct;
@@ -167,6 +174,12 @@ function roughing_zag(X, deltaY)
         }
         let pct = (Math.round(X/stl.get_work_width() * 100));
         if (pct > prev_pct + 10 || pct > 99) {
+            if (pct > 100) {
+                pct = 100;
+            }
+            if (pct < 0) {
+                pct = 0;
+            }
             var elem = document.getElementById("BarRoughing");
             elem.style.width = pct + "%";
             prev_pct = pct;
@@ -455,7 +468,7 @@ function finishing_zig_zag(_tool)
 let startdate;
 
 /* The main director function, this takes a design-in-buckets and goes all the way to gcode */
-export function calculate_image(filename) 
+export function calculate_gcode(filename) 
 {
     halfway_counter = 0;
     tool.tool_factory();

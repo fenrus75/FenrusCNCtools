@@ -9,6 +9,7 @@ import * as tool from './tool.js';
 import * as stl from './stl.js';
 import * as segment from './segment.js';
 import * as raster from './rasterscan.js';
+import * as png from './png.js';
 
 "use strict";
 
@@ -111,7 +112,8 @@ function load(evt)
         stl.process_data(evt.target.result, desired_width, desired_height, desired_depth);    
         console.log("End of data processing " + (Date.now() - start));
         start = Date.now();
-        raster.calculate_image(filename);
+        png.calculate_png_image(filename);
+        raster.calculate_gcode(filename);
         console.log("Image calculation " + (Date.now() - start));
     }    
 }

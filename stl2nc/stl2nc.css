@@ -37,3 +37,12 @@ a:visited {
   height: 30px;
   background-color: green;
 }
+#ProgressPNG {
+  width: 100%;
+  background-color: grey;
+}
+#BarPNG {
+  width: 1%;
+  height: 30px;
+  background-color: green;
+}

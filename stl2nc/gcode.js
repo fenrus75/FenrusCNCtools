@@ -319,18 +319,18 @@ export function update_gcode_on_website(filename)
     
     if (split_gcode == 1) {
         var link = document.getElementById('download')
-        link.innerHTML = 'Download roughing-' + filename+".nc";
+        link.innerHTML = 'Download gcode roughing-' + filename+".nc";
         link.href = "#";
         link.download = "roughing-" + filename + ".nc";
         link.href = "data:text/plain;base64," + btoa(gcode_content[0]);
         link = document.getElementById('download2')
-        link.innerHTML = 'Download finishing-' + filename+".nc";
+        link.innerHTML = 'Download gcode finishing-' + filename+".nc";
         link.href = "#";
         link.download = "finishing-" + filename + ".nc";
         link.href = "data:text/plain;base64," + btoa(gcode_content[1]);
     } else {
         var link = document.getElementById('download')
-        link.innerHTML = 'Download ' + filename+".nc";
+        link.innerHTML = 'Download gcode ' + filename+".nc";
         link.href = "#";
         link.download = filename + ".nc";
         link.href = "data:text/plain;base64," + btoa(gcode_content[0]);
