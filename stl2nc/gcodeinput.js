@@ -23,6 +23,8 @@ let glevel = '0';
 let gout = '';
 let metric = 1;
 
+let safeZ = 0.0;
+
 let filename = "output.nc";
 
 let dryrun = 1;
@@ -104,6 +106,10 @@ l */
 function G0(x, y, z) 
 {
 	let s = "G0";
+
+	if (z < safeZ - 0.01) {
+		z = z + get_height(x, y);
+	}
 
 	if (gout == "G0")
 		s = "";
@@ -225,7 +231,8 @@ function G1(x, y, z, feed)
 	let d = dist2(currentx, currenty, x, y);
 	if (d <= 0.025) {
 		let newZ = z + get_height(x, y);
-		if (z > 0)
+		/* retracts need to still go all the way up */
+		if (z >= safeZ - 0.01)
 			newZ = z;
 		emitG1(x,y,newZ,feed);
 		currentx = x;
@@ -319,6 +326,38 @@ function handle_XYZ_line(line)
 		G0(newX, newY, newZ, line);
 }
 
+function handle_XYZ_line_scan(line)
+{
+	let newX, newY, newZ, newF;
+	newX = currentx;
+	newY = currenty;
+	newZ = currentz;
+	newF = currentf;
+	let idx;
+	
+	
+	/* parse the x/y/z/f */	
+	idx = line.indexOf("X");
+	if (idx >= 0) {
+		newX = parseFloat(line.substring(idx + 1));	
+	}
+	idx = line.indexOf("Y");
+	if (idx >= 0)
+		newY = parseFloat(line.substring(idx + 1));	
+	idx = line.indexOf("Z");
+	if (idx >= 0)
+		newZ = parseFloat(line.substring(idx + 1));	
+	idx = line.indexOf("F")
+	if (idx >= 0) {
+		newF = parseFloat(line.substring(idx + 1));	
+		if (newF == 0) /* Bug in F360 as of Oct/2020  */
+			newF == currentf;
+	}
+
+	if (newZ > safeZ)
+		safeZ = newZ;
+}
+
 /*
  * Lines that start with G0/1 matter, all others we just pass through 
  */
@@ -347,6 +386,30 @@ function handle_G_line(line)
 	emit_output(line);
 }
 
+function handle_G_line_scan(line)
+{
+	if (line.includes("G20")) {
+		metric = 0;
+		console.log("Switching to empire units");
+	}
+	if (line.includes("G21")) {
+		metric = 1;
+		console.log("Using metric system");
+	}
+		
+	if (line[1] == '3') glevel = '3';
+	if (line[1] == '2') glevel = '2';
+	if (line[1] == '1') glevel = '1';
+	if (line[1] == '0') glevel = '0';
+	
+	if ((line[1] == '1' || line[1] == '0') && (line[2] < '0' || line[2] > '9'))
+		return handle_XYZ_line_scan(line);
+
+	/* G line we don't need to process, just pass through */
+	currentf = -1.0;
+	currentfout = -1.0;
+}
+
 /* 
  * Process one line of gcode input, demultiplex the different commands 
  */
@@ -368,6 +431,25 @@ function process_line(line)
 			break;
 		default:
 			emit_output(line);
+	}
+}
+
+function process_line_scan(line)
+{
+	if (line == "")
+		return;
+	let code = " ";
+	code = line[0];
+	
+	switch (code) {
+		case 'X':
+		case 'Y':
+		case 'Z':
+			handle_XYZ_line_scan(line);
+			break;
+		case 'G':
+			handle_G_line_scan(line);
+			break;
 	}
 }
 
@@ -419,7 +501,21 @@ export function process_data(data)
     
     start = Date.now();
     
+    console.log("Start of gcode pre-parsing at " + (Date.now() - start));
+    for (let i = 0; i < len; i ++) {
+    	process_line_scan(lines[i]);
+    }
+    
+    console.log("Retract height is ", safeZ);
+
     console.log("Start of gcode parsing at " + (Date.now() - start));
+
+    currentx = 0.0;
+    currenty = 0.0;
+    currentz = 0.0;
+    currentf = 0.0;
+
+    glevel = '0';
 
     outputtext = "";
 
