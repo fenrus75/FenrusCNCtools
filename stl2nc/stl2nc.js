@@ -251,11 +251,11 @@ export function handle_metric(val)
 {
     if (val == "imperial") {
         gui_is_metric = 0;
-        stl.set_metric(0);
+        stl.set_metric(0, desired_depth);
     } 
     if (val == "metric") {
         gui_is_metric = 1;
-        stl.set_metric(1);
+        stl.set_metric(1, desired_depth);
     } 
     update_gui_dimensions();
 }

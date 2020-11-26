@@ -841,7 +841,7 @@ export function process_data(data, desired_width, desired_height, desired_depth)
     console.log("End of parsing at " + (Date.now() - start));
 
     scale_design(desired_width, desired_height, desired_depth);    
-    update_gui_actuals();	
+    update_gui_actuals(desired_depth);	
     make_buckets();
     console.log("End of buckets at " + (Date.now() - start));
 
@@ -908,7 +908,7 @@ function process_data_ascii(data, desired_width, desired_height, desired_depth)
     console.log("End of parsing at " + (Date.now() - start));
 
     scale_design(desired_width, desired_height, desired_depth);    
-    update_gui_actuals();	
+    update_gui_actuals(desired_depth);	
     make_buckets();
     console.log("End of buckets at " + (Date.now() - start));
 
@@ -935,7 +935,7 @@ export function reset_stl_state() {
      l2buckets = [];
 }
 
-export function update_gui_actuals()
+export function update_gui_actuals(desired_depth)
 {
     let link;
     
@@ -954,18 +954,24 @@ export function update_gui_actuals()
     }
     link  = document.getElementById('resultdepth')
     if (gui_is_metric) {
-        link.innerHTML = Math.ceil(Math.max(global_maxZ, 0)*10)/10 + "mm";
+        link.innerHTML = Math.floor(Math.max(global_maxZ, 0)*10)/10 + "mm";
     } else {
         link.innerHTML = mm_to_inch(Math.max(0, global_maxZ)) +"\"";
+    }
+    link  = document.getElementById('basedepth')
+    if (gui_is_metric) {
+        link.innerHTML = Math.floor(Math.max(desired_depth - global_maxZ, 0)*10)/10 + "mm";
+    } else {
+        link.innerHTML = mm_to_inch(Math.max(0, desired_depth - global_maxZ)) +"\"";
     }
 }
 
 
 let gui_is_metric = 1;
-export function set_metric(metric)
+export function set_metric(metric, desired_depth)
 {
     gui_is_metric = metric;
-    update_gui_actuals();
+    update_gui_actuals(desired_depth);
 }
 
 export function set_orientation(o)

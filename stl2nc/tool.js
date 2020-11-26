@@ -10,7 +10,7 @@ let tool_name = "";
 export let tool_nr = 0;
 export let tool_depth_of_cut = 0.1;
 export let tool_stock_to_leave = 0.5;
-export let tool_finishing_stepover = 0.1;
+export let tool_finishing_stepover = 0.3175;
 export let tool_index = 0;
 
 let high_precision = 0;

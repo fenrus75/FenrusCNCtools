@@ -8,7 +8,7 @@ let ACC = 50.0;
 let high_precision = 0;
 
 let roughing_endmill = 201;
-let finishing_endmill = 27;
+let finishing_endmill = 101;
 let split_gcode = 0;
 
 
