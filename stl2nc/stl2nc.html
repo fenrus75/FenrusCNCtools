@@ -19,53 +19,53 @@
             results show up.
         </p>
         <div id="orient">
-            Orientation:<br />
-            <input type="radio" value="top" name="or" id="top" checked onclick="RadioB(this.value)"><label for="top">Top</label>
-            <input type="radio" value="front" name="or" id="front" onclick="RadioB(this.value)"><label for="front">Front</label>
-            <input type="radio" value="side" name="or" id="side" onclick="RadioB(this.value)"><label for="side">Side</label>
+            Orientation of the viewpoint:<br />
+            <input type="radio" value="top" name="or" id="top" checked onclick="RadioB(this.value)"><label for="top">View from the Top downwards</label></br>
+            <input type="radio" value="front" name="or" id="front" onclick="RadioB(this.value)"><label for="front">View from the Front</label></br>
+            <input type="radio" value="side" name="or" id="side" onclick="RadioB(this.value)"><label for="side">View from the Side</label>
             <br />
+            <br/>
+            STL Depth offset: 
+            <input type="text" value="0" onChange="OffsetB(this.value)" size=4/> percent (shifts the design up and down)
             <br />
+
+            <br />
+            <table><tr><td valign=top width="50%">
             <table>
-            <tr><td>Stock width:</td><td><input type="text" value="120" onChange="handle_width(this.value)" id="width">&nbsp;<label id="widthmm">mm</label></input></td><td>&nbsp;&nbsp;</td><td>Design width:</td><td><label id="resultwidth"></label></td></tr>
-            <tr><td>Stock height:</td><td> <input type="text" value="120" onChange="handle_height(this.value)" id="height">&nbsp;<label id="heightmm">mm</label></input></td><td>&nbsp;&nbsp;</td><td>Design height:</td><td><label id="resultheight"></label></td></tr>
-            <tr><td>Stock depth: </td><td> <input type="text" value="12" onChange="handle_depth(this.value)" id="depth">&nbsp;<label id="depthmm">mm</label></input></td><td>&nbsp;&nbsp;</td><td>Design depth:</td><td><label id="resultdepth"></label></td></tr>
-            </table>
-            Units in :
+            <tr><td>Stock width</td><td><input type="text" value="120" onChange="handle_width(this.value)" id="width" size=6>&nbsp;<label id="widthmm">mm</label></input></td><td>&nbsp;&nbsp;</td><td>Design width:</td><td><label id="resultwidth"></label></td></tr>
+            <tr><td>Stock height</td><td> <input type="text" value="120" onChange="handle_height(this.value)" id="height" size=6>&nbsp;<label id="heightmm">mm</label></input></td><td>&nbsp;&nbsp;</td><td>Design height:</td><td><label id="resultheight"></label></td></tr>
+            <tr><td>Stock depth</td><td> <input type="text" value="12" onChange="handle_depth(this.value)" id="depth" size=6>&nbsp;<label id="depthmm">mm</label></input></td><td>&nbsp;&nbsp;</td><td>Design depth:</td><td><label id="resultdepth"></label></td></tr>
+            <tr><td>
+            Units</td><td>
             <select name="metric" id="metric" onclick="handle_metric(this.value)">
                 <option value="metric">Metric</option>
                 <option value="imperial">Imperial</option>
-            </select>
-            
-            <br />
-            Calculation precision :
+            </select> </td><td>&nbsp;
+            </td></tr>
+            </table>
+            </td><td valign=top width="50%">
+            <table>
+            <tr><td>
+            Calculation precision</td><td>
             <select name="precision" id="precision" onclick="handle_precision(this.value)">
                 <option value="normal">Normal</option>
-                <option value="high">High</option>
+                <option value="high">High (slower)</option>
             </select>
-            
-            <br />
-            Gcode files :
+            </td></tr>
+            <tr><td>
+            Gcode files</td><td>
             <select name="bitsetter" id="bitsetter" onclick="handle_bitsetter(this.value)">
-                <option value="bitsetter" selected>Bitsetter (single file)</option>
-                <option value="no-bitsetter">No Bitsetter (split files)</option>
+                <option value="bitsetter" selected>Single file (Bitsetter)</option>
+                <option value="no-bitsetter">Multiple files (No Bitsetter)</option>
             </select>
-            <br />
-            Router type :
+            </td></tr>
+            <tr><td>
+            Router type</td><td>
             <select name="router" id="router" onclick="handle_router(this.value)">
                 <option value="router" selected>Dewalt/Makita/Carbide3D Router</option>
                 <option value="spindle">Spindle</option>
             </select>
-            
-            <br />
-            
-            <br />
-            STL Depth offset: (shifts the design up and down)<br />
-            <input type="text" value="0" onChange="OffsetB(this.value)"/>percent
-            <br />
-        </div>
-        <div>
-            <br/>
-            <table>
+            </td></tr>            
             <tr><td>
             <label for="roughing">Roughing endmill</label></td><td>
             <select name="roughing" id="roughing" onclick="handle_roughing(this.value)">
@@ -85,14 +85,14 @@
                 <option value="101">#101 - One Eighth inch ballnose endmill</option>
                 <option value="102">#102 - One Eighth inch flat endmill</option>
             </select>
-            </td></tr></table>
-            <br/>
-        </div>
-        <div>
-        Stepover for finishing: <input type="text" value="0.10" onChange="handle_stepover(this.value)" id="stepover">&nbsp;<label id="stepovermm">mm</label></input>
-        </div>
-        <div>
-        Speed multiplier (1.0 for cherry wood, 1.5 for MDF, higher is faster): <input type="text" value="1.0" onChange="handle_multiplier(this.value)" id="multiplier"></input>
+            </td></tr>
+            <tr><td>            
+        Stepover for finishing:</td><td> <input type="text" value="0.10" onChange="handle_stepover(this.value)" id="stepover" size=6>&nbsp;<label id="stepovermm">mm</label></input>
+        </td></tr>
+        <tr><td>
+        Speed multiplier</td><td> <input type="text" value="1.0" onChange="handle_multiplier(this.value)" id="multiplier" size=6></input> (1.0 for cherry wood, 1.5 for MDF, higher is faster):
+        </td></tr>        
+            </table></td></tr></table>
         </div>
         <div>
             <br />
