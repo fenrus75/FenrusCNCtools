@@ -115,7 +115,7 @@ class Triangle {
             y = this.vertex[i][1];
             z = this.vertex[i][2];
             this.vertex[i][0] = x;
-            this.vertex[i][1] = -z;
+            this.vertex[i][1] = z;
             this.vertex[i][2] = -y;
         }
     }

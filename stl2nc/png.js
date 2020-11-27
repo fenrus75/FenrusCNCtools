@@ -11,13 +11,15 @@ function  calculate_line(data, Y, elem, context, pixels, outputfilename)
     let zdiv = 0.0;
     
     zdiv = stl.get_work_depth();
+    
+    let Yprime = global_maxY - Y;
     for (let X = 0; X < global_maxX; X++) {
             let d = 1 + stl.get_height(pixelsize * (X + 0.5), pixelsize * (Y + 0.5)) / zdiv;
             let c = 255 * d;
-            data[(X + Y * global_maxX) * 4 + 0 ] = c;
-            data[(X + Y * global_maxX) * 4 + 1 ] = c;
-            data[(X + Y * global_maxX) * 4 + 2 ] = c;
-            data[(X + Y * global_maxX) * 4 + 3 ] = 255;
+            data[(X + Yprime * global_maxX) * 4 + 0 ] = c;
+            data[(X + Yprime * global_maxX) * 4 + 1 ] = c;
+            data[(X + Yprime * global_maxX) * 4 + 2 ] = c;
+            data[(X + Yprime * global_maxX) * 4 + 3 ] = 255;
     }
     elem.style.width = (Math.round(Y/global_maxY * 100)) + "%";
     if ((Y & 15) == 0) {
