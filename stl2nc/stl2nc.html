@@ -24,9 +24,16 @@
         <br/>
         <div id="orient">
             Orientation of the viewpoint:<br />
-            <input type="radio" value="top" name="or" id="top" checked onclick="RadioB(this.value)"><label for="top">View from the Top downwards</label></br>
-            <input type="radio" value="front" name="or" id="front" onclick="RadioB(this.value)"><label for="front">View from the Front</label></br>
+            <table>
+            <tr><td><input type="radio" value="top" name="or" id="top" checked onclick="RadioB(this.value)"><label for="top">View from the Top
+            downwards</label></td><td>&nbsp;</td></tr>
+            <tr>
+            <td><input type="radio" value="front" name="or" id="front" onclick="RadioB(this.value)"><label for="front">View from the Front</label></td>
+            <td><input type="radio" value="back" name="or" id="back" onclick="RadioB(this.value)"><label for="back">View from the Back</label></td>
+            </tr>
+            <tr><td>
             <input type="radio" value="side" name="or" id="side" onclick="RadioB(this.value)"><label for="side">View from the Side</label>
+            </td><td>&nbsp;</td></tr></table>
             <br />
             <br/>
             STL Depth offset: 

@@ -103,8 +103,24 @@ class Triangle {
         }
     }
     
-    /* rotation options */
+    /* Front */
     if (orientation == 1) {
+        let x,y,z;
+        let Ynorm =  data_f32_to_number(data, offset + 4);
+        if (Ynorm > 0) {
+            this.status = 1;
+        }
+        for (let i = 0; i < 3; i++) {
+            x = this.vertex[i][0];
+            y = this.vertex[i][1];
+            z = this.vertex[i][2];
+            this.vertex[i][0] = x;
+            this.vertex[i][1] = -z;
+            this.vertex[i][2] = -y;
+        }
+    }
+    /* Back */
+    if (orientation == 3) {
         let x,y,z;
         for (let i = 0; i < 3; i++) {
             x = this.vertex[i][0];
@@ -831,7 +847,7 @@ export function process_data(data, desired_width, desired_height, desired_depth)
         return;
     }
     
-    console.log("Start of parsing at " + (Date.now() - start));
+    console.log("Start of parsing at " + (Date.now() - start), " orientation is ", orientation);
     
     for (let i = 0; i < total_triangles; i++) {
         let T = new Triangle(data, 84 + i * 50);
@@ -929,7 +945,6 @@ export function reset_stl_state() {
      global_maxX = -600000000.0;
      global_maxY = -600000000.0;
      global_maxZ = -600000000.0;
-     orientation = 0;
      triangles = [];
      buckets = [];
      l2buckets = [];
@@ -958,6 +973,8 @@ export function update_gui_actuals(desired_depth)
     } else {
         link.innerHTML = mm_to_inch(Math.max(0, global_maxZ)) +"\"";
     }
+    if (global_maxZ < -500000000.0)
+        return;
     link  = document.getElementById('basedepth')
     if (gui_is_metric) {
         link.innerHTML = Math.floor(Math.max(desired_depth - global_maxZ, 0)*10)/10 + "mm";
@@ -977,4 +994,5 @@ export function set_metric(metric, desired_depth)
 export function set_orientation(o)
 {
     orientation = o;
+    console.log("orientation is ", o);
 }

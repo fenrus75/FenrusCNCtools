@@ -81,6 +81,10 @@ export function RadioB(val)
         console.log("set front orientation")
         stl.set_orientation(1);
     };
+    if (val == "back") {
+        console.log("set front orientation")
+        stl.set_orientation(3);
+    };
     if (val == "side") {
         console.log("set side orientation")
         stl.set_orientation(2);
