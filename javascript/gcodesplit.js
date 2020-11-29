@@ -42,11 +42,12 @@ function process_data(data)
 	        phase = 2;
         }
         
-        if (line.includes("M06") || line.includes("M6") || line.includes("M0")) {
+        if (line.includes("M06") || line.includes("M6") || line.includes("M0 ")) {
             let index = line.indexOf("T");
             let bit = "";
-            if (line.includes("M0")) {
+            if (line.includes("M0 ")) {
     		toolchanges = toolchanges + 1;
+    		filecontent[toolchanges] = "";
             }
             if (index >= 0) {
                 bit = line.substring(index + 1);
@@ -71,9 +72,10 @@ function process_data(data)
     
     for (let i = 0; i <= toolchanges; i++) {
             if (typeof(filenames[i]) == "undefined") {
-                console.log("NO FILENAME");
+                console.log("NO FILENAME ", i);
                 continue;
             };
+            console.log("Length at ", i, " is ", filecontent[i].length);
             var link = document.getElementById('download' + i.toString())
             link.innerHTML = 'Download ' + filenames[i];
             link.href = "#";
@@ -83,6 +85,8 @@ function process_data(data)
 
     console.log("Number of tool changes " + toolchanges);
     console.log("End of parsing at " + (Date.now() - start));
+    console.log("Size of header ", header.length);
+    console.log("Size of footer ", footer.length);
 }
 
 
