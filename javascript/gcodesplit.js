@@ -34,7 +34,7 @@ function process_data(data)
     	line = lines[i];
     	
         /* weird preproc issue in CC where it does an S without an M3 */
-    	if (line.startsWidth("S1") && ! line.includes("M3")) {
+    	if (line[0] == "S" && ! line.includes("M3")) {
     	    line = "M3" + line;
     	}
     	
