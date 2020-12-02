@@ -33,6 +33,11 @@ function process_data(data)
     for (let i = 0; i < len; i++) {
     	line = lines[i];
     	
+        /* weird preproc issue in CC where it does an S without an M3 */
+    	if (line.startsWidth("S1") && ! line.includes("M3")) {
+    	    line = "M3" + line;
+    	}
+    	
     	if (line == "M05") {
     		phase = 1;
     		toolchanges = toolchanges + 1;
