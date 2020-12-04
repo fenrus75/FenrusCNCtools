@@ -11,6 +11,8 @@ let filenames = []
 let filecontent = []
 
 
+let add_go_to_zero = 0;
+
 function process_data(data)
 {
     let lines = data.split("\n")
@@ -75,6 +77,11 @@ function process_data(data)
         }
     }
     
+    let zero = "";
+    if (add_go_to_zero) {
+        zero = "G0X0Y0\n";
+    }
+    
     for (let i = 0; i <= toolchanges; i++) {
             if (typeof(filenames[i]) == "undefined") {
                 console.log("NO FILENAME ", i);
@@ -85,7 +92,7 @@ function process_data(data)
             link.innerHTML = 'Download ' + filenames[i];
             link.href = "#";
             link.download = filenames[i];
-            link.href = "data:text/plain;base64," + btoa(header + filecontent[i] + footer);
+            link.href = "data:text/plain;base64," + btoa(header + filecontent[i] + zero + footer);
     }
 
     console.log("Number of tool changes " + toolchanges);
@@ -131,5 +138,15 @@ function Speedlimit(value)
     }
 }
 
+function set_zero(value)
+{
+    if (value) {
+        add_go_to_zero = 1;
+    } else {
+        add_go_to_zero = 0;
+    }
+}
+
 
 document.getElementById('files').onchange = handle;
+window.set_zero = set_zero;
