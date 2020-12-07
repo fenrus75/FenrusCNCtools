@@ -1,0 +1,17 @@
+all: compiler
+
+
+OBJS := main.o raw_gcode.o container.o
+
+%.o : %.cpp Makefile compiler.h
+	    @echo "Compiling: $< => $@"
+	    @g++ $(CFLAGS) -O3  -march=native -frounding-math -ffunction-sections -fno-common -Wno-address-of-packed-member -Wall -W -g2 -c $< -o $@
+
+
+
+compiler: Makefile $(OBJS)
+	g++ $(CFLAGS) $(OBJS) -o compiler
+	
+clean:
+	rm -f *.o *~ compiler
+	
