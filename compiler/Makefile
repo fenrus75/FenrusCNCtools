@@ -1,7 +1,7 @@
 all: compiler
 
 
-OBJS := main.o raw_gcode.o container.o
+OBJS := main.o parser.o raw_gcode.o container.o
 
 %.o : %.cpp Makefile compiler.h
 	    @echo "Compiling: $< => $@"

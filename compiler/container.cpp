@@ -46,3 +46,8 @@ void container::append_gcode(FILE *file)
         i->append_gcode(file);
     }
 }
+
+void container::print_stats(void)
+{
+    printf("Container has %li elements\n", elements.size());
+}

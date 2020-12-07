@@ -18,6 +18,8 @@ public:
     double minX, minY, minZ, maxX, maxY, maxZ;
     virtual void append_gcode(FILE *file) = 0;
     
+    virtual void print_stats(void) {};
+    
 private:
 };
 
@@ -31,6 +33,7 @@ public:
     void push(class element * element);
     
     virtual void append_gcode(FILE *file);
+    virtual void print_stats(void);
     
 private:
     std::vector<class element *> elements;
@@ -47,3 +50,9 @@ public:
 private:
     char *gcode_string;
 };
+
+
+
+
+
+extern class element * parse_file(const char *filename);
