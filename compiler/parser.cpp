@@ -2,7 +2,7 @@
 
 #include <stdio.h>
 #include <stdlib.h>
-
+#include <cstring>
 
 class element * parse_file(const char *filename)
 {
@@ -20,6 +20,9 @@ class element * parse_file(const char *filename)
         ret = fgets(line, 4096, file);
         if (ret == NULL)
             break;
+        ret = strchr(line, '\n');
+        if (ret) *ret = 0;
+
         container->push(new class raw_gcode(line));
     }
     

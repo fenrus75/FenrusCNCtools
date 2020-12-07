@@ -51,3 +51,9 @@ void container::print_stats(void)
 {
     printf("Container has %li elements\n", elements.size());
 }
+
+
+std::vector<class element *> *container::get_vector(void)
+{
+    return &elements;
+}

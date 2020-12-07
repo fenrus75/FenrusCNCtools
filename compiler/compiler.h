@@ -35,6 +35,8 @@ public:
     virtual void append_gcode(FILE *file);
     virtual void print_stats(void);
     
+    std::vector<class element *> *get_vector(void);
+    
 private:
     std::vector<class element *> elements;
 };
@@ -45,6 +47,12 @@ public:
     raw_gcode(const raw_gcode &obj);
     raw_gcode(const char *str);
     ~raw_gcode(void); 
+    
+    void set_G_level(char level);
+    char get_G_level(char def);
+
+    
+    bool is_movement(void);
 
     virtual void append_gcode(FILE *file);
 private:
@@ -56,3 +64,9 @@ private:
 
 
 extern class element * parse_file(const char *filename);
+
+
+
+/* passes */
+
+extern void pass_add_g_level(class element *element);
