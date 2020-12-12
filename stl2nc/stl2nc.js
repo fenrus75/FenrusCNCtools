@@ -128,6 +128,32 @@ function basename(path)
      return path.replace(/.*\//, '');
 }
 
+function png_decoded()
+{
+  let image = document.getElementById("image");
+  var canvas = document.createElement('canvas');
+  canvas.width = image.width;
+  canvas.height = image.height;
+  console.log("W/H ", image.width, " x ", image.height);
+  canvas.getContext('2d').drawImage(image, 0, 0, image.width, image.height);  
+  let pixeldata = canvas.getContext('2d').getImageData(0, 0, image.width, image.height);
+  
+  stl.process_data_PNG(pixeldata, desired_width, desired_height, desired_depth);    
+  let start = Date.now();
+  png.calculate_png_image(filename);
+  raster.calculate_gcode(filename);
+  console.log("Image calculation " + (Date.now() - start));
+}
+
+function png_loaded(evt)
+{
+  console.log("PNG loaded" + evt, evt.target.readyState);
+  
+  let image = document.getElementById("image");
+  image.src = evt.target.result;
+  image.decode().then(png_decoded);
+}
+
 export function handle(e) 
 {
     var files = this.files;
@@ -136,9 +162,17 @@ export function handle(e)
         if (fn != "" && fn.includes(".stl")) {
                 filename = fn;
         }
-        var reader = new FileReader();
-        reader.onloadend = load;
-        reader.readAsBinaryString(f);
+        if (fn.includes(".png")) {
+            console.log("Loading PNG file", fn);
+            filename = fn;
+            var reader = new FileReader();
+            reader.onload = png_loaded;
+            reader.readAsDataURL(f);
+        } else {
+            var reader = new FileReader();
+            reader.onloadend = load;
+            reader.readAsBinaryString(f);
+        }
     }
 }
 
@@ -314,4 +348,3 @@ window.handle_finishing = handle_finishing;
 window.handle_multiplier = handle_multiplier;
 window.OffsetB = OffsetB;
 window.RadioB = RadioB;
-

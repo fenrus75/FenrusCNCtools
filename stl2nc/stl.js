@@ -351,6 +351,90 @@ class Triangle_Ascii
   }
 }
 
+class TrianglePNG {
+  /* creates a triangle straight from PNG data */
+  constructor (X1,Y1,Z1)
+  {
+    /* basic vertices */
+    this.vertex = new Array(3);
+    this.vertex[0] = new Array(3);
+    this.vertex[1] = new Array(3);
+    this.vertex[2] = new Array(3);
+    /* and the bounding box */
+    this.minX = 6000000000.0;
+    this.minY = 6000000000.0;
+    this.maxX = -6000000000.0;
+    this.maxY = -6000000000.0;
+    this.minZ = 600000000.0;
+    this.maxZ = -600000000.0;
+    /* status = 0 -> add to the bucket hierarchy later, status = 1 -> don't add (again) */
+    this.status = 0;
+    
+    
+    /* first 12 bytes are the surface normal vector, only Z we'll use in a bit */
+    
+    this.vertex[0][0] = 0;
+    this.vertex[0][1] = 0;
+    this.vertex[0][2] = 0;
+
+    this.vertex[1][0] = X1;
+    this.vertex[1][1] = 0;
+    this.vertex[1][2] = Z1;
+
+    this.vertex[2][0] = X1;
+    this.vertex[2][1] = Y1;
+    this.vertex[2][2] = Z1;
+    
+    /* and now set the various min/max variables */
+   
+    this.minX = Math.min(this.vertex[0][0], this.vertex[1][0]); 
+    this.minX = Math.min(this.minX,         this.vertex[2][0]); 
+    
+    this.minY = Math.min(this.vertex[0][1], this.vertex[1][1]); 
+    this.minY = Math.min(this.minY,         this.vertex[2][1]); 
+
+    this.minZ = Math.min(this.vertex[0][2], this.vertex[1][2]); 
+    this.minZ = Math.min(this.minZ,         this.vertex[2][2]); 
+    
+    this.maxX = Math.max(this.vertex[0][0], this.vertex[1][0]); 
+    this.maxX = Math.max(this.maxX,         this.vertex[2][0]); 
+    
+    this.maxY = Math.max(this.vertex[0][1], this.vertex[1][1]); 
+    this.maxY = Math.max(this.maxY,         this.vertex[2][1]); 
+    
+    this.maxZ = Math.max(this.vertex[0][2], this.vertex[1][2]); 
+    this.maxZ = Math.max(this.maxZ,         this.vertex[2][2]); 
+    
+    global_minX = Math.min(global_minX, this.minX);
+    global_minY = Math.min(global_minY, this.minY);
+    global_minZ = Math.min(global_minZ, this.minZ);
+    global_maxX = Math.max(global_maxX, this.maxX);
+    global_maxY = Math.max(global_maxY, this.maxY);
+    global_maxZ = Math.max(global_maxZ, this.maxZ);
+  }
+  
+  /* returns 1 if (X,Y) is within the triangle */
+  /* in the math sense, this is true if the three determinants are not of different signs */
+  /* a determinant of 0 means on the line, and does not count as opposing sign in any way */
+  within_triangle(X, Y)
+  {
+        return 1;
+  }
+  /* for (X,Y) inside the triangle (see previous function), calculate the Z of the intersection point */
+  calc_Z(X, Y)
+  {
+      let x,y,z;
+      x = Math.floor(this.xyscale * X);
+      y = this.image.height - Math.floor(this.xyscale * Y) - 1;
+      z = this.depth * this.image.data[x*4 + 1 + y * this.image.width * 4] / pixeldivider;
+
+      
+      return z;
+      
+  }
+
+}
+
 
 let triangles = []
 let buckets = []
@@ -858,6 +942,51 @@ export function process_data(data, desired_width, desired_height, desired_depth)
 
     scale_design(desired_width, desired_height, desired_depth);    
     update_gui_actuals(desired_depth);	
+    make_buckets();
+    console.log("End of buckets at " + (Date.now() - start));
+
+    console.log("Scale " + (Date.now() - start));
+    
+//    document.getElementById('list').innerHTML  = "Number of triangles " + total_triangles + "mX " + global_maxX + " mY " + global_maxY;
+}
+
+
+let pixeldivider = 256.0;
+
+function png_get_pixel_value(image, X, Y)
+{
+  let _y = image.height - Y - 1; /* PNG files are upside down compared to our zero point */
+  return image.bitmap[X + _y * image.lineLen] / pixeldivider;
+}
+
+export function process_data_PNG(image, desired_width, desired_height, desired_depth)
+{
+    let start = Date.now();
+    let xscale, yscale;
+    let xyscale;
+    
+    reset_stl_state();
+    pixeldivider = 256.0;
+    if (image.depth == 16)
+        pixeldivider = 256 * 256.0;
+
+    console.log("Processing PNG image of size ", image.width, "x", image.height, " ", pixeldivider);
+    
+    xscale = 1.0* image.width / desired_width;
+    yscale = 1.0* image.height / desired_height;
+    xyscale = Math.min(xscale, yscale, desired_depth);
+
+    let T = new TrianglePNG(desired_width, desired_height, desired_depth);
+    T.image = image;
+    T.xyscale = xyscale;
+    T.depth = desired_depth;
+    triangles.push(T);
+
+    console.log("End of parsing at " + (Date.now() - start));
+    console.log("Number of triangles ", triangles.length);
+
+    update_gui_actuals(desired_depth);	
+    console.log("Making buckets");
     make_buckets();
     console.log("End of buckets at " + (Date.now() - start));
 
