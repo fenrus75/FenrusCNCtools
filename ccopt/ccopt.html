@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>GcodeForce - javascript edition</title>
+<link rel="stylesheet" type="text/css" href="ccopt.css">
+</head>
+<body>
+<table width="100%">
+<tr><td valign="top">
+<a href="" id="download"></a>
+<hr>
+<form>
+<input type="file" id="files" name="files[]" /><br><br>
+<hr>
+<div id="Progress">
+  <div id="Bar"></div>
+</div>
+<hr>
+<p>
+This website processes gcode files from Carbide Cteate and will output an speed optimized 
+version of this same gcode. 
+</p><p>
+All computation happens local
+and inside your browser, no information is uploaded or sent
+over the internet. For large files this can take 10+ seconds before the
+results show up.
+</p>
+</td>
+</tr>
+<tr><td><pre id="outputpre"></pre></td></tr></table>
+
+<script type="module" src="ccopt.js"></script>
+</body>
+</html>
