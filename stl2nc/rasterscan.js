@@ -421,8 +421,7 @@ function finishing_zig_zag(_tool)
     
     let deltaX = tool.tool_diameter / 10;
     let deltaY = tool.tool_diameter / 10;
-    let Y = -minY;
-    let lastY = 0;
+    let Y = minY;
     
     deltaX = tool.tool_finishing_stepover;
     deltaY = tool.tool_finishing_stepover;
