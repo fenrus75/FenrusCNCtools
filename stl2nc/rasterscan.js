@@ -415,8 +415,8 @@ function finishing_zig_zag(_tool)
     setTimeout(gcode.gcode_change_tool, 0, _tool);
     tool.select_tool(_tool);
         
-    let minY = -tool.radius();
-    let maxY = stl.get_work_height() + tool.radius();
+    let minY = -tool.radius() * 2;
+    let maxY = stl.get_work_height() + 2 * tool.radius();
     
     
     let deltaX = tool.tool_diameter / 10;
