@@ -300,11 +300,10 @@ export function handle_metric(val)
 
 export function handle_precision(val)
 {
-    if (val == "high") {
-        raster.set_precision(1);
-    }  else {
-        raster.set_precision(0);
-    } 
+    raster.set_precision(parseFloat(val));
+    let link  = document.getElementById('rangeoutput');
+    link.innerHTML = val;
+    
 }
 
 export function handle_bitsetter(val)

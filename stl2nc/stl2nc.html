@@ -59,10 +59,8 @@
             <table>
             <tr><td>
             Calculation precision</td><td>
-            <select name="precision" id="precision" onclick="handle_precision(this.value)">
-                <option value="normal">Normal</option>
-                <option value="high">High (slower)</option>
-            </select>
+            <input type="range" min="0.5" max="3.0" value="1.0" step="0.1" class="slider" id="precision" name="precision"  onclick="handle_precision(this.value)">
+            <div id="rangeoutput"> </div>
             </td></tr>
             <tr><td>
             Gcode files</td><td>

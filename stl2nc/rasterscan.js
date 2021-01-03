@@ -5,7 +5,7 @@ import * as segment from './segment.js';
 
 let ACC = 50.0;
 
-let high_precision = 0;
+let precision = 1.0;
 
 let roughing_endmill = 201;
 let finishing_endmill = 101;
@@ -306,8 +306,8 @@ function finishing_zig(Y, deltaX)
         let X = -tool.radius();
         let maxX = stl.get_work_width() + tool.radius();
         let threshold = 0.6;
-        if (high_precision != 0) {
-            threshold = 0.3
+        if (precision != 0) {
+            threshold = threshold / precision;
         }
         
         let prevX = X;
@@ -360,8 +360,8 @@ function finishing_zag(Y, deltaX)
         
         let prevZ = newZ;
         let threshold = 0.6;
-        if (high_precision != 0) {
-            threshold = 0.3
+        if (precision != 0) {
+            threshold = threshold / precision
         }
         
 //        gcode_travel_to(X, 0);
@@ -426,8 +426,8 @@ function finishing_zig_zag(_tool)
     deltaX = tool.tool_finishing_stepover;
     deltaY = tool.tool_finishing_stepover;
     
-    if (high_precision == 1) {
-        deltaX = deltaX * 0.75;
+    if (precision > 0) {
+        deltaX = deltaX / precision;
     }
     
     console.log("dX ", deltaX, "  dY ", deltaY);
@@ -491,13 +491,9 @@ export function calculate_gcode(filename)
 
 export function set_precision(p)
 {
-    high_precision = p;
+    precision = p;
     tool.set_precision(p);
-    if (p > 0) {
-        ACC = 200;
-    } else {
-        ACC = 50;
-    }
+    ACC = 50 * p;
 }
 
 export function set_roughing_endmill(m)

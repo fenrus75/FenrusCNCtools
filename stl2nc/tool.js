@@ -13,7 +13,7 @@ export let tool_stock_to_leave = 0.5;
 export let tool_finishing_stepover = 0.3175;
 export let tool_index = 0;
 
-let high_precision = 0;
+let precision = 1;
 let manual_stepover = 0;
 
 let material_multiplier = 1.0;
@@ -80,8 +80,8 @@ class ToolRing {
         
         if (_R > 8 && is_radius == 0) { delta = delta * 4; };
         
-        if (high_precision)
-          delta = delta / 2;
+        if (precision > 0)
+          delta = delta / precision;
         
         if (is_radius > 0)
             delta = delta / 2.1;
@@ -133,8 +133,8 @@ class Tool {
       /* now precompute the points to sample for height */      
       let R = _diameter;
       let threshold = 0.3;
-      if (high_precision) {
-          threshold = 0.15;
+      if (precision > 0 ) {
+          threshold = threshold / precision;
       }
 
     
@@ -184,7 +184,7 @@ export function tool_factory()
 
 export function set_precision(p)
 {
-  high_precision = p;
+  precision = p;
 }
 
 export function select_tool(toolnr)
