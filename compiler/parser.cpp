@@ -4,9 +4,12 @@
 #include <stdlib.h>
 #include <cstring>
 
-class element * parse_file(const char *filename)
+struct element * parse_file(const char *filename)
 {
-    class container *container = new class container();
+    struct element *container;
+    
+    container = new_element(TYPE_CONTAINER, "Top Level Container");
+    container->type = TYPE_CONTAINER;
     
     FILE *file;
     
@@ -17,13 +20,17 @@ class element * parse_file(const char *filename)
     while (!feof(file)) {
         char line[4096];
         char *ret;
+        struct element *el;
         ret = fgets(line, 4096, file);
         if (ret == NULL)
             break;
         ret = strchr(line, '\n');
         if (ret) *ret = 0;
+        
+        el = new_element(TYPE_RAW, NULL);
+        el->raw_gcode = strdup(line);
 
-        container->push(new class raw_gcode(line));
+        container->children.push_back(el);
     }
     
     

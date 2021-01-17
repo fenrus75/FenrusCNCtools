@@ -1,72 +1,69 @@
 #pragma once
 
 #include <stdio.h>
+#include <malloc.h>
+#include <string.h>
 
 #include <vector>
 
-enum elements {
-    Abstract,
-    Container,
-    Raw_gcode
-};
+#define TYPE_RAW	0
+#define TYPE_MOVEMENT	1
+#define TYPE_CONTAINER  2
 
-class element {
-public:
-    enum elements type;
+struct element;
+
+struct element {
+    int type;
     
     /* bounding box */
     double minX, minY, minZ, maxX, maxY, maxZ;
-    virtual void append_gcode(FILE *file) = 0;
-    
-    virtual void print_stats(void) {};
-    
-private:
-};
 
-class container: public element {
-public:
-    container(const container &obj);
-    container(void);
+    double X1, Y1, Z1, X2, Y2, Z2;
+    double feed;
     
-    ~container(void);
-    
-    void push(class element * element);
-    
-    virtual void append_gcode(FILE *file);
-    virtual void print_stats(void);
-    
-    std::vector<class element *> *get_vector(void);
-    
-private:
-    std::vector<class element *> elements;
-};
 
+    bool is_retract;    
+    bool is_toolgroup;
+    bool is_g1only;
 
-class raw_gcode: public element {
-public:
-    raw_gcode(const raw_gcode &obj);
-    raw_gcode(const char *str);
-    ~raw_gcode(void); 
+    char glevel;    
+    char *raw_gcode;
+    const char *description;
     
-    void set_G_level(char level);
-    char get_G_level(char def);
-
-    
-    bool is_movement(void);
-
-    virtual void append_gcode(FILE *file);
-private:
-    char *gcode_string;
+    std::vector<struct element *>children;
 };
 
 
 
+static inline struct element * new_element(int type, const char *description)
+{
+    struct element *e;
+    
+    e = (struct element*)calloc(1, sizeof(struct element));
+    e->type = type;
+    
+    if (description)
+    
+    e->description = strdup(description);
+    
+    return e;
+}
+
+extern struct element *parse_file(const char *filename);
 
 
-extern class element * parse_file(const char *filename);
+extern void move_children_to_element(struct element *parent, struct element *target, int startindex, int endindex);
 
 
+extern void emit_gcode(FILE *file, struct element *e);
+extern void print_tree(struct element *e, int level);
+extern void print_stats(void);
 
-/* passes */
 
-extern void pass_add_g_level(class element *element);
+extern int stat_pass_raw_to_movement;
+extern int stat_pass_vertical_G0;
+
+extern void pass_raw_to_movement(struct element *e);
+extern void pass_vertical_G0(struct element *e);
+extern void pass_split_by_tool(struct element *e);
+extern void pass_split_g1(struct element *e);

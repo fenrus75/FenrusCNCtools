@@ -1,11 +1,11 @@
 all: compiler
 
 
-OBJS := main.o parser.o raw_gcode.o container.o pass_add_g_level.o
+OBJS := main.o parser.o  emit.o pass_raw_to_movement.o stats.o pass_vertical_G0.o lib.o pass_split_by_tool.o pass_split_g1.o
 
 %.o : %.cpp Makefile compiler.h
 	    @echo "Compiling: $< => $@"
-	    @g++ $(CFLAGS) -O3  -march=native -frounding-math -ffunction-sections -fno-common -Wno-address-of-packed-member -Wall -W -g2 -c $< -o $@
+	    @g++ $(CFLAGS) -O3  -march=native -frounding-math -ffunction-sections -fno-common -Wno-address-of-packed-member -Wall -W -g2 -Wno-unused-variable -Wno-unused-parameter  -c $< -o $@
 
 
 

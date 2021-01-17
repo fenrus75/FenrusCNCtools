@@ -4,25 +4,33 @@
 
 
 
+
+void optimization_passes(struct element *e)
+{
+    pass_split_by_tool(e);
+    pass_raw_to_movement(e);
+
+    pass_vertical_G0(e);
+    
+    pass_split_g1(e);
+
+    print_stats();
+    print_tree(e, 0);
+}
 int main(int argc, char **argv)
 {
-    class element *element;
+    struct element *element;
     FILE *file;
     
     element = parse_file("input.nc");
     
-    element->print_stats();
     
-    
-    pass_add_g_level(element);
-    
+    optimization_passes(element);
     
     file = fopen("output.nc", "w");
-    if (!file)
-        return EXIT_FAILURE;
-        
-    element->append_gcode(file);
+    emit_gcode(file, element);
     fclose(file);
+    
     
     return EXIT_SUCCESS;
 }
