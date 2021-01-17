@@ -14,6 +14,9 @@ void pass_vertical_G0(struct element *e)
         } 
         e->is_retract = true;
     }
+    if (e->type == TYPE_MOVEMENT && e->X1 == e->X2 && e->Y1 == e->Y2) {
+        e->is_vertical = true;
+    }
 
 
     for (auto i: e->children) {

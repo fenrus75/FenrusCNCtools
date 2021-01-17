@@ -30,7 +30,7 @@ void pass_split_g1(struct element *e)
             need_flush = state;
             state = 0;
         }
-        
+
         if (state == 0 && t->glevel == '1') {
             start = i;
             state = 1;

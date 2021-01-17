@@ -26,6 +26,7 @@ struct element {
     bool is_toolgroup;
     bool is_g1only;
     bool is_ring;
+    bool is_vertical;
 
     char glevel;    
     char *raw_gcode;

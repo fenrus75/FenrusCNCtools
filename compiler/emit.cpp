@@ -89,17 +89,20 @@ void emit_gcode(FILE *file, struct element *e)
     for (auto i: e->children) {
         emit_gcode(file, i);
     }
+    if (e->children.size() > 0)
+     fprintf(file, "(END GROUP %s)\n", e->description);
 }
 
 
 const char *type2desc[] =
  { "RAW", "Movement", "Container", };
 
-void print_tree(struct element *e, int level)
+static void __print_tree(struct element *e, int level, int leaf)
 {
     int i;
+    int is_leaf;
     
-    if (e->children.size() == 0)
+    if (e->children.size() == 0 && leaf)
      return;
     
     for (i = 0; i < level; i++)
@@ -109,9 +112,23 @@ void print_tree(struct element *e, int level)
     if (e->description) {
         printf("%s\t", e->description);
     } 
+    
+    if (e->type == TYPE_MOVEMENT)
+        printf("%s\t", e->raw_gcode);
+
     printf("%i", (int) e->children.size());
     printf("\n");
+    is_leaf = 1;
     for (auto i: e->children) {
-        print_tree(i, level + 1);
+        if (i->children.size() > 0)
+         is_leaf = 0;
     }
+    for (auto i: e->children) {
+        __print_tree(i, level + 1, is_leaf);
+    }
+}
+
+void print_tree(struct element *e, int level)
+{
+    __print_tree( e, level, 0);
 }
