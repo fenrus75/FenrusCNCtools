@@ -9,10 +9,12 @@ void optimization_passes(struct element *e)
 {
     pass_split_by_tool(e);
     pass_raw_to_movement(e);
+    
 
     pass_vertical_G0(e);
     
     pass_split_g1(e);
+    pass_bounding_box(e);
 
     print_stats();
     print_tree(e, 0);

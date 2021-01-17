@@ -12,7 +12,6 @@ void move_children_to_element(struct element *parent, struct element *target, in
 {
     int i;
     
-    printf("MOVE CHILDREN from %i to %i \n", startindex, endindex);
     /* Step 1: Add a copy of all elements in the range to the target */    
     for (i = startindex; i <= endindex; i++)
         target->children.push_back(parent->children[i]);

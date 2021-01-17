@@ -67,3 +67,4 @@ extern void pass_raw_to_movement(struct element *e);
 extern void pass_vertical_G0(struct element *e);
 extern void pass_split_by_tool(struct element *e);
 extern void pass_split_g1(struct element *e);
+extern void pass_bounding_box(struct element *e);
