@@ -14,6 +14,9 @@ void optimization_passes(struct element *e)
     pass_vertical_G0(e);
     
     pass_split_g1(e);
+    
+    pass_split_rings(e);
+    
     pass_bounding_box(e);
 
     print_stats();

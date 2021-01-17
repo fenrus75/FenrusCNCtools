@@ -1,7 +1,7 @@
 all: compiler
 
 
-OBJS := main.o parser.o  emit.o pass_raw_to_movement.o stats.o pass_vertical_G0.o lib.o pass_split_by_tool.o pass_split_g1.o pass_bounding_box.o
+OBJS := main.o parser.o  emit.o pass_raw_to_movement.o stats.o pass_vertical_G0.o lib.o pass_split_by_tool.o pass_split_g1.o pass_bounding_box.o pass_split_rings.o
 
 %.o : %.cpp Makefile compiler.h
 	    @echo "Compiling: $< => $@"

@@ -25,6 +25,7 @@ struct element {
     bool is_retract;    
     bool is_toolgroup;
     bool is_g1only;
+    bool is_ring;
 
     char glevel;    
     char *raw_gcode;
@@ -62,9 +63,11 @@ extern void print_stats(void);
 
 extern int stat_pass_raw_to_movement;
 extern int stat_pass_vertical_G0;
+extern int stat_pass_split_rings;
 
 extern void pass_raw_to_movement(struct element *e);
 extern void pass_vertical_G0(struct element *e);
 extern void pass_split_by_tool(struct element *e);
 extern void pass_split_g1(struct element *e);
 extern void pass_bounding_box(struct element *e);
+extern void pass_split_rings(struct element *e);
