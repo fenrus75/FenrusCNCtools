@@ -18,6 +18,9 @@ void optimization_passes(struct element *e)
     pass_split_rings(e);
     
     pass_bounding_box(e);
+    retractZ = e->maxZ;
+    
+    pass_plunge_detect(e);
 
     print_stats();
     print_tree(e, 0);

@@ -31,6 +31,7 @@ struct element {
     bool is_ring;
     bool is_vertical;
     bool is_plunge;
+    bool is_from_plunge;
 
     char glevel;    
     char *raw_gcode;
@@ -39,7 +40,7 @@ struct element {
     std::vector<struct element *>children;
 };
 
-
+extern double retractZ;
 
 extern int globalsequence;
 
@@ -79,7 +80,7 @@ extern void pass_split_by_tool(struct element *e);
 extern void pass_split_g1(struct element *e);
 extern void pass_bounding_box(struct element *e);
 extern void pass_split_rings(struct element *e);
-
+extern void pass_plunge_detect(struct element *e);
 
 
 extern double dist3(double X1, double Y1, double Z1, double X2, double Y2, double Z2);

@@ -108,6 +108,7 @@ static void print_flags(struct element *e)
   print_flag(toolgroup, "T");
   print_flag(g1only, "1");
   print_flag(ring, "r");
+  print_flag(from_plunge, "f");
   
   printf("\t");
 }
