@@ -30,6 +30,7 @@ struct element {
     bool is_g1only;
     bool is_ring;
     bool is_vertical;
+    bool is_plunge;
 
     char glevel;    
     char *raw_gcode;

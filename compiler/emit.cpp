@@ -96,6 +96,21 @@ void emit_gcode(FILE *file, struct element *e)
 
 const char *type2desc[] =
  { "RAW", "Movement", "Container", };
+ 
+ 
+#define print_flag(f, p) do {  char c[4]; sprintf(c, "."); if (e->is_##f) sprintf(c, "%s", p); printf("%s", c); } while (0)
+
+static void print_flags(struct element *e)
+{
+  print_flag(vertical, "V");
+  print_flag(plunge, "P");
+  print_flag(retract, "R");
+  print_flag(toolgroup, "T");
+  print_flag(g1only, "1");
+  print_flag(ring, "r");
+  
+  printf("\t");
+}
 
 static void __print_tree(struct element *e, int level, int leaf)
 {
@@ -109,6 +124,7 @@ static void __print_tree(struct element *e, int level, int leaf)
         printf("\t");
         
     printf("%4i ", e->sequence);
+    print_flags(e);
         
     printf("%s\t", type2desc[e->type]);
     if (e->description) {
