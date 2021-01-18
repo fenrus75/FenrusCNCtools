@@ -108,16 +108,18 @@ static void __print_tree(struct element *e, int level, int leaf)
     for (i = 0; i < level; i++)
         printf("\t");
         
+    printf("%4i ", e->sequence);
+        
     printf("%s\t", type2desc[e->type]);
     if (e->description) {
         printf("%s\t", e->description);
     } 
     
-    if (e->type == TYPE_MOVEMENT)
+    if (e->type == TYPE_MOVEMENT || e->type == TYPE_RAW)
         printf("%s\t", e->raw_gcode);
 
     printf("%i", (int) e->children.size());
-    printf("\n");
+    printf("\t(%6.2f)\n", e->length);
     is_leaf = 1;
     for (auto i: e->children) {
         if (i->children.size() > 0)

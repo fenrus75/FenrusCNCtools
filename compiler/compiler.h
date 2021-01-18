@@ -14,6 +14,7 @@ struct element;
 
 struct element {
     int type;
+    int sequence;
     
     /* bounding box */
     double minX, minY, minZ, maxX, maxY, maxZ;
@@ -39,6 +40,8 @@ struct element {
 
 
 
+extern int globalsequence;
+
 static inline struct element * new_element(int type, const char *description)
 {
     struct element *e;
@@ -49,6 +52,7 @@ static inline struct element * new_element(int type, const char *description)
     if (description)
     
     e->description = strdup(description);
+    e->sequence = globalsequence++;
     
     return e;
 }

@@ -4,6 +4,7 @@
 #include <stdlib.h>
 #include <math.h>
 
+int globalsequence;
 
 /* This function replaces a series of elements in the parents' children vector with a new element that has
  * these elements as its children. Effectively this moves the <start,end> range of children one hierarchy level

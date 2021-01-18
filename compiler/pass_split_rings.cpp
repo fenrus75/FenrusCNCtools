@@ -43,6 +43,7 @@ void pass_split_rings(struct element *e)
                 target = new_element(TYPE_CONTAINER, "G1 ring");
                 target->is_ring = true;
                 move_children_to_element(e, target, i, j);
+                stat_pass_split_rings++;
 
             }
         }
