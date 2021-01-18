@@ -13,6 +13,7 @@ void pass_bounding_box(struct element *e)
     e->maxX = 500000000000000000;
     e->maxY = 500000000000000000;
     e->maxZ = 500000000000000000;
+    e->length = 0;
     
     for (auto i: e->children) {
         pass_bounding_box(i);
@@ -22,6 +23,8 @@ void pass_bounding_box(struct element *e)
         e->maxX = fmin(e->maxX, i->maxX);
         e->maxY = fmin(e->maxY, i->maxY);
         e->maxZ = fmin(e->maxZ, i->maxZ);        
+        
+        e->length += i->length;
     }
     
     if (e->type == TYPE_MOVEMENT) {
@@ -37,5 +40,7 @@ void pass_bounding_box(struct element *e)
         e->maxX = fmin(e->maxX, e->X2);
         e->maxY = fmin(e->maxY, e->Y2);
         e->maxZ = fmin(e->maxZ, e->Z2);        
+        
+        e->length += dist3(e->X1, e->Y1, e->Z1, e->X2, e->Y2, e->Z2);
     }
 }

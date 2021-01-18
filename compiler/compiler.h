@@ -21,6 +21,8 @@ struct element {
     double X1, Y1, Z1, X2, Y2, Z2;
     double feed;
     
+    double length;
+    
 
     bool is_retract;    
     bool is_toolgroup;
@@ -72,3 +74,7 @@ extern void pass_split_by_tool(struct element *e);
 extern void pass_split_g1(struct element *e);
 extern void pass_bounding_box(struct element *e);
 extern void pass_split_rings(struct element *e);
+
+
+
+extern double dist3(double X1, double Y1, double Z1, double X2, double Y2, double Z2);
