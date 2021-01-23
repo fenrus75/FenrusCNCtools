@@ -925,7 +925,8 @@ export function process_data(data, desired_width, desired_height, desired_depth)
     }
     
     let total_triangles = (data.charCodeAt(80)) + (data.charCodeAt(81)<<8) + (data.charCodeAt(82)<<16) + (data.charCodeAt(83)<<24); 
-    console.log("Triangle count" + total_triangles);
+    console.log("Triangle count " + total_triangles);
+    console.log("Data length " + data.length);
     
     if (84 + total_triangles * 50  != data.length) {
         document.getElementById('list').innerHTML  = "Length mismatch " + data.length + " " + total_triangles;
