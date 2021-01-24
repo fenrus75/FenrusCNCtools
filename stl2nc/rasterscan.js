@@ -7,8 +7,8 @@ let ACC = 50.0;
 
 let precision = 1.0;
 
-let roughing_endmill = 201;
-let finishing_endmill = 101;
+let roughing_endmill = 0;
+let finishing_endmill = 0;
 let split_gcode = 0;
 
 
@@ -414,6 +414,11 @@ function finishing_zig_zag(_tool)
 
     setTimeout(gcode.gcode_change_tool, 0, _tool);
     tool.select_tool(_tool);
+    
+    if (_tool == 0) {
+        return;
+    }
+    
         
     let minY = -tool.radius();
     let maxY = stl.get_work_height() + tool.radius();

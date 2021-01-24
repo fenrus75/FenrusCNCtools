@@ -710,10 +710,10 @@ function make_buckets()
 		if (bucketptr < BUCKET_SIZE2 / 2)
 			slop = Math.min(slop * 1.05, maxslop);
 
-		l2bucket.minX = Xmin;
-		l2bucket.minY = Ymin;
-		l2bucket.maxX = Xmax;
-		l2bucket.maxY = Ymax;
+		l2bucket.minX = Xmin - 0.001;
+		l2bucket.minY = Ymin - 0.001;
+		l2bucket.maxX = Xmax + 0.001;
+		l2bucket.maxY = Ymax + 0.001;
 		l2bucket.maxZ = Zmax;
 		l2buckets.push(l2bucket);
 	}
