@@ -59,7 +59,7 @@ function process_data(data)
             if (index >= 0) {
                 bit = line.substring(index + 1);
                 console.log("TOOL CHANGE" , line, " to bit ", bit);
-                filenames[toolchanges] = toolchanges.toString() + "-" + bit + "-" + filename;
+                filenames[toolchanges] = filename + "-" + toolchanges.toString() + "-" + bit + ".nc";
             }
                 
         }
@@ -121,7 +121,7 @@ function handle(e)
     for (var i = 0, f; f = files[i]; i++) {
     	fn = basename(f.name);
     	if (fn != "" && fn.includes(".nc")) {
-    		filename = fn;
+    		filename = fn.replace(/\.nc$/,"");
     	}
         var reader = new FileReader();
         reader.onloadend = load;
