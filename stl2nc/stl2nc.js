@@ -162,6 +162,12 @@ export function handle(e)
         if (fn != "" && fn.includes(".stl")) {
                 filename = fn;
         }
+        if (fn != "" && fn.includes(".STL")) {
+                filename = fn;
+        }
+
+        console.log("fn is ", fn)
+        console.log("filename is ", filename)
         if (fn.includes(".png")) {
             console.log("Loading PNG file", fn);
             filename = fn;

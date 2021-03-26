@@ -897,6 +897,9 @@ export function get_height_array(minX, minY, maxX, maxY, _X, _Y, arr, value = -g
 	return value - global_maxZ + offset;
 }
 
+function isASCII(str) {
+    return /^[\x00-\x7F]*$/.test(str);
+}
 
 /*
  * This function takes the raw data of an STL file, processes this data into ascii or binary triangles
@@ -919,7 +922,7 @@ export function process_data(data, desired_width, desired_height, desired_depth)
         return; 
     }
     
-    if (data[0] == 's' && data[1] == 'o' && data[2] == 'l' && data[3] == 'i' && data[4] == 'd') {
+    if (data[0] == 's' && data[1] == 'o' && data[2] == 'l' && data[3] == 'i' && data[4] == 'd' && isASCII(data.slice(0,200))) {
         console.log("ASCII STL detected");
         return process_data_ascii(data, desired_width, desired_height, desired_depth);
     }
