@@ -388,7 +388,7 @@ function make_buckets()
  */
 export function get_height(X, Y, value = -global_maxZ, offset = 0.0)
 {
-        value = global_minZ;
+        value = 0;
 
 	const l2bl = l2buckets.length;
 	
