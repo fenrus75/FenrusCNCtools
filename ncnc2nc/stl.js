@@ -184,9 +184,6 @@ class Triangle {
 	iX = this.X1 + l * x2;
      	iY = this.Y1 + l * y2;
 
-	if (loglimit ++ < 100)
-		console.log("Asked for ", X, ",", Y, "with l", l, "and Z1/2 ", this.Z1, " ", this.Z2);
-
 	if (l >= 0 && l <= 1) {
 		let dZ = this.Z2 - this.Z1;
 		return this.Z1 + l * dZ;
@@ -608,6 +605,27 @@ function dist3(X1, Y1, Z1, X2, Y2, Z2)
 	return Math.sqrt((X1-X2)*(X1-X2)+(Y1-Y2)*(Y1-Y2) +(Z2-Z1)*(Z2-Z1));
 }
 
+function doG1(X1, Y1, Z1, X2, Y2, Z2, recurse)
+{
+
+	let dX, dY, dZ;
+	
+	dX = X2-X1;
+	dY = Y2-Y1;
+	dZ = Z2-Z1;
+	
+	/* If Z varies too much, we break the G segment into 2 */
+	if (Math.abs(dZ) > 0.1 && dist2(X1,Y1,X2,Y2) > 0.01 && recurse < 5) {
+		doG1(X1, Y1, Z1, X1 + dX/2, Y1 + dY/2, Z1 + dZ/2, recurse + 1);
+		doG1(X1 + dX/2, Y1 + dY/2, Z1 + dZ/2, X2, Y2, Z2, recurse + 1);
+		return;
+	}
+
+        let T = new Triangle(X1, Y1, Z1, X2, Y2, Z2, diameter);
+        triangles.push(T);
+
+}
+
 function G1(x, y, z, feed) 
 {
 	let l = 0;
@@ -619,8 +637,8 @@ function G1(x, y, z, feed)
 	let Y2 = y;
 	let Z2 = z;
 	
-        let T = new Triangle(X1, Y1, Z1, X2, Y2, Z2, diameter);
-        triangles.push(T);
+	doG1(X1, Y1, Z1, X2, Y2, Z2, 0);
+	
 	
 	currentx = x;
 	currenty = y;
