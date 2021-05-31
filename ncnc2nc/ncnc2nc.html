@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>NCNC2NC - javascript edition</title>
+    <link rel="stylesheet" type="text/css" href="ncnc2nc.css">
+</head>
+<body>
+
+    <div valign="top" style="font-family: Arial;">
+        <h1>Modulate gcode-over-gcode tool</h1>
+        <p>
+            This website lets you wrap existing gcode over another gcode
+            file, to gcode for use with Shapeoko CNC machines
+        </p>
+        <p>
+            This currently only works if both gcode files are created with
+            Carbide Create (regular or PRO)
+        </p>
+        <p>
+            All computation happens local
+            and inside your browser, no information is uploaded or sent
+            over the internet. For large files this can take 10+ seconds before the
+            results show up.
+        </p>
+        <div>
+            <br />
+            <form>
+                Base GCODE file: <input type="file" id="files" name="files[]"/><br/>
+                Overlay GCODE file: <input type="file" id="gcodefiles" name="gcodefiles[]"/>
+                <output id="list"></output>
+            </form>
+
+            <br />
+            <hr />
+            <p>
+            Toolpath calculation
+            </p>
+            <div id="ProgressRoughing">
+                <div id="Bar"></div>
+            </div><br>
+
+            <div id="ProgressRoughing">
+                <div id="BarRoughing"></div>
+            </div><br>
+
+            <div id="ProgressRoughing">
+                <div id="BarFinishing"></div>
+            </div><br>
+
+            <hr />
+
+            <a href="" id="download"></a>            
+        </div>
+        <div width="100%">
+            <pre id="outputpre"></pre>
+        </div>
+    </div>
+
+    <script type="module" src="ncnc2nc.js"></script>
+</body>
+</html>
