@@ -198,7 +198,8 @@ function G1(x, y, z, feed)
 	let l = 0;
 	let d = dist2(currentx, currenty, x, y);
 	if (d <= 0.025) {
-		let newZ = z + stl.get_height_array(x - diameter/2, y - diameter / 2, x + diameter / 2, y + diameter / 2, x, y, rings);
+//		let newZ = z + stl.get_height_array(x - diameter/2, y - diameter / 2, x + diameter / 2, y + diameter / 2, x, y, rings);
+		let newZ = z + stl.get_height(x, y);
 		if (z > 0.02)
 			newZ = z;
 		emitG1(x,y,newZ,feed);
@@ -223,7 +224,8 @@ function G1(x, y, z, feed)
 		let newZ = cZ + dZ * l;
 		
 		if (newZ <= 0) {
-			newZ += stl.get_height_array(x - diameter/2, y - diameter / 2, x + diameter / 2, y + diameter / 2, x, y, rings);
+//			newZ += stl.get_height_array(x - diameter/2, y - diameter / 2, x + diameter / 2, y + diameter / 2, x, y, rings);
+			newZ += stl.get_height(x, y);
 		}
 		
 		bufferG1(newX, newY, newZ, feed);
@@ -231,7 +233,8 @@ function G1(x, y, z, feed)
 	}
 	
 	flush_buffer();
-	let newZ = z + stl.get_height_array(x - diameter/2, y - diameter / 2, x + diameter / 2, y + diameter / 2, x, y, rings);
+//	let newZ = z + stl.get_height_array(x - diameter/2, y - diameter / 2, x + diameter / 2, y + diameter / 2, x, y, rings);
+	let newZ = z + stl.get_height(x, y);
 	if (z > 0)
 		newZ = z;
 	emitG1(x,y,newZ,feed);
