@@ -225,7 +225,7 @@ function G1(x, y, z, feed)
 		
 		if (newZ <= 0) {
 //			newZ += stl.get_height_array(x - diameter/2, y - diameter / 2, x + diameter / 2, y + diameter / 2, x, y, rings);
-			newZ += stl.get_height(x, y);
+			newZ += stl.get_height(newX, newY);
 		}
 		
 		bufferG1(newX, newY, newZ, feed);
