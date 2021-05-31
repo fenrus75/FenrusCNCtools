@@ -471,10 +471,16 @@ export function get_height(X, Y, value = -global_maxZ, offset = 0.0)
  */
 export function get_height_array(minX, minY, maxX, maxY, _X, _Y, arr, value = -global_maxZ, offset = 0.0)
 {
-        value = value + global_maxZ - offset;        
+        value = global_minZ;
+        
+        let pointval = [];
 
 	const l2bl = l2buckets.length;
 	const points = arr.length / 2;
+	
+	for (let q = 0; q < points; q++) {
+		pointval[q] = 0;
+	}
 	
 	for (var k = 0; k < l2bl; k++) {
 	
@@ -539,12 +545,15 @@ export function get_height_array(minX, minY, maxX, maxY, _X, _Y, arr, value = -g
                         /* now calculate the Z height within the triangle */
                         newZ = bucket.triangles[i].calc_Z(X, Y);
 
-            		value = Math.max(newZ, value);
+            		pointval[p] = Math.min(newZ, pointval[p]);
                     }
                 }
             }
         }
-	return value - global_maxZ + offset;
+        for (let q = 0; q < points; q++)
+        	value = Math.max(pointval[q], value);
+        	
+	return value;
 }
 
 

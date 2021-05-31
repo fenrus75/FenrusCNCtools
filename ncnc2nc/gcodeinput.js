@@ -22,11 +22,12 @@ let currentfout = 0.0;
 let glevel = '0';
 let gout = '';
 let metric = 1;
+let diameter = 0;
+let rings;
 
 let filename = "output.nc";
 
 let dryrun = 1;
-
 
 
 /* Variable into which output gcode is collected */
@@ -197,7 +198,7 @@ function G1(x, y, z, feed)
 	let l = 0;
 	let d = dist2(currentx, currenty, x, y);
 	if (d <= 0.025) {
-		let newZ = z + stl.get_height(x, y);
+		let newZ = z + stl.get_height_array(x - diameter/2, y - diameter / 2, x + diameter / 2, y + diameter / 2, x, y, rings);
 		if (z > 0.02)
 			newZ = z;
 		emitG1(x,y,newZ,feed);
@@ -222,7 +223,7 @@ function G1(x, y, z, feed)
 		let newZ = cZ + dZ * l;
 		
 		if (newZ <= 0) {
-			newZ += stl.get_height(newX, newY);
+			newZ += stl.get_height_array(x - diameter/2, y - diameter / 2, x + diameter / 2, y + diameter / 2, x, y, rings);
 		}
 		
 		bufferG1(newX, newY, newZ, feed);
@@ -230,7 +231,7 @@ function G1(x, y, z, feed)
 	}
 	
 	flush_buffer();
-	let newZ = z + stl.get_height(x, y);
+	let newZ = z + stl.get_height_array(x - diameter/2, y - diameter / 2, x + diameter / 2, y + diameter / 2, x, y, rings);
 	if (z > 0)
 		newZ = z;
 	emitG1(x,y,newZ,feed);
@@ -314,6 +315,77 @@ function handle_G_line(line)
 	emit_output(line);
 }
 
+function update_rings(diameter)
+{
+	let _R = diameter / 2;
+        rings = [];
+
+        rings.push(0.0); rings.push(0.0);
+        /* the normal wind directions N / S / E / W*/
+        rings.push(+1.0000 * _R);    rings.push(+0.0000 * _R);
+        rings.push(+0.0000 * _R);    rings.push(+1.0000 * _R);
+        rings.push(-1.0000 * _R);    rings.push(-0.0000 * _R);
+        rings.push(-0.0000 * _R);    rings.push(-1.0000 * _R);
+        
+        /* and the halfway points of those */
+        
+        rings.push(+0.7071 * _R);    rings.push(+0.7071 * _R);
+        rings.push(-0.7071 * _R);    rings.push(+0.7071 * _R);
+        rings.push(-0.7071 * _R);    rings.push(-0.7071 * _R);
+        rings.push(+0.7071 * _R);    rings.push(-0.7071 * _R);
+        
+        /* and the halfway points again */
+        
+        rings.push(+0.9239 * _R);    rings.push(+0.3827 * _R);
+        rings.push(+0.3827 * _R);    rings.push(+0.9239 * _R);
+        rings.push(-0.3827 * _R);    rings.push(+0.9239 * _R);
+        rings.push(-0.9239 * _R);    rings.push(+0.3827 * _R);
+
+        rings.push(-0.9239 * _R);    rings.push(-0.3827 * _R);
+        rings.push(-0.3827 * _R);    rings.push(-0.9239 * _R);
+        rings.push(+0.3827 * _R);    rings.push(-0.9239 * _R);
+        rings.push(+0.9239 * _R);    rings.push(-0.3827 * _R);
+        
+        _R = _R * 0.7;
+
+        /* the normal wind directions N / S / E / W*/
+        rings.push(+1.0000 * _R);    rings.push(+0.0000 * _R);
+        rings.push(+0.0000 * _R);    rings.push(+1.0000 * _R);
+        rings.push(-1.0000 * _R);    rings.push(-0.0000 * _R);
+        rings.push(-0.0000 * _R);    rings.push(-1.0000 * _R);
+        
+        /* and the halfway points of those */
+        
+        rings.push(+0.7071 * _R);    rings.push(+0.7071 * _R);
+        rings.push(-0.7071 * _R);    rings.push(+0.7071 * _R);
+        rings.push(-0.7071 * _R);    rings.push(-0.7071 * _R);
+        rings.push(+0.7071 * _R);    rings.push(-0.7071 * _R);
+        
+        /* and the halfway points again */
+        
+        rings.push(+0.9239 * _R);    rings.push(+0.3827 * _R);
+        rings.push(+0.3827 * _R);    rings.push(+0.9239 * _R);
+        rings.push(-0.3827 * _R);    rings.push(+0.9239 * _R);
+        rings.push(-0.9239 * _R);    rings.push(+0.3827 * _R);
+
+        rings.push(-0.9239 * _R);    rings.push(-0.3827 * _R);
+        rings.push(-0.3827 * _R);    rings.push(-0.9239 * _R);
+        rings.push(+0.3827 * _R);    rings.push(-0.9239 * _R);
+        rings.push(+0.9239 * _R);    rings.push(-0.3827 * _R);
+
+}
+
+function handle_comment(line)
+{
+	if (line.includes("TOOL/MILL")) {
+		let linesplit = line.split(",")
+		let diastr = linesplit[1];
+		diameter = parseFloat(diastr);
+		update_rings(diameter);
+		console.log("Setting Diameter to ", diameter);
+	}
+}
+
 /* 
  * Process one line of gcode input, demultiplex the different commands 
  */
@@ -332,6 +404,10 @@ function process_line(line)
 			break;
 		case 'G':
 			handle_G_line(line);
+			break;
+		case '(':
+			handle_comment(line);
+			emit_output(line);
 			break;
 		default:
 			emit_output(line);
