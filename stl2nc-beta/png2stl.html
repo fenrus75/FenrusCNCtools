@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>PNG Depth map to STL converter</title>
+    <link rel="stylesheet" type="text/css" href="stl2nc.css">
+</head>
+<body>
+
+    <div valign="top" style="font-family: Arial;">
+        <h1>PNG2STL - turn heightmaps into STL-like files</h1>
+        <p>
+            This website lets tile an existing PNG image file into
+            STL-like files.
+        </p>
+        <p>
+            All computation happens local
+            and inside your browser, no information is uploaded or sent
+            over the internet. For large files this can take 10+ seconds before the
+            results show up.
+        </p>
+        <div>
+            <br />
+            <form>
+                PNG file: <input type="file" id="pngfiles" name="pngfiles[]"/>
+                <output id="list"></output>
+            </form>
+
+            <br />
+            <hr />
+            <p>
+            Tile calculation
+            </p>
+            <div id="ProgressRoughing">
+                <div id="Bar"></div>
+            </div><br>
+
+            <a href="" id="download"></a>            
+        </div>
+        <div>
+          <canvas id="canvas"/ width=500 height=500>
+             <img id="image">
+         </div>
+        <div width="100%">
+            <pre id="outputpre"></pre>
+        </div>
+    </div>
+
+    <script type="module" src="png2stl.js"></script>
+</body>
+</html>

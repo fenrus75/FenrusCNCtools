@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>STL2NC - javascript edition</title>
+    <link rel="stylesheet" type="text/css" href="stl2nc.css">
+</head>
+<body>
+
+    <div valign="top" style="font-family: Arial;">
+        <h1>STL to PNG and GCODE conversion tool</h1>
+        <p>
+        
+        <table>
+        <tr><td width="33%" valign=top>
+            This website lets you convert STL files to PNG files for use
+            with Carbide Create Pro, and will also generate Gcode
+            for use directly with Shapeoko CNC machines.
+        </td><td width="33%">&nbsp;</td><td valign=top>
+            All computation happens local
+            and inside your browser, no information is uploaded or sent
+            over the internet. For large files this can take 10+ seconds before the
+            results show up.
+        </td></tr></table>
+        <br/>
+        <div id="orient">
+            Orientation of the viewpoint:<br />
+            <table>
+            <tr><td><input type="radio" value="top" name="or" id="top" checked onclick="RadioB(this.value)"><label for="top">View from the Top
+            downwards</label></td><td>&nbsp;</td></tr>
+            <tr>
+            <td><input type="radio" value="front" name="or" id="front" onclick="RadioB(this.value)"><label for="front">View from the Front</label></td>
+            <td><input type="radio" value="back" name="or" id="back" onclick="RadioB(this.value)"><label for="back">View from the Back</label></td>
+            </tr>
+            <tr><td>
+            <input type="radio" value="side" name="or" id="side" onclick="RadioB(this.value)"><label for="side">View from the Side</label>
+            </td><td>&nbsp;</td></tr></table>
+            <br />
+            <br/>
+            STL Depth offset: 
+            <input type="text" value="0" onChange="OffsetB(this.value)" size=4/> percent (shifts the design up and down)
+            <br />
+
+            <br />
+            <table><tr><td valign=top width="50%">
+            <table>
+            <tr><td>Stock width</td><td><input type="text" value="120" onChange="handle_width(this.value)" id="width" size=6>&nbsp;<label id="widthmm">mm</label></input></td><td>&nbsp;&nbsp;</td><td>Design width:</td><td><label id="resultwidth"></label></td></tr>
+            <tr><td>Stock height</td><td><input type="text" value="120" onChange="handle_height(this.value)" id="height" size=6>&nbsp;<label id="heightmm">mm</label></input></td><td>&nbsp;&nbsp;</td><td>Design height:</td><td><label id="resultheight"></label></td></tr>
+            <tr><td>Stock depth</td><td><input type="text" value="12" onChange="handle_depth(this.value)" id="depth" size=6>&nbsp;<label id="depthmm">mm</label></input></td><td>&nbsp;&nbsp;</td><td>Design depth:</td><td><label id="resultdepth"></label></td></tr>
+            <tr><td>&nbsp;</td><td>&nbsp;</td><td>&nbsp;&nbsp;</td><td>Base depth:</td><td><label id="basedepth"></label></td></tr>
+            <tr><td>
+            Units</td><td>
+            <select name="metric" id="metric" onclick="handle_metric(this.value)">
+                <option value="metric">Metric</option>
+                <option value="imperial">Imperial</option>
+            </select> </td><td>&nbsp;
+            </td></tr>
+            </table>
+            </td><td valign=top width="50%">
+            <table>
+            <tr><td>
+            Calculation precision</td><td>
+            <input type="range" min="0.5" max="3.0" value="1.0" step="0.1" class="slider" id="precision" name="precision"  onclick="handle_precision(this.value)">
+            <div id="rangeoutput"> </div>
+            </td></tr>
+            <tr><td>
+            Gcode files</td><td>
+            <select name="bitsetter" id="bitsetter" onclick="handle_bitsetter(this.value)">
+                <option value="bitsetter" selected>Single file (Bitsetter)</option>
+                <option value="no-bitsetter">Multiple files (No Bitsetter)</option>
+            </select>
+            </td></tr>
+            <tr><td>
+            Router type</td><td>
+            <select name="router" id="router" onclick="handle_router(this.value)">
+                <option value="router" selected>Dewalt/Makita/Carbide3D Router</option>
+                <option value="spindle">Spindle</option>
+            </select>
+            </td></tr>            
+            <tr><td>
+            <label for="roughing">Roughing endmill</label></td><td>
+            <select name="roughing" id="roughing" onclick="handle_roughing(this.value)">
+                <option value="0" selected>No Roughing Pass</option>
+                <option value="18">#18 - 2mm diameter flat endmill</option>
+                <option value="91">#91 - Half inch flat endmill</option>
+                <option value="102">#102 - One Eighth inch flat endmill</option>
+                <option value="201">#201 - One Quarter inch flat endmill</option>
+                <option value="78">#78 - One Quarter inch Two Flute endmill</option>
+                <option value="278">#278Z - One Quarter inch Single Flute endmill</option>
+            </select></td></tr>
+            <tr><td>
+            <label for="finishing">Finishing endmill</label></td><td>
+            <select name="finishing" id="finishing" onclick="handle_finishing(this.value)">
+                <option value="0" selected>No Finishing Pass</option>
+                <option value="18">#18 - 2mm diameter flat endmill</option>
+                <option value="19">#19 - 1.5mm diameter flat endmill</option>
+                <option value="27">#27 - 1mm diameter tapered ballnose endmill</option>
+                <option value="28">#28 - 1/2mm diameter tapered ballnose endmill</option>
+                <option value="101">#101 - One Eighth inch ballnose endmill</option>
+                <option value="102">#102 - One Eighth inch flat endmill</option>
+            </select>
+            </td></tr>
+            <tr><td>            
+        Stepover for finishing:</td><td> <input type="text" value="0.3175" onChange="handle_stepover(this.value)" id="stepover" size=6>&nbsp;<label id="stepovermm">mm</label></input>
+        </td></tr>
+        <tr><td>
+        Roughing chipload target</td><td> <input type="text" value="0.025" onChange="handle_chipload(this.value)" id="chipload" size=6>&nbsp<label id="chiploadmm">mm</label></input>
+        </td></tr>        
+            </table></td></tr></table>
+        </div>
+        <div>
+            <br />
+            <form>
+                <input type="file" id="files" name="files[]" />
+                <output id="list"></output>
+            </form>
+
+            <br />
+            <hr />
+            <table width="100%">
+            <tr><td width="15%">PNG image</td><td>
+            <div id="ProgressPNG">
+                <div id="BarPNG"></div>
+            </div>
+            </td></tr>
+            <tr><td>
+            Roughing toolpath
+            </td><td>
+            <div id="ProgressRoughing">
+                <div id="BarRoughing"></div>
+            </div>
+            </td></tr>
+            <tr><td>
+            Finishing toolpath
+            </td><td>
+            <div id="ProgressFinishing">
+                <div id="BarFinishing"></div>
+            </div>
+            </td></tr>
+            </table>
+            <hr />
+
+            <a href="" id="downloadpng"></a><br>
+            <a href="" id="download"></a><br>
+            <a href="" id="download2"></a>
+            
+            
+        </div>
+        <div width="100%">
+            <canvas id="canvas"></canvas>
+        </div>
+
+        <div width="100%">
+            <pre id="outputpre"></pre>
+        </div>
+    </div>
+
+    <img id="image"\>
+    <script type="module" src="stl2nc.js"></script>
+    
+</body>
+</html>
