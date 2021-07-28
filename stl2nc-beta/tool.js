@@ -16,7 +16,7 @@ export let tool_index = 0;
 export let chipload = 0.025;
 export let tool_roughing_feedrate = 0.0;
 
-let precision = 1.25;
+let precision = 1.0;
 let manual_stepover = 0;
 
 let material_multiplier = 1.0;
@@ -165,7 +165,7 @@ class Tool {
       let woc = 0.01;
       let rpm = 6000;
       for (rpm = 6000; rpm <= 24000; rpm += 1000) {
-        for (woc = 0.1 * this.diameter; woc <= this.diameter/4; woc += 0.005) {
+        for (woc = 0.125 * this.diameter; woc <= this.diameter/4; woc += 0.0005) {
           let adjusted = target_mm;
           if (this.roughing_woc < this.diameter / 2) {
             adjusted = target_mm *
@@ -193,10 +193,15 @@ class Tool {
           }
         }
       }
+      
       this.roughing_feedrate = best_feed;
       this.roughing_woc = best_woc;
       this.rippem = best_rpm;
+      
       console.log("Feedrate set to ", best_feed, " for WOC of ", best_woc, " at rpm ", best_rpm);
+      let link  = document.getElementById('resultfns');
+      best_woc = Math.round(best_woc * 1000) / 1000;
+      link.innerHTML = best_rpm + " rpm @ "+ best_feed + "mm/min, WOC is " + best_woc + " mm";
    }
 }
 
@@ -219,7 +224,8 @@ export function tool_factory()
     tool_library.push(new Tool(27,   1.0, inch_to_mm(200), inch_to_mm(30), "ball", 0.5, 0.0, 0.1));
     tool_library.push(new Tool(28,   0.5, inch_to_mm(200), inch_to_mm(30), "ball", 0.5, 0.0, 0.05)); 
     tool_library.push(new Tool(91,  inch_to_mm(0.50),  inch_to_mm(70), inch_to_mm(20), "flat", 2.0, 0.3));
-    tool_library.push(new Tool(101, inch_to_mm(0.125), inch_to_mm(40), inch_to_mm(20), "ball", 1.0, 0.25));
+    tool_library.push(new Tool(101, inch_to_mm(0.125), inch_to_mm(140), inch_to_mm(20), "ball", 1.0, 0.25));
+    tool_library.push(new Tool(99,  inch_to_mm(0.125/2), inch_to_mm(140), inch_to_mm(20), "ball", 1.0, 0.25));
     tool_library.push(new Tool(102, inch_to_mm(0.125), inch_to_mm(40), inch_to_mm(20), "flat", 1.0, 0.25));
     tool_library.push(new Tool(201, inch_to_mm(0.250), inch_to_mm(180), inch_to_mm(20), "flat", 1.0, 0.25, 0.0, 3));
     tool_library.push(new Tool(78, inch_to_mm(0.250), inch_to_mm(180), inch_to_mm(20), "flat", 1.0, 0.25, 0.0, 2));

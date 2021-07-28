@@ -28,6 +28,7 @@ class Segment {
     this.X2 = -1.0;
     this.Y2 = -1.0;
     this.Z2 = -1.0;
+    this.want_cooling_retract = false;
     this.direct_mill_distance = 0.0001;
   }
 }
@@ -76,7 +77,7 @@ class Level {
  * If this segment is just an extension of the previously pushed segment,
  * the segments may get merged into one larger segment for efficiency.
  */
-export function push_segment(X1, Y1, Z1, X2, Y2, Z2, level = 0, direct_mill = 0.0001)
+export function push_segment(X1, Y1, Z1, X2, Y2, Z2, level = 0, direct_mill = 0.0001, cooling = false)
 {
     if (X1 == X2 && Y1 == Y2 && Z1 == Z2) {
         return;
@@ -114,6 +115,9 @@ export function push_segment(X1, Y1, Z1, X2, Y2, Z2, level = 0, direct_mill = 0.
     seg.Y2 = Y2;
     seg.Z2 = Z2;
     seg.direct_mill_distance = direct_mill;
+    if (cooling) {
+        seg.want_cooling_retract = true;
+    }
     
     levels[level].paths.push(seg);
 }
@@ -270,7 +274,10 @@ export function segments_to_gcode_quick()
                     gcode.gcode_mill_to_3D(segm.X1, segm.Y1, segm.Z1);            
                 }
             }
-            gcode.gcode_mill_to_3D(segm.X2, segm.Y2, segm.Z2);            
+            gcode.gcode_mill_to_3D(segm.X2, segm.Y2, segm.Z2);
+            if (segm.want_cooling_retract) {
+                gcode.gcode_cooling_retract(segm.Z2);
+            }
         }
     }
     levels = [];

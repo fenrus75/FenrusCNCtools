@@ -5,7 +5,7 @@ import * as segment from './segment.js';
 
 let ACC = 50.0;
 
-let precision = 1.0;
+let precision = 1;
 
 let roughing_endmill = 0;
 let finishing_endmill = 0;
@@ -161,9 +161,11 @@ function roughing_zag(X, startY, endY, deltaY)
         }    
 }
 
-function roughing_zeg(Y, startX, endX, deltaX)
+function roughing_zeg(Y, startX, endX, deltaX, cooling = false)
 {
         let X = startX;
+        
+        console.log("startX", startX);
 
 
         let prevX = X;
@@ -178,7 +180,11 @@ function roughing_zeg(Y, startX, endX, deltaX)
                 Z = prevZ - deltaX;
             }
 
-            segment.push_segment(prevX, prevY, prevZ, X, Y, Z, 0, 5);
+            /* We're only want it to do bit-cooling at the very end */
+            let do_cooling = cooling;
+            if (X != endX)
+                do_cooling = false;
+            segment.push_segment(prevX, prevY, prevZ, X, Y, Z, 0, 5, do_cooling);
             
             
             prevX = X;
@@ -228,6 +234,13 @@ function roughing_zog(Y, startX, endX, deltaX)
                 X = endX;
             }
         }    
+
+        let pct = 100-(Math.round(Math.abs(endX-startX)/stl.get_work_width() * 100));
+        pct = Math.min(pct, 100.0);
+        pct = Math.max(pct, 0);
+        var elem = document.getElementById("BarRoughing");
+        elem.style.width = pct + "%";
+
 }
 
 
@@ -297,7 +310,8 @@ function roughing_zig_zag(_tool, width, height)
     
     
     let woc = tool.woc_from_chipload(_tool);
-
+    let total = 0;
+    let next_cool = 1500;
     
     if (_tool == 0) {
         return;
@@ -319,7 +333,7 @@ function roughing_zig_zag(_tool, width, height)
     let offsetY = height/2 + tool.tool_diameter/1.75;
      
     
-    let deltaXY = tool.tool_diameter / 10;
+    let deltaXY = tool.tool_diameter / 8;
     if (deltaXY > 0.5) {
         deltaXY = 0.5;
     }
@@ -327,11 +341,21 @@ function roughing_zig_zag(_tool, width, height)
 //    setTimeout(cutout_box1, 0);    
     
     while (offsetX > 0 && offsetY > 0) {
+        let cooling = false;
+
+        total += 4 * offsetY  + 4 * offsetX;
+        
+        if (total > next_cool) {
+            cooling = true;
+            next_cool = total + 2000;
+        }
+        
 
         setTimeout(roughing_zig, 0, midX - offsetX, midY - offsetY - stepsize, midY + offsetY, deltaXY);
-        setTimeout(roughing_zeg, 0, midY + offsetY, midX - offsetX, midX + offsetX, deltaXY);
+        setTimeout(roughing_zeg, 0, midY + offsetY, midX - offsetX, midX + offsetX, deltaXY, cooling);
         setTimeout(roughing_zag, 0, midX + offsetX, midY + offsetY, midY - offsetY, deltaXY);
         setTimeout(roughing_zog, 0, midY - offsetY, midX + offsetX, midX - offsetX + stepsize, deltaXY);
+        
         
         if (offsetX == 0) { break; };
         if (offsetY == 0) { break; };
@@ -342,10 +366,13 @@ function roughing_zig_zag(_tool, width, height)
         if (offsetY < 0) { offsetY = 0;};
         
     }
+
+    setTimeout(segment.segments_to_gcode_quick, 0);
     
-    setTimeout(segment.segments_to_gcode, 0, 50);
+//    setTimeout(segment.segments_to_gcode, 0, 50);
 //    setTimeout(cutout_box2, 0);    
-    setTimeout(segment.segments_to_gcode, 0);
+//    setTimeout(segment.segments_to_gcode, 0);
+    console.log("Total roughing distance: ", total);
     
 }
 

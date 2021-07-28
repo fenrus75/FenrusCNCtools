@@ -151,6 +151,15 @@ export function gcode_retract()
     gcode_G="0";
 }
 
+export function gcode_cooling_retract(newZ)
+{
+    gcode_write("G0Z" + gcode_float2str( safe_retract_height));
+    gcode_cZ = safe_retract_height;
+    gcode_write("G4P5.0");
+    gcode_write("G1Z" + gcode_float2str(newZ));
+    gcode_G="1";
+}
+
 
 /*
 * Moves the bit to some (X,Y) location at retract height. 

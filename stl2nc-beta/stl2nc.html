@@ -15,9 +15,13 @@
             This website lets you convert STL files to PNG files for use
             with Carbide Create Pro, and will also generate Gcode
             for use directly with Shapeoko CNC machines.
-            
+            <p>
             WARNING: THIS IS THE BETA SITE AND CONTAINS VERY EXPERIMENTAL
             STUFF, BE CAREFUL
+            <p>
+            Specifically, this code assumes that the dimensions REALLY match
+            the stock and that there is enough clearance around the stock to
+            come in milling from the outside.
         </td><td width="33%">&nbsp;</td><td valign=top>
             All computation happens local
             and inside your browser, no information is uploaded or sent
@@ -98,6 +102,7 @@
                 <option value="19">#19 - 1.5mm diameter flat endmill</option>
                 <option value="27">#27 - 1mm diameter tapered ballnose endmill</option>
                 <option value="28">#28 - 1/2mm diameter tapered ballnose endmill</option>
+                <option value="99">#99 - One Sixteenth inch ballnose endmill</option>
                 <option value="101">#101 - One Eighth inch ballnose endmill</option>
                 <option value="102">#102 - One Eighth inch flat endmill</option>
             </select>
@@ -107,6 +112,8 @@
         </td></tr>
         <tr><td>
         Roughing chipload target</td><td> <input type="text" value="0.025" onChange="handle_chipload(this.value)" id="chipload" size=6>&nbsp<label id="chiploadmm">mm</label></input>
+        <br>
+        <label id="resultfns"></label>
         </td></tr>        
             </table></td></tr></table>
         </div>
