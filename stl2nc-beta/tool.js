@@ -165,7 +165,7 @@ class Tool {
       let woc = 0.01;
       let rpm = 6000;
       for (rpm = 6000; rpm <= 24000; rpm += 1000) {
-        for (woc = 0.125 * this.diameter; woc <= this.diameter/4; woc += 0.0005) {
+        for (woc = 0.11 * this.diameter; woc <= this.diameter/4; woc += 0.0005) {
           let adjusted = target_mm;
           if (this.roughing_woc < this.diameter / 2) {
             adjusted = target_mm *
