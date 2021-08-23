@@ -110,14 +110,14 @@ function print_rings(nr, rings)
 const sqrt2 = Math.sqrt(2);
  
 class Tool {
-  constructor (_number, _diameter, _feedrate, _plungerate, _geometry, _depth_of_cut, _stock_to_leave = 0.0, _stepover = 0.0, flutes = 2) 
+  constructor (_number, _diameter, _feedrate, _plungerate, _geometry, _depth_of_cut, _stock_to_leave = 0.0, _stepover = 0.0, flutes = 2, maxrpm = 24000) 
   {
       this.number = _number;
       this.diameter = 1.0 * _diameter;
       this.feedrate = 1.0 * _feedrate;
       this.roughing_feedrate = this.feedrate;
       this.roughing_woc = this.diameter / 2;
-      this.rippem = 24000;
+      this.rippem = maxrpm;
       this.flutes = flutes;
       this.plungerate = 1.0 * _plungerate;
       this.geometry = _geometry;
@@ -162,10 +162,11 @@ class Tool {
       let best_woc = 0;
       let best_rpm = 0;
       let best_feed = 0;    
+      let best_mrr = 0;
       let woc = 0.01;
       let rpm = 6000;
-      for (rpm = 6000; rpm <= 24000; rpm += 1000) {
-        for (woc = 0.11 * this.diameter; woc <= this.diameter/4; woc += 0.0005) {
+      for (rpm = 6000; rpm <= 18000; rpm += 1000) {
+        for (woc = 0.06 * this.diameter; woc <= this.diameter/4; woc += 0.0005) {
           let adjusted = target_mm;
           if (this.roughing_woc < this.diameter / 2) {
             adjusted = target_mm *
@@ -181,12 +182,15 @@ class Tool {
           }
           rate = Math.round(rate/100) * 100;
           
-          if (rate > best_feed) {
+          let mrr = rate * woc;
+          
+          if (mrr > best_mrr) {
+              best_mrr = mrr;
               best_feed = rate;
               best_woc = woc;
               best_rpm = rpm;
           }
-          if (rate == best_feed && woc > best_woc) {
+          if (mrr == best_mrr && woc < best_woc) {
               best_feed = rate;
               best_woc = woc;
               best_rpm = rpm;
@@ -197,6 +201,11 @@ class Tool {
       this.roughing_feedrate = best_feed;
       this.roughing_woc = best_woc;
       this.rippem = best_rpm;
+      
+      if (this.geometry != "flat") {
+        this.roughing_feedrate = this.feedrate;
+        this.rippem = 24000;
+      }
       
       console.log("Feedrate set to ", best_feed, " for WOC of ", best_woc, " at rpm ", best_rpm);
       let link  = document.getElementById('resultfns');
@@ -211,7 +220,7 @@ export let tool_library = [];
 
 
 
-//   constructor (_number, _diameter, _feedrate, _plungerate, _geometry, _depth_of_cut, _stock_to_leave = 0.0, _stepover = 0.0) 
+//   constructor (_number, _diameter, _feedrate, _plungerate, _geometry, _depth_of_cut, _stock_to_leave = 0.0, _stepover = 0.0, flutes = 3) 
 
 /* Creates all the tools */
 export function tool_factory()
@@ -219,6 +228,7 @@ export function tool_factory()
     if (tool_library.length > 0) {
         return;
     }
+    tool_library.push(new Tool(666,   12.5, 5000, 500, "flat", 25, 0.25, 0.2,3));
     tool_library.push(new Tool(18,   2.0, inch_to_mm(20), inch_to_mm(10), "flat", 1.0, 0.1, 0.2));
     tool_library.push(new Tool(19,   1.5, inch_to_mm(15), inch_to_mm(7), "flat", 1.0, 0.1, 0.2));
     tool_library.push(new Tool(27,   1.0, inch_to_mm(200), inch_to_mm(30), "ball", 0.5, 0.0, 0.1));
@@ -226,10 +236,10 @@ export function tool_factory()
     tool_library.push(new Tool(91,  inch_to_mm(0.50),  inch_to_mm(70), inch_to_mm(20), "flat", 2.0, 0.3));
     tool_library.push(new Tool(101, inch_to_mm(0.125), inch_to_mm(140), inch_to_mm(20), "ball", 1.0, 0.25));
     tool_library.push(new Tool(99,  inch_to_mm(0.125/2), inch_to_mm(140), inch_to_mm(20), "ball", 1.0, 0.25));
-    tool_library.push(new Tool(102, inch_to_mm(0.125), inch_to_mm(40), inch_to_mm(20), "flat", 1.0, 0.25));
+    tool_library.push(new Tool(102, inch_to_mm(0.125), inch_to_mm(75), inch_to_mm(50), "flat", 1.0, 0.25));
     tool_library.push(new Tool(201, inch_to_mm(0.250), inch_to_mm(180), inch_to_mm(20), "flat", 1.0, 0.25, 0.0, 3));
-    tool_library.push(new Tool(78, inch_to_mm(0.250), inch_to_mm(180), inch_to_mm(20), "flat", 1.0, 0.25, 0.0, 2));
-    tool_library.push(new Tool(278, inch_to_mm(0.250), inch_to_mm(180), inch_to_mm(20), "flat", 1.0, 0.25, 0.0, 1));
+    tool_library.push(new Tool(78, inch_to_mm(0.250), inch_to_mm(180), inch_to_mm(20), "flat", 5.0, 0.25, 0.0, 2));
+    tool_library.push(new Tool(278, inch_to_mm(0.250), inch_to_mm(180), inch_to_mm(20), "flat", 5.0, 0.25, 0.0, 1));
 }
 
 
@@ -254,7 +264,7 @@ export function select_tool(toolnr)
             tool_depth_of_cut = tool_library[i].depth_of_cut * Math.sqrt(material_multiplier);
             tool_stock_to_leave = tool_library[i].stock_to_leave * Math.sqrt(material_multiplier);
             tool_library[i].set_chipload(chipload);
-            if (tool_library[i] > 0) {
+            if (tool_library[i].rippem > 0) {
               tool_rippem = tool_library[i].rippem;
             } else {
               tool_rippem = 24000;
@@ -366,3 +376,76 @@ export function plungerate()
 {
   return tool_plungerate;
 }
+
+export function custom_rippem(value)
+{
+    tool_factory();
+    for (let i = 0; i < tool_library.length; i++) {
+        if (tool_library[i].number == 666) {
+            tool_library[i].rippem = value;
+            console.log("Max RPM set to ", tool_library[i].rippem);
+        }
+    }
+    return 0;
+}
+
+export function custom_diameter(value)
+{
+    tool_factory();
+    for (let i = 0; i < tool_library.length; i++) {
+        if (tool_library[i].number == 666) {
+            tool_library[i].diameter = value;
+            console.log("Diameter set to ", tool_library[i].diameter);
+        }
+    }
+    return 0;
+}
+
+export function custom_feedrate(value)
+{
+    tool_factory();
+    for (let i = 0; i < tool_library.length; i++) {
+        if (tool_library[i].number == 666) {
+            tool_library[i].feedrate = value;
+            console.log("Feedrate set to ", tool_library[i].feedrate);
+        }
+    }
+    return 0;
+}
+
+export function custom_plungerate(value)
+{
+    tool_factory();
+    for (let i = 0; i < tool_library.length; i++) {
+        if (tool_library[i].number == 666) {
+            tool_library[i].plungerate = value;
+            console.log("Plungerate set to ", tool_library[i].plungerate);
+        }
+    }
+    return 0;
+}
+
+export function custom_flutes(value)
+{
+    tool_factory();
+    for (let i = 0; i < tool_library.length; i++) {
+        if (tool_library[i].number == 666) {
+            tool_library[i].flutes = value;
+            console.log("Flutes set to ", tool_library[i].flutes);
+        }
+    }
+    return 0;
+}
+
+export function custom_doc(value)
+{
+    tool_factory();
+    for (let i = 0; i < tool_library.length; i++) {
+        if (tool_library[i].number == 666) {
+            tool_library[i].depth_of_cut = value;
+            console.log("DOC set to ", tool_library[i].depth_of_cut);
+        }
+    }
+    return 0;
+}
+

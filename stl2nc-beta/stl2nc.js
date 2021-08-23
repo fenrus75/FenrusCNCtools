@@ -350,6 +350,31 @@ export function handle_chipload(val)
     }
 }
 
+export function handle_custom_rippem(val)
+{
+  tool.custom_rippem(val);
+}
+export function handle_custom_diameter(val)
+{
+  tool.custom_diameter(val);
+}
+export function handle_custom_feedrate(val)
+{
+  tool.custom_feedrate(val);
+}
+export function handle_custom_plungerate(val)
+{
+  tool.custom_plungerate(val);
+}
+export function handle_custom_flutes(val)
+{
+  tool.custom_flutes(val);
+}
+export function handle_custom_doc(val)
+{
+  tool.custom_doc(val);
+}
+
 
 document.getElementById('files').onchange = handle;
 
@@ -367,3 +392,10 @@ window.handle_finishing = handle_finishing;
 window.handle_chipload = handle_chipload;
 window.OffsetB = OffsetB;
 window.RadioB = RadioB;
+
+window.handle_custom_rippem = handle_custom_rippem;
+window.handle_custom_diameter = handle_custom_diameter;
+window.handle_custom_feedrate = handle_custom_feedrate;
+window.handle_custom_plungerate = handle_custom_plungerate;
+window.handle_custom_flutes = handle_custom_flutes;
+window.handle_custom_doc = handle_custom_doc;

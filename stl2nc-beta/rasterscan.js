@@ -93,23 +93,27 @@ let prev_pct = 0;
 let roughing_overcut = 1.5;
 
 /* one raster direction for roughing, front to back */
-function roughing_zig(X, startY, endY, deltaY)
+function roughing_zig(X, startY, endY, deltaY, extraZ)
 {
         let Y = startY;
         
         let prevX = X;
         let prevY = Y;
-        let prevZ = get_height_tool(X, Y, roughing_overcut * tool.radius()) + tool.tool_stock_to_leave;;
+        let prevZ = get_height_tool(X, Y, roughing_overcut * tool.radius()) + tool.tool_stock_to_leave + extraZ;
         
         while (Y <= endY) {
             /* for roughing we look roughing_overcutx the tool diameter as a stock-to-leave measure */
-            let Z = get_height_tool(X, Y, roughing_overcut * tool.radius()) + tool.tool_stock_to_leave;
+            let Z = get_height_tool(X, Y, roughing_overcut * tool.radius()) + tool.tool_stock_to_leave + extraZ;
             /* 45 degree max ramp down */
             if (Z - prevZ < -deltaY) {
                 Z = prevZ + prevY - Y;
             }
+            
+            if (Z > 1 && prevZ > 0) {
+                Z = 1;
+            }
 
-            segment.push_segment(prevX, prevY, prevZ, X, Y, Z, 0, 5);
+            segment.push_segment(prevX, prevY, prevZ, X, Y, Z, 0, 1);
             
             
             prevY = Y;
@@ -127,23 +131,26 @@ function roughing_zig(X, startY, endY, deltaY)
         }    
 }
 
-function roughing_zag(X, startY, endY, deltaY)
+function roughing_zag(X, startY, endY, deltaY, extraZ)
 {
         let Y = startY;
 
         let prevX = X;
         let prevY = Y;
-        let prevZ = get_height_tool(X, Y, roughing_overcut * tool.radius()) + tool.tool_stock_to_leave;;
+        let prevZ = get_height_tool(X, Y, roughing_overcut * tool.radius()) + tool.tool_stock_to_leave + extraZ;
         
         while (Y >= endY) {
             /* for roughing we look roughing_overcutx the tool diameter as a stock-to-leave measure */
-            let Z = get_height_tool(X, Y, roughing_overcut * tool.radius()) + tool.tool_stock_to_leave;
+            let Z = get_height_tool(X, Y, roughing_overcut * tool.radius()) + tool.tool_stock_to_leave + extraZ;
             /* 45 degree max ramp down */
             if (Z - prevZ < -deltaY) {
                 Z = prevZ - deltaY;
             }
+            if (Z > 1 && prevZ > 0) {
+                Z = 1;
+            }
 
-            segment.push_segment(prevX, prevY, prevZ, X, Y, Z, 0, 5);
+            segment.push_segment(prevX, prevY, prevZ, X, Y, Z, 0, 1);
             
             
             prevY = Y;
@@ -161,30 +168,33 @@ function roughing_zag(X, startY, endY, deltaY)
         }    
 }
 
-function roughing_zeg(Y, startX, endX, deltaX, cooling = false)
+function roughing_zeg(Y, startX, endX, deltaX, extraZ, cooling = false)
 {
         let X = startX;
         
-        console.log("startX", startX);
+        console.log("startX", Math.round(startX * 1000)/1000, " and extraZ is ", extraZ);
 
 
         let prevX = X;
         let prevY = Y;
-        let prevZ = get_height_tool(X, Y, roughing_overcut * tool.radius()) + tool.tool_stock_to_leave;;
+        let prevZ = get_height_tool(X, Y, roughing_overcut * tool.radius()) + tool.tool_stock_to_leave + extraZ;
         
         while (X <= endX) {
             /* for roughing we look roughing_overcutx the tool diameter as a stock-to-leave measure */
-            let Z = get_height_tool(X, Y, roughing_overcut * tool.radius()) + tool.tool_stock_to_leave;
+            let Z = get_height_tool(X, Y, roughing_overcut * tool.radius()) + tool.tool_stock_to_leave + extraZ;
             /* 45 degree max ramp down */
             if (Z - prevZ < -deltaX) {
                 Z = prevZ - deltaX;
+            }
+            if (Z > 1 && prevZ > 0) {
+                Z = 1;
             }
 
             /* We're only want it to do bit-cooling at the very end */
             let do_cooling = cooling;
             if (X != endX)
                 do_cooling = false;
-            segment.push_segment(prevX, prevY, prevZ, X, Y, Z, 0, 5, do_cooling);
+            segment.push_segment(prevX, prevY, prevZ, X, Y, Z, 0, 1, do_cooling);
             
             
             prevX = X;
@@ -202,23 +212,27 @@ function roughing_zeg(Y, startX, endX, deltaX, cooling = false)
         }    
 }
 
-function roughing_zog(Y, startX, endX, deltaX)
+function roughing_zog(Y, startX, endX, deltaX, extraZ)
 {
         let X = startX;
 
         let prevX = X;
         let prevY = Y;
-        let prevZ = get_height_tool(X, Y, roughing_overcut * tool.radius()) + tool.tool_stock_to_leave;;
+        let prevZ = get_height_tool(X, Y, roughing_overcut * tool.radius()) + tool.tool_stock_to_leave + extraZ;
         
         while (X >= endX) {
             /* for roughing we look roughing_overcutx the tool diameter as a stock-to-leave measure */
-            let Z = get_height_tool(X, Y, roughing_overcut * tool.radius()) + tool.tool_stock_to_leave;
+            let Z = get_height_tool(X, Y, roughing_overcut * tool.radius()) + tool.tool_stock_to_leave + extraZ;
             /* 45 degree max ramp down */
             if (Z - prevZ < -deltaX) {
                 Z = prevZ - deltaX;
             }
 
-            segment.push_segment(prevX, prevY, prevZ, X, Y, Z, 0, 5);
+            if (Z > 1 && prevZ > 0) {
+                Z = 1;
+            }
+
+            segment.push_segment(prevX, prevY, prevZ, X, Y, Z, 0, 1);
             
             
             prevX = X;
@@ -303,6 +317,9 @@ function reset_progress_bars()
 /* roughing pass */
 function roughing_zig_zag(_tool, width, height)
 {
+    if (_tool == 0) {
+        return;
+    }
     tool.select_tool(_tool);
     setTimeout(gcode.gcode_change_tool, 0, _tool);
     
@@ -313,9 +330,6 @@ function roughing_zig_zag(_tool, width, height)
     let total = 0;
     let next_cool = 1500;
     
-    if (_tool == 0) {
-        return;
-    }
     
     console.log("roughing tool diameter is ", tool.tool_diameter);
     console.log("wxh ", width, " ", height)
@@ -329,44 +343,67 @@ function roughing_zig_zag(_tool, width, height)
     let midX = width / 2;
     let midY = height / 2;
     
-    let offsetX = width/2 + tool.tool_diameter/1.75;
-    let offsetY = height/2 + tool.tool_diameter/1.75;
+    
+    let Zoffset = stl.get_work_depth() - tool.tool_depth_of_cut;
+    if (Zoffset < 0.0) {
+        Zoffset = 0.0;
+    }
+    
+    while (Zoffset >= 0) {
+    
+        if (Zoffset <= 0.2) {
+            ACC = 50;
+        } else {
+            ACC = 5;
+        }
+    
+        let offsetX = width/2 + tool.tool_diameter/1;
+        let offsetY = height/2 + tool.tool_diameter/1;
      
     
-    let deltaXY = tool.tool_diameter / 8;
-    if (deltaXY > 0.5) {
-        deltaXY = 0.5;
-    }
+        let deltaXY = tool.tool_diameter / 8;
+        if (deltaXY > 0.5) {
+            deltaXY = 0.5;
+        }
+        setTimeout(segment.push_segment, 0, midX, midY, 1, -tool.tool_diameter, -tool.tool_diameter, 1);
 
 //    setTimeout(cutout_box1, 0);    
     
-    while (offsetX > 0 && offsetY > 0) {
-        let cooling = false;
+        while (offsetX > 0 && offsetY > 0) {
+            let cooling = false;
 
-        total += 4 * offsetY  + 4 * offsetX;
+            total += 4 * offsetY  + 4 * offsetX;
+            
+            if (total > next_cool) {
+                cooling = true;
+                next_cool = total + 2000;
+            }
         
-        if (total > next_cool) {
-            cooling = true;
-            next_cool = total + 2000;
+
+            setTimeout(roughing_zig, 0, midX - offsetX, midY - offsetY - stepsize, midY + offsetY, deltaXY, Zoffset);
+            setTimeout(roughing_zeg, 0, midY + offsetY, midX - offsetX, midX + offsetX, deltaXY, Zoffset, cooling);
+            setTimeout(roughing_zag, 0, midX + offsetX, midY + offsetY, midY - offsetY, deltaXY, Zoffset);
+            setTimeout(roughing_zog, 0, midY - offsetY, midX + offsetX, midX - offsetX + stepsize, deltaXY, Zoffset);
+        
+        
+            if (offsetX == 0) { break; };
+            if (offsetY == 0) { break; };
+        
+            offsetX -= stepsize;
+            offsetY -= stepsize;
+            if (offsetX < 0) { offsetX = 0;};
+            if (offsetY < 0) { offsetY = 0;};
+        
         }
         
-
-        setTimeout(roughing_zig, 0, midX - offsetX, midY - offsetY - stepsize, midY + offsetY, deltaXY);
-        setTimeout(roughing_zeg, 0, midY + offsetY, midX - offsetX, midX + offsetX, deltaXY, cooling);
-        setTimeout(roughing_zag, 0, midX + offsetX, midY + offsetY, midY - offsetY, deltaXY);
-        setTimeout(roughing_zog, 0, midY - offsetY, midX + offsetX, midX - offsetX + stepsize, deltaXY);
-        
-        
-        if (offsetX == 0) { break; };
-        if (offsetY == 0) { break; };
-        
-        offsetX -= stepsize;
-        offsetY -= stepsize;
-        if (offsetX < 0) { offsetX = 0;};
-        if (offsetY < 0) { offsetY = 0;};
-        
+        if (Zoffset == 0.0) {
+            break;
+        }
+        Zoffset = Zoffset - tool.tool_depth_of_cut;
+        if (Zoffset < 0) {
+            Zoffset = 0;
+        }
     }
-
     setTimeout(segment.segments_to_gcode_quick, 0);
     
 //    setTimeout(segment.segments_to_gcode, 0, 50);
@@ -489,13 +526,13 @@ function finishing_zag(Y, deltaX)
 function finishing_zig_zag(_tool)
 {
 
-    setTimeout(gcode.gcode_change_tool, 0, _tool);
-    tool.select_tool(_tool);
-    
     if (_tool == 0) {
         return;
     }
+    setTimeout(gcode.gcode_change_tool, 0, _tool);
+    tool.select_tool(_tool);
     
+    ACC = 100;
         
     let minY = -tool.radius();
     let maxY = stl.get_work_height() + tool.radius();

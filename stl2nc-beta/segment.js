@@ -97,13 +97,17 @@ export function push_segment(X1, Y1, Z1, X2, Y2, Z2, level = 0, direct_mill = 0.
     if (levels[level].paths.length > 0) {
         let prev = levels[level].paths[levels[level].paths.length - 1];
         if (prev.X1 == X1 && prev.Z1 == prev.Z2 && Z1 == Z2 && approx4(prev.Y2,Y1) && prev.Z1 == Z1 && X1 == X2) {
-            levels[level].paths[levels[level].paths.length - 1].Y2 = Y2;
-            return;
+            if (Math.abs(levels[level].paths[levels[level].paths.length - 1].Y2 - levels[level].paths[levels[level].paths.length - 1].Y1) < 10) {
+                levels[level].paths[levels[level].paths.length - 1].Y2 = Y2;
+                return;
+            }
         }
 
         if (prev.Y1== Y1 && prev.Z1 == prev.Z2 && Z1 == Z2 && approx4(prev.X2, X1) && prev.Z1 == Z1 && Y1 == Y2) {
-            levels[level].paths[levels[level].paths.length - 1].X2 = X2;
-            return;
+            if (Math.abs(levels[level].paths[levels[level].paths.length - 1].X2 - levels[level].paths[levels[level].paths.length - 1].X1) < 10) {
+                levels[level].paths[levels[level].paths.length - 1].X2 = X2;
+                return;
+            }
         }
     }
     

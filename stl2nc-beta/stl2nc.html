@@ -48,8 +48,9 @@
             <br />
 
             <br />
-            <table><tr><td valign=top width="50%">
+            <table width="100%"><tr><td valign=top width="30%">
             <table>
+            <tr><th colspan=2>Stock dimensions</th></tr>
             <tr><td>Stock width</td><td><input type="text" value="120" onChange="handle_width(this.value)" id="width" size=6>&nbsp;<label id="widthmm">mm</label></input></td><td>&nbsp;&nbsp;</td><td>Design width:</td><td><label id="resultwidth"></label></td></tr>
             <tr><td>Stock height</td><td><input type="text" value="120" onChange="handle_height(this.value)" id="height" size=6>&nbsp;<label id="heightmm">mm</label></input></td><td>&nbsp;&nbsp;</td><td>Design height:</td><td><label id="resultheight"></label></td></tr>
             <tr><td>Stock depth</td><td><input type="text" value="12" onChange="handle_depth(this.value)" id="depth" size=6>&nbsp;<label id="depthmm">mm</label></input></td><td>&nbsp;&nbsp;</td><td>Design depth:</td><td><label id="resultdepth"></label></td></tr>
@@ -62,13 +63,9 @@
             </select> </td><td>&nbsp;
             </td></tr>
             </table>
-            </td><td valign=top width="50%">
+            </td><td valign=top width="40%">
             <table>
-            <tr><td>
-            Calculation precision</td><td>
-            <input type="range" min="0.5" max="3.0" value="1.0" step="0.1" class="slider" id="precision" name="precision"  onclick="handle_precision(this.value)">
-            <div id="rangeoutput"> </div>
-            </td></tr>
+            <tr><th colspan=2>Direct GCode generation</th></tr>
             <tr><td>
             Gcode files</td><td>
             <select name="bitsetter" id="bitsetter" onclick="handle_bitsetter(this.value)">
@@ -93,6 +90,7 @@
                 <option value="201">#201 - One Quarter inch flat endmill</option>
                 <option value="78">#78 - One Quarter inch Two Flute endmill</option>
                 <option value="278">#278Z - One Quarter inch Single Flute endmill</option>
+                <option value="666">Custom tool, specifiy to the right</option>
             </select></td></tr>
             <tr><td>
             <label for="finishing">Finishing endmill</label></td><td>
@@ -108,14 +106,24 @@
             </select>
             </td></tr>
             <tr><td>            
-        Stepover for finishing:</td><td> <input type="text" value="0.3175" onChange="handle_stepover(this.value)" id="stepover" size=6>&nbsp;<label id="stepovermm">mm</label></input>
+        Stepover for finishing:</td><td><input type="text" value="0.3175" onChange="handle_stepover(this.value)" id="stepover" size=6>&nbsp;<label id="stepovermm">mm</label></input>
         </td></tr>
         <tr><td>
         Roughing chipload target</td><td> <input type="text" value="0.025" onChange="handle_chipload(this.value)" id="chipload" size=6>&nbsp<label id="chiploadmm">mm</label></input>
         <br>
         <label id="resultfns"></label>
         </td></tr>        
-            </table></td></tr></table>
+            </table></td><td width="30%" valign=top>
+            <table>
+            <tr><th colspan=2>Custom Roughing tool settings</th></tr>
+            <tr><td>Tool diameter </td><td><input type="text" value="12.5" onChange="handle_custom_diameter(this.value)" id="custom_diameter" size=6></input> mm</td></tr>
+            <tr><td>Max Feedrate </td><td><input type="text" value="5000" onChange="handle_custom_feedrate(this.value)" id="custom_feedrate" size=6></input> mm/min</td></tr>
+            <tr><td>Max Plunge Feedrate </td><td><input type="text" value="500" onChange="handle_custom_plungerate(this.value)" id="custom_plungerate" size=6></input> mm/min</td></tr>
+            <tr><td>Max depth of cut </td><td><input type="text" value="25" onChange="handle_custom_doc(this.value)" id="custom_doc" size=6></input> mm</td></tr>
+            <tr><td>Max spindle RPM </td><td><input type="text" value="24000" onChange="handle_custom_rippem(this.value)" id="custom_rippem" size=6></input> revolutions/min</td></tr>
+            <tr><td>Number of flutes </td><td><input type="text" value="3" onChange="handle_custom_flutes(this.value)" id="custom_flutes" size=6></input></td></tr>
+            </table>
+            </td></tr></table>
         </div>
         <div>
             <br />
