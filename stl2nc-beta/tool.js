@@ -165,7 +165,10 @@ class Tool {
       let best_mrr = 0;
       let woc = 0.01;
       let rpm = 6000;
-      for (rpm = 6000; rpm <= 18000; rpm += 1000) {
+      if (this.rippem < 6000) {
+          this.rippem = 24000;
+      }
+      for (rpm = 6000; rpm <= this.rippem; rpm += 1000) {
         for (woc = 0.06 * this.diameter; woc <= this.diameter/4; woc += 0.0005) {
           let adjusted = target_mm;
           if (this.roughing_woc < this.diameter / 2) {
@@ -228,7 +231,7 @@ export function tool_factory()
     if (tool_library.length > 0) {
         return;
     }
-    tool_library.push(new Tool(666,   12.5, 5000, 500, "flat", 25, 0.25, 0.2,3));
+    tool_library.push(new Tool(666,   12.7, 5000, 500, "flat", 25, 0.25, 0.2,3));
     tool_library.push(new Tool(18,   2.0, inch_to_mm(20), inch_to_mm(10), "flat", 1.0, 0.1, 0.2));
     tool_library.push(new Tool(19,   1.5, inch_to_mm(15), inch_to_mm(7), "flat", 1.0, 0.1, 0.2));
     tool_library.push(new Tool(27,   1.0, inch_to_mm(200), inch_to_mm(30), "ball", 0.5, 0.0, 0.1));
