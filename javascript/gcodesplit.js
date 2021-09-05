@@ -12,6 +12,7 @@ let filecontent = []
 
 
 let add_go_to_zero = 0;
+let toolpath_split = 0;
 
 function process_data(data)
 {
@@ -23,6 +24,7 @@ function process_data(data)
     
     let header = ""
     let footer = ""
+    let m6line = ""
     
     console.log("Data is " + lines[0] + " size  " + lines.length);
     
@@ -49,7 +51,20 @@ function process_data(data)
 	        phase = 2;
         }
         
+        if (toolpath_split && line.includes("(") && !line.includes("FOR RAPID PLUNGE")) {
+    		toolchanges = toolchanges + 1;
+    		filecontent[toolchanges] = m6line + "\n";
+                let bit = "";
+                let index = m6line.indexOf("T");
+                if (index >= 0) {
+                    bit = line.substring(index + 1);
+                }
+                filenames[toolchanges] = filename + "-" + toolchanges.toString() + "-" + bit + ".nc";
+            
+        }
+        
         if (line.includes("M06") || line.includes("M6") || line.includes("M0 ")) {
+            m6line = line;
             let index = line.indexOf("T");
             let bit = "";
             if (line.includes("M0 ")) {
@@ -146,7 +161,16 @@ function set_zero(value)
         add_go_to_zero = 0;
     }
 }
+function set_toolpath_split(value)
+{
+    if (value) {
+        toolpath_split = 1;
+    } else {
+        toolpath_split = 0;
+    }
+}
 
 
 document.getElementById('files').onchange = handle;
 window.set_zero = set_zero;
+window.set_toolpath_split = set_toolpath_split;
