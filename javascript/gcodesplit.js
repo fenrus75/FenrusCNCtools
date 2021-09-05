@@ -51,7 +51,7 @@ function process_data(data)
 	        phase = 2;
         }
         
-        if (toolpath_split && line.includes("(") && !line.includes("FOR RAPID PLUNGE")) {
+        if (toolpath_split && line.includes("(") && !line.includes("FOR RAPID PLUNGE") and phase == 1 ) {
     		toolchanges = toolchanges + 1;
     		filecontent[toolchanges] = m6line + "\n";
                 let bit = "";
