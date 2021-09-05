@@ -51,6 +51,10 @@ function process_data(data)
 	        phase = 2;
         }
         
+        if (phase == 1 && toolpath_split && line.includes("(")) {
+            console.log("Comment found: ", line);
+        }
+        
         if (toolpath_split && line.includes("(") && !line.includes("FOR RAPID PLUNGE") && !line.includes("TOOL/MILL") && m6line != "" ) {
     		toolchanges = toolchanges + 1;
     		filecontent[toolchanges] = m6line + "\n";
