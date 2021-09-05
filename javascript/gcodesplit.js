@@ -60,6 +60,8 @@ function process_data(data)
                     bit = line.substring(index + 1);
                 }
                 filenames[toolchanges] = filename + "-" + toolchanges.toString() + "-" + bit + ".nc";
+                console.log("Toolpath line", line);
+                console.log("Toolpath found ", filenames[toolchanges]);
             
         }
         
