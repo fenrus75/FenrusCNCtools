@@ -166,6 +166,7 @@ function set_zero(value)
 function set_toolpath_split(value)
 {
     if (value) {
+        console.log("Turning on toolpath splitting");
         toolpath_split = 1;
     } else {
         toolpath_split = 0;
