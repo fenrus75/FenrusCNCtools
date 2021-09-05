@@ -51,8 +51,9 @@ function process_data(data)
 	        phase = 2;
         }
         
-        if (phase == 1 && toolpath_split && line.includes("(")) {
+        if (toolpath_split && line.includes("(")) {
             console.log("Comment found: ", line);
+            console.log("Comment found with m6line: ", m6line);
         }
         
         if (toolpath_split && line.includes("(") && !line.includes("FOR RAPID PLUNGE") && !line.includes("TOOL/MILL") && m6line != "" ) {
