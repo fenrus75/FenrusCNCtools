@@ -62,7 +62,7 @@ function process_data(data)
                 let bit = "";
                 let index = m6line.indexOf("T");
                 if (index >= 0) {
-                    bit = line.substring(index + 1);
+                    bit = m6line.substring(index + 1);
                 }
                 filenames[toolchanges] = filename + "-" + toolchanges.toString() + "-" + bit + ".nc";
                 console.log("Toolpath line", line);
