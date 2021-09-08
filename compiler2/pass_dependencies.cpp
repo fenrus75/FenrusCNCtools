@@ -33,7 +33,7 @@ void pass_dependencies(struct element *e)
                 break;
             }
             
-            if (elements_intersect(first, second) || first->is_barrier)
+            if (elements_intersect(first, second) || first->is_barrier || first->type != TYPE_CONTAINER)
                 declare_A_depends_on_B(second, first);
             
             

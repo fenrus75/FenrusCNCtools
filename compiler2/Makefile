@@ -5,7 +5,7 @@ OBJS := main.o parser.o  emit.o stats.o lib.o  pass_bounding_box.o pass_raw_to_m
 
 %.o : %.cpp Makefile compiler.h
 	    @echo "Compiling: $< => $@"
-	    @g++ $(CFLAGS) -g -O0  -march=native -frounding-math -ffunction-sections -fno-common -Wno-address-of-packed-member -Wall -W -g2 -Wno-unused-variable -Wno-unused-parameter  -c $< -o $@
+	    @g++ $(CFLAGS) -g -O3  -march=native -frounding-math -ffunction-sections -fno-common -Wno-address-of-packed-member -Wall -W -g2 -Wno-unused-variable -Wno-unused-parameter  -c $< -o $@
 
 
 

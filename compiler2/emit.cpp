@@ -4,6 +4,7 @@
 #include <stdlib.h>
 #include <math.h>
 #include <cstring>
+#include <algorithm>
 
 
 void emit_TYPE_RAW(FILE *file, struct element *e)
@@ -55,7 +56,11 @@ void emit_TYPE_MOVEMENT(FILE *file, struct element *e)
         sprintf(frag, "F%0.0f", e->feed);
         strcat(line, frag);
     }
-    fprintf(file, "%s\n", line);
+    if (e->raw_gcode)
+      fprintf(file, "%s\n", e->raw_gcode);
+    else
+      fprintf(file, "%s\n", line);
+    
     lX = e->X2;
     lY = e->Y2;
     lZ = e->Z2;
@@ -65,7 +70,48 @@ void emit_TYPE_MOVEMENT(FILE *file, struct element *e)
     lG = e->glevel;
 }
 
-void emit_gcode(FILE *file, struct element *e)
+static double currentX, currentY, currentZ;
+
+
+/* Sorting rules
+ * All emitted items come last
+ * Then sort by least depends-on
+ * THen sort by travel distance
+ * Then sort by sequence number
+ */
+static bool compare_elements_for_sort(struct element *A, struct element *B)
+{
+  if (A->has_been_emitted && ! B->has_been_emitted)
+    return false;
+  if (B->has_been_emitted && ! A->has_been_emitted)
+    return true;
+    
+  if (A->depends_refcount < B->depends_refcount)
+    return true;
+  if (A->depends_refcount > B->depends_refcount)
+    return false;
+    
+  double dA = dist3(currentX, currentY, currentZ, A->X1, A->Y1, A->Z1);
+  double dB = dist3(currentX, currentY, currentZ, B->X1, B->Y1, B->Z1);
+    
+  if (dA < dB)
+    return true;
+  if (dA > dB)
+    return false;
+
+  if (A->sequence < B->sequence)
+    return true;
+
+  return false;
+    
+}
+
+static void sort_children(struct element *e)
+{
+  std::sort(e->children.begin(), e->children.end(), compare_elements_for_sort);
+}
+
+void __emit_gcode(FILE *file, struct element *e, int level)
 {
 
         
@@ -76,21 +122,64 @@ void emit_gcode(FILE *file, struct element *e)
         break;
 
     case TYPE_CONTAINER:
+        currentX = e->X1;
+        currentY = e->Y1;
+        currentZ = e->Z1;
         emit_TYPE_CONTAINER(file, e);
         break;
     case TYPE_MOVEMENT:
+        currentX = e->X2;
+        currentY = e->Y2;
+        currentZ = e->Z2;
         emit_TYPE_MOVEMENT(file, e);
         break;
     
     default:
         ;
     }
-        
-    for (auto i: e->children) {
-        emit_gcode(file, i);
+    e->has_been_emitted = true;
+    
+    for (auto q: e->dependents) {    
+      q->depends_refcount--;
     }
-    if (e->children.size() > 0)
-     fprintf(file, "(END GROUP %s)\n", e->description);
+    
+    if (e->type == TYPE_CONTAINER || e->type == TYPE_RAW)
+      printf("Emiting container %i (%s)\n", e->sequence, e->description);
+      
+    if (level == 0) {
+
+      sort_children(e);
+    
+      if (e->children.size() > 0) {
+        struct element *i;
+        i = e->children[0];
+      
+        while (!i->has_been_emitted) {
+#if 0        
+          printf("emitting sequence %i at distance %5.2f\n", i->sequence, dist3(currentX, currentY, currentZ, i->X1, i->Y1, i->Z1));
+          for (unsigned int pp = 1; pp < e->children.size() && pp < 3; pp++) {
+              struct element *qq = e->children[pp];
+              if (!qq->has_been_emitted && qq->depends_refcount < 5)
+                printf("    versus emitting sequence %i at distance %5.2f  RC %li\n", qq->sequence, dist3(currentX, currentY, currentZ, qq->X1, qq->Y1, qq->Z1), qq->depends_refcount);
+          }
+#endif        
+          __emit_gcode(file, i, level + 1);
+          sort_children(e);
+          i = e->children[0];
+        }
+      }
+    } else {
+      for (auto i: e->children)
+        __emit_gcode(file, i, level + 1);
+    }
+      
+    if (e->description)
+      fprintf(file, "(END GROUP %s)\n", e->description);
+}
+
+void emit_gcode(FILE *file, struct element *e)
+{
+  __emit_gcode(file, e, 0);
 }
 
 
@@ -132,8 +221,13 @@ static void __print_tree(struct element *e, int level, int leaf)
         printf("%s\t", e->raw_gcode);
 
     printf("%i\t", (int) e->children.size());
-    if (e->type == TYPE_CONTAINER) 
+    if (e->type == TYPE_CONTAINER || e->type == TYPE_RAW) 
       printf("RC:%li\t", e->depends_refcount);
+    if (e->depends_refcount == 1)
+      printf("DEPS:%i\t", e->depends_on[0]->sequence);
+    if (e->type == TYPE_CONTAINER) {
+      printf("BB:%1.2fx%1.2f-%1.2fx%1.2f\t", e->minX, e->minY, e->maxX, e->maxY);
+    }
     printf("(%6.2f)\n", e->length);
     is_leaf = 1;
     for (auto i: e->children) {

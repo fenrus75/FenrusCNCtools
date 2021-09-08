@@ -4,6 +4,8 @@
 #include <stdlib.h>
 #include <cstring>
 
+static int cutcount = 0;
+
 
 void pass_split_cut(struct element *e)
 {
@@ -21,12 +23,12 @@ void pass_split_cut(struct element *e)
         struct element *t;
         t = e->children[i];
         
-        if (t->type != TYPE_MOVEMENT) {
+        if (t->type != TYPE_MOVEMENT && state != 0) {
             need_flush = state;
             state = 0;
         }
 
-        if (t->type == TYPE_MOVEMENT && t->is_retract) {
+        if (t->type == TYPE_MOVEMENT && t->is_retract && state != 0) {
             need_flush = state;
             state = 0;
         }
@@ -35,10 +37,12 @@ void pass_split_cut(struct element *e)
             start = i;
             state = 1;
         }
-        
+  
         if (need_flush) {
             struct element *target;
-            target = new_element(TYPE_CONTAINER, "Cut path");
+            char buffer[4096];
+            sprintf(buffer, "Cut path %i", cutcount++);
+            target = new_element(TYPE_CONTAINER, buffer);
             target->is_split_already = true;
             if (t->is_retract)
                 move_children_to_element(e, target, start, i);

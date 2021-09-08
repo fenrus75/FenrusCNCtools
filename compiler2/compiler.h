@@ -30,7 +30,9 @@ struct element {
     bool is_positioning;
     bool is_split_already;
     bool is_barrier;
-    
+
+
+    bool has_been_emitted;    
 
     char glevel;    
     char *raw_gcode;

@@ -61,9 +61,7 @@ static void handle_XYZ(struct element *e, const char *c2)
         e->feed = nF;
         e->type = TYPE_MOVEMENT;
         stat_pass_raw_to_movement++;
-    } else {
-        e->is_positioning = true;
-    };
+    }
     
     if (cZ == 1000)
         e->is_positioning = true;

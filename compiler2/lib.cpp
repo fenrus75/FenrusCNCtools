@@ -25,6 +25,12 @@ void move_children_to_element(struct element *parent, struct element *target, in
     /* Step 3: remove the rest */    
     if (startindex + 1 <= endindex)
         parent->children.erase(parent->children.begin() + startindex + 1, parent->children.begin() + endindex + 1);
+        
+    if (target->children.size() > 0) {
+        struct element *e = target->children[0];
+        if (e->type != TYPE_MOVEMENT)
+            target->is_barrier = true;
+    }
 }
 
 
