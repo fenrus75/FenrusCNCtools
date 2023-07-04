@@ -10,7 +10,7 @@ static int total_count = 0;
 
 static int step = 1;
 
-double correlate(render *base, render *plug, double limit)
+static double correlate(render *base, render *plug, double limit)
 {
     double best_so_far = 100;
     double delta;
@@ -57,7 +57,7 @@ double correlate(render *base, render *plug, double limit)
 }
 
 
-void find_best_correlation(render *base, render *plug)
+double find_best_correlation(render *base, render *plug)
 {
     double best_so_far = -50;
     
@@ -97,4 +97,55 @@ void find_best_correlation(render *base, render *plug)
         }
     }
     printf("%i/%i early exits\n", early_exit_count, total_count);
+    
+    plug->set_offsets(bestx, besty);
+    return best_so_far;
+}
+
+
+void save_as_xpm(const char *filename, render *base,render *plug, double offset)
+{
+    FILE *file;
+    int x,y;
+    
+    file = fopen(filename, "w");
+    
+    fprintf(file, "! XPM2\n");
+    fprintf(file, "%i %i 5 1\n", base->width, base->height);
+    fprintf(file, "a c #FFFFFF\n");
+    fprintf(file, "r c #FF0000\n");
+    fprintf(file, "g c #00FF00\n");
+    fprintf(file, "l c #88FF88\n");
+    fprintf(file, "b c #0000FF\n");
+    
+    for (y = base->height-1; y >= 0; y--) {
+        for (x =0; x <base->width; x++) {
+            double b = base->get_height(x,y);
+            double p = plug->get_height(x,y);
+            double d = p - b - offset;
+            
+            if (b == 0) {
+                fprintf(file, "a");
+                continue;
+            }
+            /* the plug sticks out, we have a gap, color it red */
+            if (p - offset > 0) {
+                fprintf(file, "r");
+                continue;
+            }
+            /* we nearly touch */
+            if (d < 0.01) {
+                fprintf(file, "b");
+                continue;
+            }
+            if (d < 1) {
+                fprintf(file, "g");
+                continue;
+            }
+            fprintf(file, "l");
+            
+        }
+        fprintf(file, "\n");
+    }
+    fclose(file);
 }

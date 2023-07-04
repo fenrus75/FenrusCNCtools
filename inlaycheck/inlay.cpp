@@ -6,6 +6,9 @@
 int main(int argc, char **argv)
 {
     class render *base, *plug;
+    
+    double offset;
+    
     if (argc < 2) {
         printf("Need 2 files as argument\n");
         exit(0);
@@ -23,5 +26,7 @@ int main(int argc, char **argv)
     plug->save_as_pgm("plug.pgm");
 
 
-    find_best_correlation(base, plug);    
+    offset = find_best_correlation(base, plug);    
+    
+    save_as_xpm("result.xpm", base, plug, offset);
 }
