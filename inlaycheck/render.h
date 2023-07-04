@@ -17,6 +17,7 @@ public:
     /* internal representation */
     int	   pixels_per_mm;
     int    width, height;
+    int    minX,minY,maxX,maxY;
     double *pixels;
     double deepest;
     
@@ -29,6 +30,7 @@ public:
     
     void save_as_pgm(const char *filename);
 
+    void crop(void);
     void cut_out(void);    
     void flip_over(void);
     

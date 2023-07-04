@@ -80,6 +80,12 @@ void render::update_pixel(int x, int y, double H)
         pixels[y * width + x] = H;
     if (H < deepest)
         deepest = H;
+    if (H >= 0)
+        return;
+    if (x < minX)  minX = x;
+    if (y < minY)  minY = y;
+    if (x > maxX)  maxX = x;
+    if (y > maxY)  maxY = y;
 }
 
 void render::update_pixel(double X, double Y, double H)
@@ -91,6 +97,11 @@ void render::setup_canvas(void)
 {
     width = 0.99999 + pixels_per_mm * width_mm;
     height = 0.99999 + pixels_per_mm * height_mm;
+    
+    minX = width;
+    minY = height;
+    maxX = 0;
+    maxY = 0;
     
     ratio_x = width / width_mm;
     ratio_y = height / height_mm;
@@ -356,4 +367,39 @@ void render::cut_out(void)
                 pixels[y * width + x] = deepest;
         }
     }
+}
+
+
+void render::crop(void)
+{
+    int new_width, new_height;
+    double *newpixels;
+    int x,y;
+    
+    printf("Cropping (%i %i) x (%i %i)\n", minX, minY, maxX, maxY);
+    
+    new_width = maxX - minX + 1;
+    new_height = maxY - minY + 1;
+    
+    newpixels = (double *)calloc(sizeof(double), new_width * new_height);
+    
+    for (y = 0; y < new_height; y++) {
+        if (y + minY >= height)
+            continue;
+            
+        for (x = 0; x < new_width; x++) {
+            if (x + minX >= width)
+                continue;
+            newpixels[y * new_width + x] = pixels[ (y + minY) * width + (x + minX)];  
+        }
+    }
+ 
+     width = new_width;
+     height = new_height;
+     free(pixels);
+     pixels = newpixels;
+     minX = 0;
+     minY = 0;
+     maxX = width;
+     maxY = height;   
 }
