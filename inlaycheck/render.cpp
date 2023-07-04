@@ -23,6 +23,7 @@ render::render(const char *filename)
     tool = NULL;    
     cX = 0; cY = 0; cZ = 50;
     deepest = 0;
+    offsetX = 0; offsetY = 0;
     
     fname = strdup(filename);
     
@@ -306,7 +307,7 @@ void render::save_as_pgm(const char *filename)
          for (x = 0; x < width; x++) {
              double d;
              int c;
-             d = pixels[y * width + x];
+             d = pixels[y * width + x] + offsetZ;
              d = 255 * (deepest -d)/deepest;
              c = round(d);
              if (c < 0) c =0;
@@ -402,4 +403,41 @@ void render::crop(void)
      minY = 0;
      maxX = width;
      maxY = height;   
+}
+
+void render::set_offsets(int x, int y)
+{
+    offsetX = x;
+    offsetY = y;
+}
+
+double render::get_height(int x, int y) 
+{
+    x -= offsetX;
+    y -= offsetY;
+    
+    if (x < 0 || y < 0)
+        return 0;
+    if (x > width)
+        return 0;
+    if (y > height)
+        return 0;
+    return pixels[y * width + x];
+}
+
+void render::flip_over(void)
+{
+    double *newpixels;
+    int x,y;
+    
+    newpixels = (double *)calloc(sizeof(double), width * height);
+    
+    for (y = 0; y < height; y++) {
+        for (x = 0; x < width; x++) {
+            newpixels[y * width + (width - x - 1)] = - pixels[y * width + x];
+        }
+    }
+    free(pixels);
+    pixels = newpixels;
+    offsetZ = depth_mm;
 }

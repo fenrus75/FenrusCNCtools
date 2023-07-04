@@ -13,6 +13,8 @@ int main(int argc, char **argv)
         ren1->crop();
         ren1->cut_out();
         
+        ren1->flip_over();
+        
         ren1->save_as_pgm("output.pgm");
     }
     

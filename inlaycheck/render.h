@@ -34,6 +34,8 @@ public:
     void cut_out(void);    
     void flip_over(void);
     
+    double get_height(int x, int y);
+    void set_offsets(int x, int y);
     
 private:
     double ratio_x, ratio_y;
@@ -41,6 +43,9 @@ private:
     const char *fname;
     
     double cX, cY, cZ;
+    int offsetX = 0;
+    int offsetY = 0;
+    double offsetZ = 0.0;
     
     void setup_canvas(void);
     
