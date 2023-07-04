@@ -114,6 +114,20 @@ void render::parse_line(const char *line)
         setup_canvas();
         return;
     }
+    if (strncmp(line, "(stockMin ", 9) == 0) {
+        const char *c;
+        char *d;
+        c =line +10;
+        strtod(c, &d); /* width */
+        if (d)
+            strtod(d + 3, &d); /* height */
+        if (d) 
+            depth_mm = strtod(d + 3, NULL); /* height */
+        printf("STOCK Depth  %5.2f\n", depth_mm);
+        
+        setup_canvas();
+        return;
+    }
 // (TOOL/MILL,1.98, 0.00, 0.00, 0.00)
 
     if (strncmp(line, "(TOOL/MILL,", 11) == 0) {
@@ -165,6 +179,9 @@ void render::parse_g_line(const char *line)
     nX = cX;
     nY = cY;
     nZ = cZ;
+    
+    if (strstr(line, "G53"))
+        return;
     
     c = (char *)line;
     while (strlen(c) > 0) {
@@ -271,6 +288,9 @@ void render::save_as_pgm(const char *filename)
      fprintf(file, "%i %i\n", width, height);
      fprintf(file, "255 \n");
      
+     if (deepest < depth_mm)
+         deepest = depth_mm;
+     
      for (y = height - 1 ; y >= 0; y--) {
          for (x = 0; x < width; x++) {
              double d;
@@ -286,4 +306,54 @@ void render::save_as_pgm(const char *filename)
      }
      
      fclose(file);
+}
+
+
+void render::cut_out(void)
+{
+    int x,y;
+    double threshold;
+    
+    double cutout = 100;
+
+     if (deepest < depth_mm)
+         deepest = depth_mm;
+    
+    threshold = deepest + 0.0001; /* deal with rounding artifacts*/
+    
+    for (y = 0; y < height; y++) {
+        for (x = 0; x < width; x++) {
+            if (pixels[y * width + x] > threshold)
+                pixels[y * width + x] = cutout;
+            else
+                break;
+        }
+        for (x = width - 1; x >= 0; x--) {
+            if (pixels[y * width + x] > threshold)
+                pixels[y * width + x] = cutout;
+            else
+                break;
+        }
+    }
+    for (x = 0; x < width; x++) {
+        for (y = 0; y < height; y++) {
+            if (pixels[y * width + x] > threshold)
+                pixels[y * width + x] = cutout;
+            else
+                break;
+        }
+        for (y = height - 1; y >= 0; y--) {
+            if (pixels[y * width + x] > threshold)
+                pixels[y * width + x] = cutout;
+            else
+                break;
+        }
+    }
+
+    for (y = 0; y < height; y++) {
+        for (x = 0; x < width; x++) {
+            if (pixels[y * width + x] >= cutout)
+                pixels[y * width + x] = deepest;
+        }
+    }
 }

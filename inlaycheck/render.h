@@ -10,7 +10,7 @@ public:
     void load(void);
     
     /* gcode language */
-    double width_mm, height_mm;
+    double width_mm, height_mm, depth_mm;
     void update_pixel(double X, double Y, double H);
 
 
@@ -28,6 +28,9 @@ public:
     void update_pixel(int x, int y, double H);
     
     void save_as_pgm(const char *filename);
+
+    void cut_out(void);    
+    void flip_over(void);
     
     
 private:
