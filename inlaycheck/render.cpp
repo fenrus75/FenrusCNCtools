@@ -417,11 +417,11 @@ double render::get_height(int x, int y)
     y -= offsetY;
     
     if (x < 0 || y < 0)
-        return 0;
-    if (x > width)
-        return 0;
-    if (y > height)
-        return 0;
+        return -offsetZ;
+    if (x >= width)
+        return -offsetZ;
+    if (y >= height)
+        return -offsetZ;
     return pixels[y * width + x];
 }
 

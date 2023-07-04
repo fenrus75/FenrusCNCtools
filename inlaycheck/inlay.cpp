@@ -1,21 +1,27 @@
 #include "inlay.h"
 
+#include <cstdio>
+#include <cstdlib>
 
 int main(int argc, char **argv)
 {
-    class render *ren1;
-    if (argc >= 1) {
-        
-        ren1 = new render(argv[1]);
-        
-        ren1->load();
-        
-        ren1->crop();
-        ren1->cut_out();
-        
-        ren1->flip_over();
-        
-        ren1->save_as_pgm("output.pgm");
+    class render *base, *plug;
+    if (argc < 2) {
+        printf("Need 2 files as argument\n");
+        exit(0);
     }
-    
+        
+    base = new render(argv[1]);
+    base->load();
+    base->save_as_pgm("base.pgm");
+        
+    plug =new render(argv[2]);
+    plug->load();
+    plug->crop();
+    plug->cut_out();
+    plug->flip_over();
+    plug->save_as_pgm("plug.pgm");
+
+
+    find_best_correlation(base, plug);    
 }
