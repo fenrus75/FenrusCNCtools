@@ -8,6 +8,8 @@ static int breakX = 0,breakY = 0;
 static int early_exit_count = 0;
 static int total_count = 0;
 
+static int step = 1;
+
 double correlate(render *base, render *plug, double limit)
 {
     double best_so_far = 100;
@@ -22,10 +24,10 @@ double correlate(render *base, render *plug, double limit)
         early_exit_count++;
         return delta;
     } 
-    delta = plug->get_height(breakX+1, breakY) - base->get_height(breakX+1, breakY);
+    delta = plug->get_height(breakX+step, breakY) - base->get_height(breakX+step, breakY);
     if (delta <= limit) {
         early_exit_count++;
-        breakX++;
+        breakX+=step;
         return delta;
     } 
     
@@ -61,16 +63,36 @@ void find_best_correlation(render *base, render *plug)
     
     int x,y;
     
-    for (y = -plug->height/4 ; y < base->height + plug->height/4 ; y += 1) {
+    int bestx, besty;
+    
+    step  = 3;
+    for (y = -plug->height/4 ; y < base->height + plug->height/4 ; y += step) {
 //        printf("y is %i / %i\n", y, base->height);
 	//printf("   %i/%i early exits\n", early_exit_count, total_count);
-        for (x = -plug->width/4; x < base->width +plug->width/4 ; x += 1) {
+        for (x = -plug->width/4; x < base->width +plug->width/4 ; x += step) {
             plug->set_offsets(x, y);
             double v = correlate(base, plug, best_so_far);
             if (v > best_so_far) {
                 if (v > 0.01)
                     printf("Found best so far: (%i, %i) at %5.2f\n", x, y, v);
                 best_so_far = v;
+                bestx = x;
+                besty = y;
+            }
+        }
+    }
+    
+    step = 1;
+    for (y = besty - 5 ; y < besty + 5 ; y += step) {
+        for (x = bestx - 5; x < bestx + 5 ; x += step) {
+            plug->set_offsets(x, y);
+            double v = correlate(base, plug, best_so_far);
+            if (v > best_so_far) {
+                if (v > 0.01)
+                    printf("Found best so far: (%i, %i) at %5.2f\n", x, y, v);
+                best_so_far = v;
+                bestx = x;
+                besty = y;
             }
         }
     }
