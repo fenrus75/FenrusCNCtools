@@ -29,4 +29,5 @@ int main(int argc, char **argv)
     offset = find_best_correlation(base, plug);    
     
     save_as_xpm("result.xpm", base, plug, offset);
+    save_as_stl("result.stl", base, plug, offset);
 }

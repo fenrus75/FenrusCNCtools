@@ -63,9 +63,11 @@ double find_best_correlation(render *base, render *plug)
     
     int x,y;
     
-    int bestx, besty;
+    int bestx = 0, besty = 0;
     
-    step  = 3;
+    printf("Finding location of plug in base \n");
+    
+    step  = base->pixels_per_mm/4;
     for (y = -plug->height/4 ; y < base->height + plug->height/4 ; y += step) {
 //        printf("y is %i / %i\n", y, base->height);
 	//printf("   %i/%i early exits\n", early_exit_count, total_count);
@@ -81,10 +83,14 @@ double find_best_correlation(render *base, render *plug)
             }
         }
     }
+
+
+    best_so_far = -50;
+    printf("Finding location of plug in base phase 2\n");
     
     step = 1;
-    for (y = besty - 5 ; y < besty + 5 ; y += step) {
-        for (x = bestx - 5; x < bestx + 5 ; x += step) {
+    for (y = besty - base->pixels_per_mm ; y < besty + base->pixels_per_mm ; y += step) {
+        for (x = bestx - base->pixels_per_mm; x < bestx + base->pixels_per_mm ; x += step) {
             plug->set_offsets(x, y);
             double v = correlate(base, plug, best_so_far);
             if (v > best_so_far) {
@@ -138,7 +144,9 @@ void save_as_xpm(const char *filename, render *base,render *plug, double offset)
         }
     }
     
+    printf("Lowest d is %5.2f\n", lowest_d);
     lowest_d += 0.01;
+    
 
     for (y = base->height-1; y >= 0; y--) {
         for (x =0; x <base->width; x++) {

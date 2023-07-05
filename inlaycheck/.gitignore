@@ -3,3 +3,5 @@ inlay
 *~
 *.o
 *.pgm
+*.xpm
+*.stl

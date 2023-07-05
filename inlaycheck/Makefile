@@ -1,7 +1,12 @@
 all: inlay
 
-inlay: Makefile inlay.cpp inlay.h render.cpp render.h tool.h tool.cpp correlate.cpp
-	g++ -g -O2 -flto -Wall inlay.cpp render.cpp tool.cpp correlate.cpp -o inlay
+%.o : %.cpp Makefile inlay.h render.h tool.h  
+	    @echo "Compiling: $< => $@"
+	    @g++ $(CFLAGS) -O3  -march=native -frounding-math -fno-common -Wno-address-of-packed-member -Wall -g2 -c $< -o $@
+
+OBJS := inlay.o render.o tool.o correlate.o stloutput.o 
+inlay: Makefile inlay.h render.h tool.h  $(OBJS)
+	g++ -g -O2 -flto -Wall $(OBJS) -o inlay
 	
 	
 clean:
