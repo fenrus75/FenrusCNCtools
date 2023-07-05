@@ -30,4 +30,6 @@ int main(int argc, char **argv)
     
     save_as_xpm("result.xpm", base, plug, offset);
     save_as_stl("result.stl", base, plug, offset);
+    save_as_stl("base.stl", base, plug, offset, true, false);
+    save_as_stl("plug.stl", base, plug, offset, false, true);
 }

@@ -111,11 +111,13 @@ static void write_point4(FILE *file, int x, int y, double d00, double d01,double
     
 }
 
-void save_as_stl(const char *filename, render *base,render *plug, double offset)
+void save_as_stl(const char *filename, render *base,render *plug, double offset, bool export_base, bool export_plug)
 {
     FILE *file;
     int x,y;
     struct stlheader header;
+    
+    triangles = 0;
     
     printf("Size of triangle %li\n", sizeof(struct triangle));
     
@@ -135,8 +137,9 @@ void save_as_stl(const char *filename, render *base,render *plug, double offset)
             double p = plug->get_height(x,y);
 //            double d = p - b - offset;
             
-            write_point4(file, x, y, b00, b01, b10, b11);
-            if (p - offset < 0.1) {
+            if (export_base)
+                write_point4(file, x, y, b00, b01, b10, b11);
+            if (export_plug && p - offset < 0.1) {
                 double p00 = plug->get_height(x,y);
                 double p01 = plug->get_height(x,y+1);
                 double p10 = plug->get_height(x+1,y);

@@ -6,4 +6,4 @@
 
 extern double find_best_correlation(render *base, render *plug);
 extern void save_as_xpm(const char *filename, render *base,render *plug, double offset);
-extern void save_as_stl(const char *filename, render *base,render *plug, double offset);
+extern void save_as_stl(const char *filename, render *base,render *plug, double offset, bool dobase = true,bool doplug=true);
