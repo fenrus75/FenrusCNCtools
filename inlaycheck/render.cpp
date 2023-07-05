@@ -241,7 +241,7 @@ void render::movement(double X1, double Y1, double Z1, double X2, double Y2,doub
     if (Z1 > 0 && Z2 > 0)
         return;
     
-    steps = len * pixels_per_mm;
+    steps = len * pixels_per_mm * 2 + 1;
     
     stepX = (X2-X1) / steps;
     stepY = (Y2-Y1) / steps;

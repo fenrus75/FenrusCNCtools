@@ -52,7 +52,7 @@ static double correlate(render *base, render *plug, double limit)
             }
         }
     }
-//    printf("Hit at %i %i for depth %5.2f\n", breakX, breakY, best_so_far);
+    printf("Hit at %i %i for depth %5.2f\n", breakX, breakY, best_so_far);
     return best_so_far;
 }
 
@@ -107,6 +107,7 @@ void save_as_xpm(const char *filename, render *base,render *plug, double offset)
 {
     FILE *file;
     int x,y;
+    double lowest_d = 5;
     
     file = fopen(filename, "w");
     
@@ -125,6 +126,27 @@ void save_as_xpm(const char *filename, render *base,render *plug, double offset)
             double d = p - b - offset;
             
             if (b == 0) {
+                continue;
+            }
+            /* the plug sticks out, we have a gap, color it red */
+            if (p - offset > 0) {
+                continue;
+            }
+            if (d < lowest_d)
+                lowest_d = d;
+            
+        }
+    }
+    
+    lowest_d += 0.01;
+
+    for (y = base->height-1; y >= 0; y--) {
+        for (x =0; x <base->width; x++) {
+            double b = base->get_height(x,y);
+            double p = plug->get_height(x,y);
+            double d = p - b - offset;
+            
+            if (b == 0) {
                 fprintf(file, "a");
                 continue;
             }
@@ -134,7 +156,7 @@ void save_as_xpm(const char *filename, render *base,render *plug, double offset)
                 continue;
             }
             /* we nearly touch */
-            if (d < 0.01) {
+            if (d <= lowest_d) {
                 fprintf(file, "b");
                 continue;
             }
