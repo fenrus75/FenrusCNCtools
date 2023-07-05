@@ -16,6 +16,7 @@ public:
 private:
     double _angle;
     double _tan;
+    double _invtan;
 };
 
 class flat:public tool {

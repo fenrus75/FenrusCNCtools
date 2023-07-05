@@ -118,13 +118,14 @@ void save_as_xpm(const char *filename, render *base,render *plug, double offset)
     file = fopen(filename, "w");
     
     fprintf(file, "! XPM2\n");
-    fprintf(file, "%i %i 5 1\n", base->width, base->height);
+    fprintf(file, "%i %i 6 1\n", base->width, base->height);
     fprintf(file, "a c #FFFFFF\n");
     fprintf(file, "r c #FF0000\n");
     fprintf(file, "g c #00FF00\n");
     fprintf(file, "l c #88FF88\n");
     fprintf(file, "b c #0000FF\n");
-    
+    fprintf(file, "B c #8080FF\n");
+
     for (y = base->height-1; y >= 0; y--) {
         for (x =0; x <base->width; x++) {
             double b = base->get_height(x,y);
@@ -145,7 +146,7 @@ void save_as_xpm(const char *filename, render *base,render *plug, double offset)
     }
     
     printf("Lowest d is %5.2f\n", lowest_d);
-    lowest_d += 0.01;
+    lowest_d += 0.02; /* cope with rounding errors */
     
 
     for (y = base->height-1; y >= 0; y--) {
@@ -168,7 +169,12 @@ void save_as_xpm(const char *filename, render *base,render *plug, double offset)
                 fprintf(file, "b");
                 continue;
             }
-            if (d < 1) {
+            /* we nearly touch */
+            if (d <= lowest_d + 0.1) {
+                fprintf(file, "B");
+                continue;
+            }
+            if (d < 0.5) {
                 fprintf(file, "g");
                 continue;
             }

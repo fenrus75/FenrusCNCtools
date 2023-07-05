@@ -38,7 +38,7 @@ public:
     void set_offsets(int x, int y);
     
 private:
-    double ratio_x, ratio_y;
+    double ratio_x, ratio_y, invratio_x, invratio_y;
     class tool *tool;
     const char *fname;
     

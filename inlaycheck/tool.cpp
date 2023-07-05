@@ -11,13 +11,14 @@ vbit::vbit(double angle)
 {
     _angle = angle;
     _tan = tan(_angle/360.0 * 2 * M_PI / 2);
+    _invtan = 1/_tan;
     scanzone = 4; /* 8mm diameter V bit */
     samplesteps = 3;
 }
 
 double vbit::get_height(double R, double depth)
 {
-    return fabs(R) / _tan + depth; 
+    return fabs(R) * _invtan + depth; 
     return 0;
 }
 

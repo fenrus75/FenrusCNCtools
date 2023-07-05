@@ -63,12 +63,12 @@ int render::mm_to_y(double Y)
 
 double render::x_to_mm(int x) 
 {
-    return x / ratio_x;
+    return x * invratio_x;
 }
 
 double render::y_to_mm(int y)
 {
-    return y / ratio_y;
+    return y * invratio_y;
 }
 
 void render::update_pixel(int x, int y, double H)
@@ -106,6 +106,8 @@ void render::setup_canvas(void)
     
     ratio_x = width / width_mm;
     ratio_y = height / height_mm;
+    invratio_x = 1/ratio_x;
+    invratio_y = 1/ratio_y;
     
     pixels = (double *)calloc(sizeof(double), width * height);
 }
