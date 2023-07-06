@@ -73,10 +73,12 @@ void render::update_pixel(int x, int y, double H)
 {
     if (H >= 0)
         return;
+/*        
     if (x < 0 || y < 0)
         return;
     if (x >= width || y >= height)
         return;
+*/
     if (pixels[y * width + x] > H)
         pixels[y * width + x] = H;
     if (H < deepest)
