@@ -6,7 +6,7 @@
 
 static int triangles = 0;
 
-static bool *cache;
+static double *cache;
 
 struct stlheader {
     char sig[80];
@@ -22,13 +22,18 @@ struct triangle {
 } __attribute__((packed));
 
 
-static void write_point(FILE *file, int x, int y, double d00, double d01,double d10, double d11, bool filter)
+static void write_point(FILE *file, int x, int y, double d00, double d01,double d10, double d11, bool filter, int width)
 {
     struct triangle t;
     
     if (d00 >= 0 && d01 >= 0 && d10 >= 0 && d11 >= 0 && filter)
         return;
-        
+
+    if (cache[x + y * width] > 900) {
+        cache[x + y * width] = d00;
+        return;
+    }
+
     memset(&t, 0, sizeof(t));
     t.point0[0] = x;    
     t.point0[1] = y;    
@@ -53,9 +58,60 @@ static void write_point(FILE *file, int x, int y, double d00, double d01,double 
     fwrite(&t, sizeof(t), 1, file);
     
     triangles ++;
-    
+
 }
-static void write_point4(FILE *file, int x, int y, double d00, double d01,double d10,double d11, bool filter)
+
+static void flush_cache(FILE *file, int width, int height)
+{
+    int x, y;
+    
+    for (y = 0; y < height; y++) {
+        for (x = 0; x < width; x++) {
+            struct triangle t;
+            int x2;
+            double c = cache[x + y * width];
+            if (c > 900)
+                continue;
+            x2 = x;
+            while (x2 < width -1) {
+                if (fabs(cache[x2 + 1 + y * width] - c) < 0.0001) 
+                    x2++;
+                else
+                    break;
+            }
+            /* now we know we have a run from x to x2 (where x could be x2) */
+            memset(&t, 0, sizeof(t));
+            t.point0[0] = x;    
+            t.point0[1] = y;    
+            t.point0[2] = c;    
+            t.point1[0] = x2 + 1;    
+            t.point1[1] = y;    
+            t.point1[2] = c;    
+            t.point2[0] = x2 + 1;    
+            t.point2[1] = y + 1;    
+            t.point2[2] = c;    
+            fwrite(&t, sizeof(t), 1, file);
+            triangles++;
+            t.point0[0] = x;    
+            t.point0[1] = y;    
+            t.point0[2] = c;    
+            t.point1[0] = x;    
+            t.point1[1] = y + 1;    
+            t.point1[2] = c;    
+            t.point2[0] = x2 + 1;    
+            t.point2[1] = y + 1;    
+            t.point2[2] = c;    
+            fwrite(&t, sizeof(t), 1, file);
+    
+            triangles ++;
+            printf("X is %i X2 is %i \n", x, x2);
+            x = x2;
+            
+        }
+    }
+}
+
+static void write_point4(FILE *file, int x, int y, double d00, double d01,double d10,double d11, bool filter, int width)
 {
     struct triangle t;
     double dM = (d00+d01+d10+d11)/4;
@@ -64,7 +120,7 @@ static void write_point4(FILE *file, int x, int y, double d00, double d01,double
         return;
         
     if (fabs(d00-d01)<0.001 && fabs(d00-d10)<0.001 && fabs(d00-d11)<0.0010)
-        return write_point(file, x,y,d00,d01,d10,d11, filter);
+        return write_point(file, x,y,d00,d01,d10,d11, filter, width);
         
     memset(&t, 0, sizeof(t));
     t.point0[0] = x;    
@@ -155,7 +211,8 @@ void save_as_stl(const char *filename, render *base,render *plug, double offset,
     memset(&header, 0, sizeof(header));
     sprintf(header.sig, "Binary STL file");
     
-    cache = (bool *)calloc(base->width,base->height * sizeof(bool));
+    cache = (double *)calloc(base->width,base->height * sizeof(double));
+    for (x = 0; x < base->width * base->height ; x++) cache[x] = 1000;
     
     
     
@@ -175,14 +232,15 @@ void save_as_stl(const char *filename, render *base,render *plug, double offset,
 //            double d = p - b - offset;
             
             if (export_base)
-                write_point4(file, x, y, b00, b01, b10, b11,true);
+                write_point4(file, x, y, b00, b01, b10, b11,true, base->width);
             if (export_plug && should_emit_plug(p00, p01, p10, p11, offset)) {
-                write_point4(file, x, y, p00 - offset, p01-offset, p10-offset,p11-offset, false);
-                write_point4(file, x, y, plugtop(p00 - offset), plugtop(p01-offset), plugtop(p10-offset),plugtop(p11-offset), false);
+                write_point4(file, x, y, p00 - offset, p01-offset, p10-offset,p11-offset, false, base->width);
+                write_point4(file, x, y, plugtop(p00 - offset), plugtop(p01-offset), plugtop(p10-offset),plugtop(p11-offset), false, base->width);
                 
             }
         }
     }
+    flush_cache(file, base->width, base->height);
     fseek(file, 0, SEEK_SET);
     header.triangles = triangles;
     fwrite(&header, 1, sizeof(header), file);
