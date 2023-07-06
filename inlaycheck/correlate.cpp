@@ -12,24 +12,30 @@ static int step = 1;
 
 static double correlate(render *base, render *plug, double limit)
 {
-    double best_so_far = 100;
     double delta;
     
     int x, y;
     
     total_count++;
 
-    delta = plug->get_height(breakX, breakY) - base->get_height(breakX, breakY);
-    if (delta <= limit) {
-        early_exit_count++;
-        return delta;
-    } 
     delta = plug->get_height(breakX+step, breakY) - base->get_height(breakX+step, breakY);
     if (delta <= limit) {
         early_exit_count++;
         breakX+=step;
         return delta;
     } 
+    delta = plug->get_height(breakX, breakY) - base->get_height(breakX, breakY);
+    if (delta <= limit) {
+        early_exit_count++;
+        return delta;
+    } 
+    delta = plug->get_height(breakX, breakY+step) - base->get_height(breakX, breakY+step);
+    if (delta <= limit) {
+        early_exit_count++;
+        breakY+=step;
+        return delta;
+    } 
+    double best_so_far = 100;
     
     
     for (y = base->minY-plug->height/2; y < base->maxY + plug->height/2; y++) {
@@ -68,6 +74,8 @@ double find_best_correlation(render *base, render *plug)
     printf("Finding location of plug in base \n");
     
     step  = base->pixels_per_mm/4;
+    if (step < 1)
+        step = 1;
     for (y = base->minY-plug->height/4 ; y < base->maxY + plug->height/4 ; y += step) {
 //        printf("y is %i / %i\n", y, base->height);
 	//printf("   %i/%i early exits\n", early_exit_count, total_count);
@@ -89,8 +97,8 @@ double find_best_correlation(render *base, render *plug)
     printf("Finding location of plug in base phase 2\n");
     
     step = 1;
-    for (y = besty - base->pixels_per_mm ; y < besty + base->pixels_per_mm ; y += step) {
-        for (x = bestx - base->pixels_per_mm; x < bestx + base->pixels_per_mm ; x += step) {
+    for (y = besty - base->pixels_per_mm/2 ; y < besty + base->pixels_per_mm/2 ; y += step) {
+        for (x = bestx - base->pixels_per_mm/2; x < bestx + base->pixels_per_mm/2 ; x += step) {
             plug->set_offsets(x, y);
             double v = correlate(base, plug, best_so_far);
             if (v > best_so_far) {
