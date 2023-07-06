@@ -18,7 +18,7 @@ vbit::vbit(double angle)
 
 double vbit::get_height(double R, double depth)
 {
-    return fabs(R) * _invtan + depth; 
+    return R * _invtan + depth; 
     return 0;
 }
 

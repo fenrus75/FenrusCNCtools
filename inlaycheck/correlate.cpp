@@ -93,7 +93,7 @@ double find_best_correlation(render *base, render *plug)
     }
 
 
-    best_so_far = -50;
+    best_so_far -= 0.5;
     printf("Finding location of plug in base phase 2\n");
     
     step = 1;
