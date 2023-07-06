@@ -280,10 +280,22 @@ void render::tooltouch(double X, double Y, double Z)
     starty = mm_to_y(Y - tool->scanzone);       
     maxY = mm_to_y(Y + tool->scanzone) + 1;
     
+    if (maxY >= height)
+        maxY = height - 1;
+    if (maxX >= width)
+        maxX = width - 1;
+    if (starty < 0)
+        starty = 0;
+    if (startx < 0)
+        startx = 0;
+    
     for (y = starty; y <= maxY; y++) {
         for (x = startx; x < maxX; x++) {
             double R;
             double dX, dY;
+            
+            if (pixels[x + y * width] <= Z)
+                continue;
             dX = x_to_mm(x)-X;
             dY= y_to_mm(y)-Y;
             R = sqrt(dX*dX+dY*dY);
