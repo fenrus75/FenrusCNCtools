@@ -19,18 +19,18 @@ vbit::vbit(double angle)
 double vbit::get_height(double R, double depth)
 {
     return R * _invtan + depth; 
-    return 0;
 }
 
 flat::flat(double diameter)
 {
     _diameter = diameter;
+    _radius = diameter / 2;
     scanzone = diameter / 2 + 0.5;
 }
 
 double flat::get_height(double R, double depth)
 {
-    if (R > _diameter / 2)
+    if (R > _radius )
             return 0;
  
     return depth;           

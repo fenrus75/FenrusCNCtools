@@ -58,7 +58,7 @@ static double correlate(render *base, render *plug, double limit)
             }
         }
     }
-    printf("Hit at %i %i for depth %5.2f\n", breakX, breakY, best_so_far);
+//    printf("Hit at %i %i for depth %5.2f\n", breakX, breakY, best_so_far);
     return best_so_far;
 }
 
@@ -93,7 +93,7 @@ double find_best_correlation(render *base, render *plug)
     }
 
 
-    best_so_far -= 0.5;
+    /* fine tuning phase, we know we're pretty close */
     printf("Finding location of plug in base phase 2\n");
     
     step = 1;
@@ -153,7 +153,7 @@ void save_as_xpm(const char *filename, render *base,render *plug, double offset)
         }
     }
     
-    printf("Lowest d is %5.2f\n", lowest_d);
+//    printf("Lowest d is %5.2f\n", lowest_d);
     lowest_d += 0.02; /* cope with rounding errors */
     
 

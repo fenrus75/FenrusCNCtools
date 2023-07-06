@@ -25,4 +25,5 @@ public:
     virtual double get_height(double R, double depth);
 private:
     double _diameter;
+    double _radius;
 };

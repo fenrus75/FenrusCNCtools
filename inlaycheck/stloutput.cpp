@@ -208,7 +208,7 @@ void save_as_stl(const char *filename, render *base,render *plug, double offset,
    
     triangles = 0;
     
-    printf("Size of triangle %li\n", sizeof(struct triangle));
+//    printf("Size of triangle %li\n", sizeof(struct triangle));
     
     memset(&header, 0, sizeof(header));
     sprintf(header.sig, "Binary STL file");
@@ -267,5 +267,5 @@ void save_as_stl(const char *filename, render *base,render *plug, double offset,
         free(plugcache1);
         free(plugcache2);
     }
-    printf("Exported %i triangles \n", triangles);
+//    printf("Exported %i triangles \n", triangles);
 }
