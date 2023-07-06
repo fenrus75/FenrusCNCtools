@@ -7,10 +7,6 @@
 #include <cstring>
 #include <cmath>
 
-extern "C" {
-#include <png.h>
-}
-
 render::render(const char *filename)
 {
     
