@@ -39,7 +39,8 @@ static double correlate(render *base, render *plug, double limit)
     
     
     for (y = base->minY-plug->height/2; y < base->maxY + plug->height/2; y++) {
-        for (x = base->minX -plug->width/2; x < base->maxX + plug->width/2; x++) {
+        int limitX = base->maxX + plug->width/2;
+        for (x = base->minX -plug->width/2; x < limitX; x++) {
             
 //            printf("Trying %i,%i\n", x,y);
             delta = plug->get_height(x, y) - base->get_height(x, y);
@@ -65,7 +66,7 @@ static double correlate(render *base, render *plug, double limit)
 
 double find_best_correlation(render *base, render *plug)
 {
-    double best_so_far = -50;
+    double best_so_far = 0.001;
     
     int x,y;
     
@@ -83,8 +84,7 @@ double find_best_correlation(render *base, render *plug)
             plug->set_offsets(x, y);
             double v = correlate(base, plug, best_so_far);
             if (v > best_so_far) {
-                if (v > 0.01)
-                    printf("Found best so far: (%i, %i) at %5.2f\n", x, y, v);
+                printf("Found best so far: (%i, %i) at %5.2f\n", x, y, v);
                 best_so_far = v;
                 bestx = x;
                 besty = y;
