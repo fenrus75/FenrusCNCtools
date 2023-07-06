@@ -286,11 +286,12 @@ void render::tooltouch(double X, double Y, double Z)
         startx = 0;
     
     for (y = starty; y <= maxY; y++) {
+        int offset = y * width;
         for (x = startx; x < maxX; x++) {
             double R;
             double dX, dY;
             
-            if (pixels[x + y * width] <= Z)
+            if (pixels[x + offset] <= Z)
                 continue;
             dX = x_to_mm(x)-X;
             dY= y_to_mm(y)-Y;
