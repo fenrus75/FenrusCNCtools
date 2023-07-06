@@ -1,5 +1,7 @@
 #include "inlay.h"
 
+#include <sys/param.h>
+
 
 #include <cstddef>
 #include <cstdio>
@@ -69,6 +71,8 @@ double render::y_to_mm(int y)
 
 void render::update_pixel(int x, int y, double H)
 {
+    if (H >= 0)
+        return;
     if (x < 0 || y < 0)
         return;
     if (x >= width || y >= height)
@@ -77,12 +81,11 @@ void render::update_pixel(int x, int y, double H)
         pixels[y * width + x] = H;
     if (H < deepest)
         deepest = H;
-    if (H >= 0)
-        return;
-    if (x < minX)  minX = x;
-    if (y < minY)  minY = y;
-    if (x > maxX)  maxX = x;
-    if (y > maxY)  maxY = y;
+        
+    minX = MIN(minX, x);
+    minY = MIN(minY, y);
+    maxX = MAX(maxX, x);
+    maxY = MAX(maxY, y);
 }
 
 void render::update_pixel(double X, double Y, double H)
