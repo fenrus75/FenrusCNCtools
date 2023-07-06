@@ -32,8 +32,8 @@ static double correlate(render *base, render *plug, double limit)
     } 
     
     
-    for (y = -plug->height/2; y < base->height + plug->height/2; y++) {
-        for (x = -plug->width/2; x < base->width + plug->width/2; x++) {
+    for (y = base->minY-plug->height/2; y < base->maxY + plug->height/2; y++) {
+        for (x = base->minX -plug->width/2; x < base->maxX + plug->width/2; x++) {
             
 //            printf("Trying %i,%i\n", x,y);
             delta = plug->get_height(x, y) - base->get_height(x, y);
@@ -68,10 +68,10 @@ double find_best_correlation(render *base, render *plug)
     printf("Finding location of plug in base \n");
     
     step  = base->pixels_per_mm/4;
-    for (y = -plug->height/4 ; y < base->height + plug->height/4 ; y += step) {
+    for (y = base->minY-plug->height/4 ; y < base->maxY + plug->height/4 ; y += step) {
 //        printf("y is %i / %i\n", y, base->height);
 	//printf("   %i/%i early exits\n", early_exit_count, total_count);
-        for (x = -plug->width/4; x < base->width +plug->width/4 ; x += step) {
+        for (x = base->minX-plug->width/4; x < base->maxX +plug->width/4 ; x += step) {
             plug->set_offsets(x, y);
             double v = correlate(base, plug, best_so_far);
             if (v > best_so_far) {
