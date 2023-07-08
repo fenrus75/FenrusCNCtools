@@ -122,6 +122,9 @@ void save_as_xpm(const char *filename, render *base,render *plug, double offset)
     int x,y;
     double lowest_d = 5;
     
+    int gapcount = 0;
+    double gap = 0.0;
+    
     
     printf("Offset is %5.2f\n", offset);
     file = fopen(filename, "w");
@@ -175,6 +178,11 @@ void save_as_xpm(const char *filename, render *base,render *plug, double offset)
                 fprintf(file, "r");
                 continue;
             }
+            
+            if (p > 0.001) { /* not the glue gap */
+                gapcount++;
+                gap += d;
+            }
             /* we nearly touch */
             if (d <= lowest_d) {
                 fprintf(file, "b");
@@ -195,4 +203,9 @@ void save_as_xpm(const char *filename, render *base,render *plug, double offset)
         fprintf(file, "\n");
     }
     fclose(file);
+    if (gapcount) {
+        printf("Average gap is %5.2fmm   (%5.2f %i)\n", gap/gapcount, gap, gapcount);
+    } else {
+        printf("No gap found \n");
+    }
 }

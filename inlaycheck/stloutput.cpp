@@ -242,6 +242,8 @@ void save_as_stl(const char *filename, render *base,render *plug, double offset,
     
     for (y = base->minY - 2/zoomf; y < base->maxY + 2/zoomf; y++) {
         for (x =base->minX - 2/zoomf ; x < base->maxX + 2/zoomf; x++) {
+            if (y > base->height || x > base->width || x < 0 || y < 0)
+                continue;
             double b00 = base->get_height(x,y);
             double b01 = base->get_height(x,y+1);
             double b10 = base->get_height(x+1,y);
