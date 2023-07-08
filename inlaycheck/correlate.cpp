@@ -77,11 +77,11 @@ double find_best_correlation(render *base, render *plug)
     step  = base->pixels_per_mm/4;
     if (step < 1)
         step = 1;
-    for (y = -plug->height/4 ; y < + plug->height/4 ; y += step) {
+    for (y = -plug->height/2; y < base->height -plug->height/2; y += step) {
 //        printf("y is %i / %i\n", y, base->height);
 	//printf("   %i/%i early exits\n", early_exit_count, total_count);
-        for (x = -plug->width/4; x < +plug->width/4 ; x += step) {
-            plug->set_offsets(x, y);
+        for (x = -plug->width/2; x < base->width - plug->width/2 ; x += step) {
+            plug->set_offsets(x, y); 
             double v = correlate(base, plug, best_so_far);
             if (v > best_so_far) {
                 printf("Found best so far: (%i, %i) at %5.2f\n", x, y, v);
