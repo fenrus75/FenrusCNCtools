@@ -57,7 +57,7 @@ int main(int argc, char **argv)
     offset = find_best_correlation(base, plug);    
     
     save_as_xpm("result.xpm", base, plug, offset);
-    save_as_stl("result.stl", base, plug, offset);
-    save_as_stl("base.stl", base, plug, offset, true, false);
-    save_as_stl("plug.stl", base, plug, offset, false, true);
+    save_as_stl("result.stl", base, plug, offset, true, true, 1.0/base->pixels_per_mm);
+    save_as_stl("base.stl", base, plug, offset, true, false, 1.0/base->pixels_per_mm);
+    save_as_stl("plug.stl", base, plug, offset, false, true, 1.0/base->pixels_per_mm);
 }
