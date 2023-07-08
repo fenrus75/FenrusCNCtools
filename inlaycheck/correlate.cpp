@@ -77,10 +77,10 @@ double find_best_correlation(render *base, render *plug)
     step  = base->pixels_per_mm/4;
     if (step < 1)
         step = 1;
-    for (y = base->minY-plug->height/4 ; y < base->maxY + plug->height/4 ; y += step) {
+    for (y = -plug->height/4 ; y < + plug->height/4 ; y += step) {
 //        printf("y is %i / %i\n", y, base->height);
 	//printf("   %i/%i early exits\n", early_exit_count, total_count);
-        for (x = base->minX-plug->width/4; x < base->maxX +plug->width/4 ; x += step) {
+        for (x = -plug->width/4; x < +plug->width/4 ; x += step) {
             plug->set_offsets(x, y);
             double v = correlate(base, plug, best_so_far);
             if (v > best_so_far) {
@@ -122,6 +122,8 @@ void save_as_xpm(const char *filename, render *base,render *plug, double offset)
     int x,y;
     double lowest_d = 5;
     
+    
+    printf("Offset is %5.2f\n", offset);
     file = fopen(filename, "w");
     
     fprintf(file, "! XPM2\n");
@@ -161,6 +163,7 @@ void save_as_xpm(const char *filename, render *base,render *plug, double offset)
             double b = base->get_height(x,y);
             double p = plug->get_height(x,y);
             double d = p - b - offset;
+//                printf("x %i y %i  b %5.2f  p %5.2f   ox %i, oy %i  oZ %5.2f\n", x,y,b,p, plug->offsetX, plug->offsetY, plug->offsetZ);
             
             if (b == 0) {
                 fprintf(file, "a");
@@ -168,6 +171,7 @@ void save_as_xpm(const char *filename, render *base,render *plug, double offset)
             }
             /* the plug sticks out, we have a gap, color it red */
             if (p - offset > 0) {
+            
                 fprintf(file, "r");
                 continue;
             }
