@@ -16,7 +16,7 @@ render::render(const char *filename)
     height_mm = 0;
     width = 0;
     height = 0;
-    pixels_per_mm = 8;
+    pixels_per_mm = 16;
     pixels = NULL;
     tool = NULL;    
     cX = 0; cY = 0; cZ = 50;

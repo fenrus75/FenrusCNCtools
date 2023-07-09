@@ -124,19 +124,22 @@ void save_as_xpm(const char *filename, render *base,render *plug, double offset)
     
     int gapcount = 0;
     double gap = 0.0;
+    int touch = 0;
+    int good_touch = 0;
     
     
     printf("Offset is %5.2f\n", offset);
     file = fopen(filename, "w");
     
     fprintf(file, "! XPM2\n");
-    fprintf(file, "%i %i 6 1\n", base->width, base->height);
+    fprintf(file, "%i %i 7 1\n", base->width, base->height);
     fprintf(file, "a c #FFFFFF\n");
     fprintf(file, "r c #FF0000\n");
     fprintf(file, "g c #00FF00\n");
     fprintf(file, "l c #88FF88\n");
-    fprintf(file, "b c #0000FF\n");
-    fprintf(file, "B c #8080FF\n");
+    fprintf(file, "b c #00FFFF\n");
+    fprintf(file, "B c #80FFFF\n");
+    fprintf(file, "z c #AAAAAA\n");
 
     for (y = base->height-1; y >= 0; y--) {
         for (x =0; x <base->width; x++) {
@@ -163,6 +166,7 @@ void save_as_xpm(const char *filename, render *base,render *plug, double offset)
 
     for (y = base->height-1; y >= 0; y--) {
         for (x =0; x <base->width; x++) {
+            double notgap= false;
             double b = base->get_height(x,y);
             double p = plug->get_height(x,y);
             double d = p - b - offset;
@@ -179,33 +183,43 @@ void save_as_xpm(const char *filename, render *base,render *plug, double offset)
                 continue;
             }
             
-            if (p > 0.001) { /* not the glue gap */
+            if (p >= 0.00001) { /* counters for only the not-glue gap */
                 gapcount++;
                 gap += d;
+                touch++;
+                notgap = true;
+            } else {
+                fprintf(file, "z");
+                continue;
             }
             /* we nearly touch */
             if (d <= lowest_d) {
-                fprintf(file, "b");
+                fprintf(file, "g");
+                if (notgap)
+                    good_touch++;
                 continue;
             }
             /* we nearly touch */
             if (d <= lowest_d + 0.1) {
-                fprintf(file, "B");
+                fprintf(file, "l");
                 continue;
             }
             if (d < 0.5) {
-                fprintf(file, "g");
+                fprintf(file, "b");
                 continue;
             }
-            fprintf(file, "l");
+            fprintf(file, "B");
             
         }
         fprintf(file, "\n");
     }
     fclose(file);
     if (gapcount) {
-        printf("Average gap is %5.2fmm   (%5.2f %i)\n", gap/gapcount, gap, gapcount);
+        printf("Average vertical gap (non-glue-area) is %6.3fmm\n", gap/gapcount);
     } else {
         printf("No gap found \n");
+    }
+    if (touch) {
+        printf("%5.2f percent of the touch area makes good contact.\n", 100.0 * good_touch / touch);
     }
 }
