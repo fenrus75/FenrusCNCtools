@@ -116,7 +116,7 @@ double find_best_correlation(render *base, render *plug)
 }
 
 
-void save_as_xpm(const char *filename, render *base,render *plug, double offset)
+double save_as_xpm(const char *filename, render *base,render *plug, double offset)
 {
     FILE *file;
     int x,y;
@@ -126,6 +126,7 @@ void save_as_xpm(const char *filename, render *base,render *plug, double offset)
     double gap = 0.0;
     int touch = 0;
     int good_touch = 0;
+    double retval = 0.0;
     
     
     printf("Offset is %5.2f\n", offset);
@@ -216,10 +217,12 @@ void save_as_xpm(const char *filename, render *base,render *plug, double offset)
     fclose(file);
     if (gapcount) {
         printf("Average vertical gap (non-glue-area) is %6.3fmm\n", gap/gapcount);
+        retval = gap/gapcount;
     } else {
         printf("No gap found \n");
     }
     if (touch) {
         printf("%5.2f percent of the touch area makes good contact.\n", 100.0 * good_touch / touch);
     }
+    return retval;
 }
