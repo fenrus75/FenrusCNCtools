@@ -179,6 +179,164 @@ static void write_point4(FILE *file, int x, int y, double d00, double d01,double
     
 }
 
+static void write_bar(FILE *file, int x, int y, double d00, double d01)
+{
+    struct triangle t;
+    
+    memset(&t, 0, sizeof(t));
+    t.point0[0] = zoom(x);    
+    t.point0[1] = zoom(y);    
+    t.point0[2] = d00;    
+    t.point1[0] = zoom(x + 1);
+    t.point1[1] = zoom(y);    
+    t.point1[2] = d00;    
+    t.point2[0] = zoom(x + 1);    
+    t.point2[1] = zoom(y + 1);    
+    t.point2[2] = d00;    
+    fwrite(&t, sizeof(t), 1, file);
+    triangles++;
+
+    t.point0[0] = zoom(x);    
+    t.point0[1] = zoom(y);    
+    t.point0[2] = d00;    
+    t.point1[0] = zoom(x);    
+    t.point1[1] = zoom(y + 1);    
+    t.point1[2] = d00;    
+    t.point2[0] = zoom(x + 1);    
+    t.point2[1] = zoom(y + 1);    
+    t.point2[2] = d00;    
+    fwrite(&t, sizeof(t), 1, file);    
+    triangles ++;
+    
+    memset(&t, 0, sizeof(t));
+    t.point0[0] = zoom(x);    
+    t.point0[1] = zoom(y);    
+    t.point0[2] = d01;    
+    t.point1[0] = zoom(x + 1);
+    t.point1[1] = zoom(y);    
+    t.point1[2] = d01;    
+    t.point2[0] = zoom(x + 1);    
+    t.point2[1] = zoom(y + 1);    
+    t.point2[2] = d01;    
+    fwrite(&t, sizeof(t), 1, file);
+    triangles++;
+
+    t.point0[0] = zoom(x);    
+    t.point0[1] = zoom(y);    
+    t.point0[2] = d01;    
+    t.point1[0] = zoom(x);    
+    t.point1[1] = zoom(y + 1);    
+    t.point1[2] = d01;    
+    t.point2[0] = zoom(x + 1);    
+    t.point2[1] = zoom(y + 1);    
+    t.point2[2] = d01;    
+    fwrite(&t, sizeof(t), 1, file);    
+    triangles ++;
+
+
+    memset(&t, 0, sizeof(t));
+    t.point0[0] = zoom(x);    
+    t.point0[1] = zoom(y);    
+    t.point0[2] = d00;    
+    t.point1[0] = zoom(x+1);
+    t.point1[1] = zoom(y);    
+    t.point1[2] = d00;    
+    t.point2[0] = zoom(x);    
+    t.point2[1] = zoom(y);    
+    t.point2[2] = d01;    
+    fwrite(&t, sizeof(t), 1, file);
+    triangles++;
+    memset(&t, 0, sizeof(t));
+    t.point0[0] = zoom(x+1);    
+    t.point0[1] = zoom(y);    
+    t.point0[2] = d00;    
+    t.point1[0] = zoom(x+1);
+    t.point1[1] = zoom(y);    
+    t.point1[2] = d01;    
+    t.point2[0] = zoom(x);    
+    t.point2[1] = zoom(y);    
+    t.point2[2] = d01;    
+    fwrite(&t, sizeof(t), 1, file);
+    triangles++;
+
+    memset(&t, 0, sizeof(t));
+    t.point0[0] = zoom(x);    
+    t.point0[1] = zoom(y+1);    
+    t.point0[2] = d00;    
+    t.point1[0] = zoom(x+1);
+    t.point1[1] = zoom(y+1);    
+    t.point1[2] = d00;    
+    t.point2[0] = zoom(x);    
+    t.point2[1] = zoom(y+1);    
+    t.point2[2] = d01;    
+    fwrite(&t, sizeof(t), 1, file);
+    triangles++;
+    memset(&t, 0, sizeof(t));
+    t.point0[0] = zoom(x+1);    
+    t.point0[1] = zoom(y+1);    
+    t.point0[2] = d00;    
+    t.point1[0] = zoom(x+1);
+    t.point1[1] = zoom(y+1);    
+    t.point1[2] = d01;    
+    t.point2[0] = zoom(x);    
+    t.point2[1] = zoom(y+1);    
+    t.point2[2] = d01;    
+    fwrite(&t, sizeof(t), 1, file);
+    triangles++;
+
+
+    memset(&t, 0, sizeof(t));
+    t.point0[0] = zoom(x);    
+    t.point0[1] = zoom(y);    
+    t.point0[2] = d00;    
+    t.point1[0] = zoom(x);
+    t.point1[1] = zoom(y+1);    
+    t.point1[2] = d00;    
+    t.point2[0] = zoom(x);    
+    t.point2[1] = zoom(y);    
+    t.point2[2] = d01;    
+    fwrite(&t, sizeof(t), 1, file);
+    triangles++;
+    memset(&t, 0, sizeof(t));
+    t.point0[0] = zoom(x);    
+    t.point0[1] = zoom(y+1);    
+    t.point0[2] = d00;    
+    t.point1[0] = zoom(x);
+    t.point1[1] = zoom(y+1);    
+    t.point1[2] = d01;    
+    t.point2[0] = zoom(x);    
+    t.point2[1] = zoom(y);    
+    t.point2[2] = d01;    
+    fwrite(&t, sizeof(t), 1, file);
+    triangles++;
+    memset(&t, 0, sizeof(t));
+    t.point0[0] = zoom(x+1);    
+    t.point0[1] = zoom(y);    
+    t.point0[2] = d00;    
+    t.point1[0] = zoom(x+1);
+    t.point1[1] = zoom(y+1);    
+    t.point1[2] = d00;    
+    t.point2[0] = zoom(x+1);    
+    t.point2[1] = zoom(y);    
+    t.point2[2] = d01;    
+    fwrite(&t, sizeof(t), 1, file);
+    triangles++;
+    memset(&t, 0, sizeof(t));
+    t.point0[0] = zoom(x+1);    
+    t.point0[1] = zoom(y+1);    
+    t.point0[2] = d00;    
+    t.point1[0] = zoom(x+1);
+    t.point1[1] = zoom(y+1);    
+    t.point1[2] = d01;    
+    t.point2[0] = zoom(x+1);    
+    t.point2[1] = zoom(y);    
+    t.point2[2] = d01;    
+    fwrite(&t, sizeof(t), 1, file);
+    triangles++;
+
+
+}
+
 
 
 
@@ -278,4 +436,46 @@ void save_as_stl(const char *filename, render *base,render *plug, double offset,
         free(plugcache2);
     }
 //    printf("Exported %i triangles \n", triangles);
+}
+
+void save_overlap_as_stl(const char *filename, render *base,render *plug, double offset, double zoomf)
+{
+    FILE *file;
+    int x,y;
+    struct stlheader header;
+    
+    zoomfactor = zoomf;
+//    printf("Zoomfactor %5.2f\n", zoomfactor);
+   
+    triangles = 0;
+    
+//    printf("Size of triangle %li\n", sizeof(struct triangle));
+    
+    memset(&header, 0, sizeof(header));
+    sprintf(header.sig, "Binary STL file");
+    
+    file = fopen(filename, "w");
+    fwrite(&header, 1, sizeof(header), file);
+    
+    if (base->maxX > base->height)
+        base->maxY = base->height;
+    
+    for (y = base->minY - 2/zoomf; y < base->maxY + 2/zoomf; y++) {
+        for (x =base->minX - 2/zoomf ; x < base->maxX + 2/zoomf; x++) {
+            if (y > base->height || x > base->width || x < 0 || y < 0)
+                continue;
+            double b00 = base->get_height(x, y);
+            double b01 = plug->get_height(x, y) - offset;
+            
+            if (b01 >= b00 + 0.000001)
+                continue;
+            
+            write_bar(file,x, y, b00, b01);
+        }
+    }
+    fseek(file, 0, SEEK_SET);
+    header.triangles = triangles;
+    fwrite(&header, 1, sizeof(header), file);
+    
+    fclose(file);
 }

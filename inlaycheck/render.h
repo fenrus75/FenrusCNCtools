@@ -37,6 +37,9 @@ public:
     double get_height(int x, int y);
     void set_offsets(int x, int y);
     
+    int get_offsetX(void) { return offsetX;};
+    int get_offsetY(void) { return offsetY;};
+    
 private:
     double ratio_x, ratio_y, invratio_x, invratio_y;
     class tool *tool;

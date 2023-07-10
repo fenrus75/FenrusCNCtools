@@ -226,3 +226,67 @@ double save_as_xpm(const char *filename, render *base,render *plug, double offse
     }
     return retval;
 }
+
+
+static int overlap_pixels(render *base, render *plug, double depth, double *total, int best)
+{
+    
+    int x, y;
+    
+    int overlap = 0;
+    *total = 0;
+
+    for (y = base->minY-plug->height/2; y < base->maxY + plug->height/2; y++) {
+        int limitX = base->maxX + plug->width/2;
+        for (x = base->minX -plug->width/2; x < limitX; x++) {
+            double delta;
+            
+            delta = plug->get_height(x, y) - base->get_height(x, y) - depth;
+            
+            if (delta < -0.00001) {
+                overlap++;
+                *total -= delta;
+                if (overlap > best)
+                    return overlap;
+            }
+            
+        }
+    }
+    return overlap;
+}
+
+void find_least_overlap(render *base, render *plug, double depth)
+{
+    int best_so_far = plug->width* plug->height;
+    double total_best = best_so_far * depth;
+    
+    int x,y;
+    
+    int centerx = plug->get_offsetX(), centery = plug->get_offsetY();
+    int bestx = centerx, besty = centery;
+    
+    best_so_far = overlap_pixels(base, plug, depth, &total_best, best_so_far);
+    
+    printf("Finding location with the least overlap \n");
+    
+    step = 1;
+    for (y = centery - base->pixels_per_mm ; y < centery + base->pixels_per_mm ; y ++) {
+        for (x = centerx - base->pixels_per_mm; x < bestx + base->pixels_per_mm ; x ++) {
+            double total;
+            int ov;
+            
+            plug->set_offsets(x, y);
+            ov = overlap_pixels(base, plug, depth, &total, best_so_far);
+            
+            if (ov < best_so_far || (ov == best_so_far && total < total_best)) {
+                printf("Found best so far: (%i, %i) at %i pixels overlap with %5.2f total\n", x, y, ov, total);
+                best_so_far = ov;
+                bestx = x;
+                besty = y;
+                total_best = total;
+            }
+        }
+    }
+    plug->set_offsets(bestx, besty);
+}
+
