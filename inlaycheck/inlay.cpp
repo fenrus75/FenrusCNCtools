@@ -5,6 +5,7 @@
 
 #include <pthread.h>
 
+#define EXPORT_OVERLAP
 
 class render *base, *plug;
 
@@ -65,8 +66,10 @@ int main(int argc, char **argv)
 
 #ifdef EXPORT_OVERLAP
     if (gap > 0.1) {    
-        find_least_overlap(base, plug, offset + gap); /* this is not fast */
-        save_overlap_as_stl("overlap.stl", base, plug, offset+gap, 1.0/base->pixels_per_mm);
+        offset += gap;
+        find_least_overlap(base, plug, offset); /* this is not fast */
+        save_overlap_as_stl("overlap.stl", base, plug, offset, 1.0/base->pixels_per_mm);
+        gap = save_as_xpm("result2.xpm", base, plug, offset);
     }
 #endif
 

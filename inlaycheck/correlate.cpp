@@ -161,8 +161,13 @@ double save_as_xpm(const char *filename, render *base,render *plug, double offse
         }
     }
     
+    
+    
 //    printf("Lowest d is %5.2f\n", lowest_d);
     lowest_d += 0.02; /* cope with rounding errors */
+    
+    if (lowest_d < 0)
+        lowest_d = 0.02;
     
 
     for (y = base->height-1; y >= 0; y--) {
@@ -186,7 +191,8 @@ double save_as_xpm(const char *filename, render *base,render *plug, double offse
             
             if (p >= 0.00001) { /* counters for only the not-glue gap */
                 gapcount++;
-                gap += d;
+                if (d > 0)
+                    gap += d;
                 touch++;
                 notgap = true;
             } else {
