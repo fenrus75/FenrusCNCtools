@@ -9,6 +9,10 @@
 #include <cstring>
 #include <cmath>
 
+
+static tool *lastv = NULL;
+
+
 render::render(const char *filename)
 {
     
@@ -160,10 +164,12 @@ void render::parse_line(const char *line)
             angle = 2 *strtod(d + 1, &d);
         printf("Tool : D = %5.2f,  Angle = %5.2f\n", diameter, angle);
         
-        if (angle > 0)
+        if (angle > 0) {
             tool = new vbit(angle);
-        else
+            lastv = tool;
+        } else {
             tool = new flat(diameter);
+        }
             
         return;
     }    
@@ -173,7 +179,14 @@ void render::parse_line(const char *line)
     }
     
     if (line[0] == 'M' || line[0] =='T') {
-        /*nothing to do with M or T or comment lines for now but reset Z*/
+        const char *c;
+        /* nothing much to do with M or T or comment lines for now but reset Z*/
+        
+        /* but we do want to find the tool number */
+        c = strchr(line, 'T');
+        if (c)
+            tool->number = strtoll(c+1, NULL, 10);
+        
         cZ = 0;
         return;
     }

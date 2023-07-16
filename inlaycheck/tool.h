@@ -6,6 +6,7 @@ public:
     double scanzone;
     virtual double get_height(double R, double depth);
     int samplesteps = 2;
+    int number;
 };
 
 
