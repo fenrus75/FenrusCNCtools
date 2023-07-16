@@ -36,7 +36,7 @@ void *plug_thread(void *arg)
 int main(int argc, char **argv)
 {
     FILE *gcode;    
-    double offset, gap;
+    double offset, gap, Z;
     
     if (argc < 2) {
         printf("Need 2 files as argument\n");
@@ -83,12 +83,17 @@ int main(int argc, char **argv)
 #endif
 //    plug->make_validmap(-(offset + gap));    
     gcode = gcode_file("fixup.nc");
+    
+    Z = -offset -0.5 + 0.001;
 
+    while (Z < 00) {
+        printf("Procesisng depth %5.2f\n", Z);
 
-    plug->make_validmap(-2);    
-    plug->export_validmap("valid.pgm");
-
-    gcode_writeout_maps(gcode,plug, -2);    
+        plug->make_validmap(Z);    
+        plug->export_validmap("valid.pgm");
+        gcode_writeout_maps(gcode,plug, Z);    
+        Z += 0.5;
+    }
     
     gcode_close(gcode);
 }

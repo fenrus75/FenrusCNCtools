@@ -20,7 +20,6 @@ FILE *gcode_file(const char *filename)
     fprintf(file, "(TOOL/MILL,0.03, 0.00, 10.00, %4.2f)\n", lastv->_angle/2.0);
     fprintf(file, "M6T102\n");
     fprintf(file, "M03S18000\n");
-    fprintf(file, "G1Z2\n");
 
         
         
