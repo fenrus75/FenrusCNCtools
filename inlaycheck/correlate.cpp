@@ -279,8 +279,8 @@ void find_least_overlap(render *base, render *plug, double depth)
     printf("Finding location with the least overlap \n");
     
     step = 1;
-    for (y = centery - base->pixels_per_mm ; y < centery + base->pixels_per_mm ; y ++) {
-        for (x = centerx - base->pixels_per_mm; x < bestx + base->pixels_per_mm ; x ++) {
+    for (y = centery - base->pixels_per_mm/2 ; y < centery + base->pixels_per_mm/2 ; y ++) {
+        for (x = centerx - base->pixels_per_mm/2; x < bestx + base->pixels_per_mm/2 ; x ++) {
             double total;
             int ov;
             

@@ -35,7 +35,7 @@ void *plug_thread(void *arg)
 
 int main(int argc, char **argv)
 {
-    
+    FILE *gcode;    
     double offset, gap;
     
     if (argc < 2) {
@@ -75,13 +75,20 @@ int main(int argc, char **argv)
 
     plug->flip_over();
     
-#if 1
+#if 0
     save_as_stl("plug_actual.stl", base, plug, offset, false, true, 1.0/base->pixels_per_mm);
     plug->swap_best();
     save_as_stl("plug_best.stl", base, plug, offset, false, true, 1.0/base->pixels_per_mm);
     plug->swap_best();
 #endif
 //    plug->make_validmap(-(offset + gap));    
-    plug->make_validmap(-4);    
+    gcode = gcode_file("fixup.nc");
+
+
+    plug->make_validmap(-2);    
     plug->export_validmap("valid.pgm");
+
+    gcode_writeout_maps(gcode,plug, -2);    
+    
+    gcode_close(gcode);
 }

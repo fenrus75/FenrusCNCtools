@@ -21,6 +21,11 @@ double vbit::get_height(double R, double depth)
     return R * _invtan + depth; 
 }
 
+double vbit::get_height_static(double R, double depth)
+{
+    return R * _invtan + depth; 
+}
+
 flat::flat(double diameter)
 {
     _diameter = diameter;

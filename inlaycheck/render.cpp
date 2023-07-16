@@ -10,7 +10,7 @@
 #include <cmath>
 
 
-static tool *lastv = NULL;
+vbit *lastv = NULL;
 
 
 render::render(const char *filename)
@@ -167,8 +167,8 @@ void render::parse_line(const char *line)
         printf("Tool : D = %5.2f,  Angle = %5.2f\n", diameter, angle);
         
         if (angle > 0) {
-            tool = new vbit(angle);
-            lastv = tool;
+            lastv = new vbit(angle);
+            tool = lastv;
         } else {
             tool = new flat(diameter);
         }
@@ -411,6 +411,9 @@ void render::crop(void)
     
     printf("Cropping (%i %i) x (%i %i)\n", minX, minY, maxX, maxY);
     
+    croppedX = minX;
+    croppedY = minY;
+    
     new_width = maxX - minX + 1;
     new_height = maxY - minY + 1;
     
@@ -555,8 +558,16 @@ bool render::tooltouch_valid(int cx, int cy, double Z)
     startx = cx - mm_to_x(tool->scanzone);       
     maxX = cx + mm_to_x(tool->scanzone) + 1;
     starty = cy - mm_to_y(tool->scanzone);       
-    maxY = cy +  mm_to_y(tool->scanzone) + 1;
-    
+    maxY = cy +  mm_to_y(tool->scanzone) ;
+
+
+#if 0
+    if (bestpixels[cx+cy * width >= 0])  {
+        retval = false;
+        validmap[cx + cy * width] = false;
+        return false;
+    }
+#endif
 //    startx = cx ; maxX = cx+1;starty=cy;maxY=cy;
     
     if (maxY >= height)
@@ -576,21 +587,19 @@ bool render::tooltouch_valid(int cx, int cy, double Z)
             
             if (pixels[x + offset] <= Z)
                 continue;
+                
             dX = x_to_mm(x)-X;
             dY= y_to_mm(y)-Y;
             R = sqrt(dX*dX+dY*dY);
             
-            double H = tool->get_height(R, Z);
+            double H = lastv->get_height_static(R, Z);
             
 
-            if (bestpixels[x + y * width] > -6 && fabs(pixels[x + y * width]) > 0) {
-//               if (bestpixels[x + y * width] < pixels[x + y * width]) 
-//                       printf("***");
-//             printf("xy %i %i H is %5.2f    bp is %5.2f  p is %5.2f\n", x, y, H, bestpixels[x + y * width], pixels[x + y * width]);
-            }
-            
-            if (H < bestpixels[x + y * width])
+            if (H < bestpixels[x + y * width]) {
                 retval = false;
+                validmap[cx + cy * width] = false;
+                return false;
+            }
             if (retval && H < pixels[x + y * width])  {
                 gains  += pixels[x + y * width] - H;
 //                printf("x,y %i,%i  H is %5.2f  pixels is %5.2f  gains is %5.2f\n",x,y,H, pixels[x + y * width],gains);
@@ -601,9 +610,9 @@ bool render::tooltouch_valid(int cx, int cy, double Z)
     }
     
     if (retval)
-        valuemap[x + y * width] = gains;
+        valuemap[cx + cy * width] = gains;
     else 
-        validmap[x + y * width] = false;
+        validmap[cx + cy * width] = false;
         
     return retval;
 }
@@ -619,6 +628,8 @@ void render::make_validmap(double Depth)
     
     if (!lastv)
         return;
+        
+    printf("Making validmap\n");
     
     tool = lastv;
     
@@ -630,9 +641,42 @@ void render::make_validmap(double Depth)
         }
     }
     
-   for (y = 0; y < height; y++) {
+    /* find all the valid pixels where the V bit can work without damaging the design -- and where there is value */
+    
+    for (y = 0; y < height; y++) {
         for (x = 0; x < width; x++) {
            tooltouch_valid(x, y, Depth);
+        }
+    }
+    
+    /* now we need to filter the valuemap -- we only want to do values that are adjacent to invalid pixels */
+    for (y = 1; y < height -1; y++) {
+        for (x = 1; x < width - 1; x++) {
+            if (valuemap[x + y * width] == 0)
+               continue;
+            if (!validmap[x - 1 + (y-1) * width])
+               continue;               
+            if (!validmap[x + 0 + (y-1) * width])
+               continue;
+            if (!validmap[x + 1 + (y-1) * width])
+               continue;
+            if (!validmap[x - 1 + y * width])
+               continue;
+            if (!validmap[x + 0 + y * width])
+               continue;
+            if (!validmap[x + 1 + y * width])
+               continue; 
+            if (!validmap[x - 1 + (y+1) * width])
+               continue;
+            if (!validmap[x + 0 + (y+1) * width])
+               continue;
+            if (!validmap[x + 1 + (y+1) * width])
+               continue;
+               
+
+            /* if we get there no neighbor is invalid */
+            valuemap[x + y * width] = 0;               
+            
         }
     }
     

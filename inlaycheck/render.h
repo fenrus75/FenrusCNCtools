@@ -21,6 +21,7 @@ public:
     double *pixels;
     double deepest;
     double offsetZ = 0.0;
+    int	   croppedX, croppedY;
     
     int mm_to_x(double X); 
     int mm_to_y(double Y); 
