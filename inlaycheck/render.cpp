@@ -20,13 +20,15 @@ render::render(const char *filename)
     height_mm = 0;
     width = 0;
     height = 0;
-    pixels_per_mm = 32;
+    pixels_per_mm = 16;
     pixels = NULL;
     tool = NULL;    
     bestpixels = NULL;
     cX = 0; cY = 0; cZ = 50;
     deepest = 0;
     offsetX = 0; offsetY = 0;
+    validmap = NULL;
+    valuemap = NULL;
     
     fname = strdup(filename);
     
@@ -531,4 +533,149 @@ void render::swap_best(void)
     p = pixels;
     pixels = bestpixels;
     bestpixels = p;
+}
+
+bool render::tooltouch_valid(int cx, int cy, double Z)
+{
+    int startx, starty;
+    int maxX, maxY;
+    int x,y;
+    double X, Y;
+    bool retval = true;
+    double gains = 0.0;
+    if (Z > 0)
+        return true;
+        
+    if (!tool)
+        return false;
+        
+    X = x_to_mm(cx);
+    Y = y_to_mm(cy);
+    
+    startx = cx - mm_to_x(tool->scanzone);       
+    maxX = cx + mm_to_x(tool->scanzone) + 1;
+    starty = cy - mm_to_y(tool->scanzone);       
+    maxY = cy +  mm_to_y(tool->scanzone) + 1;
+    
+//    startx = cx ; maxX = cx+1;starty=cy;maxY=cy;
+    
+    if (maxY >= height)
+        maxY = height - 1;
+    if (maxX >= width)
+        maxX = width - 1;
+    if (starty < 0)
+        starty = 0;
+    if (startx < 0)
+        startx = 0;
+    
+    for (y = starty; y <= maxY; y++) {
+        int offset = y * width;
+        for (x = startx; x < maxX; x++) {
+            double R;
+            double dX, dY;
+            
+            if (pixels[x + offset] <= Z)
+                continue;
+            dX = x_to_mm(x)-X;
+            dY= y_to_mm(y)-Y;
+            R = sqrt(dX*dX+dY*dY);
+            
+            double H = tool->get_height(R, Z);
+            
+
+            if (bestpixels[x + y * width] > -6 && fabs(pixels[x + y * width]) > 0) {
+//               if (bestpixels[x + y * width] < pixels[x + y * width]) 
+//                       printf("***");
+//             printf("xy %i %i H is %5.2f    bp is %5.2f  p is %5.2f\n", x, y, H, bestpixels[x + y * width], pixels[x + y * width]);
+            }
+            
+            if (H < bestpixels[x + y * width])
+                retval = false;
+            if (retval && H < pixels[x + y * width])  {
+                gains  += pixels[x + y * width] - H;
+//                printf("x,y %i,%i  H is %5.2f  pixels is %5.2f  gains is %5.2f\n",x,y,H, pixels[x + y * width],gains);
+//               gains += pixels[x + y * width] - bestpixels[x + y * width];
+            }
+                
+        }
+    }
+    
+    if (retval)
+        valuemap[x + y * width] = gains;
+    else 
+        validmap[x + y * width] = false;
+        
+    return retval;
+}
+
+
+void render::make_validmap(double Depth)
+{
+    int x,y;
+    if (!validmap)
+        validmap = (bool *)calloc(sizeof(bool), width * height);
+    if (!valuemap)
+        valuemap = (double *)calloc(sizeof(double), width * height);
+    
+    if (!lastv)
+        return;
+    
+    tool = lastv;
+    
+    /* first we set all places to valid, and all value to 0 */
+    for (y = 0; y < height; y++) {
+        for (x = 0; x < width; x++) {
+            validmap[x + y * width] = true;
+            valuemap[x + y * width] = 0.0;
+        }
+    }
+    
+   for (y = 0; y < height; y++) {
+        for (x = 0; x < width; x++) {
+           tooltouch_valid(x, y, Depth);
+        }
+    }
+    
+    
+}
+
+void render::export_validmap(const char *filename)
+{
+     FILE *file;
+     int x,y;
+     printf("Saving valuemap to %s\n", filename);
+     file = fopen(filename, "w");
+     
+     double maxvalue = 0.001;
+     fprintf(file, "P2\n");
+     fprintf(file, "%i %i\n", width, height);
+     fprintf(file, "255 \n");
+     
+     if (deepest < depth_mm)
+         deepest = depth_mm;
+     
+     for (y = height - 1 ; y >= 0; y--) {
+         for (x = 0; x < width; x++) {
+                 if (fabs(valuemap[x + y * width]) > maxvalue)
+                    maxvalue = fabs(valuemap[x + y * width]);
+         }
+     }
+
+
+     for (y = height - 1 ; y >= 0; y--) {
+         for (x = 0; x < width; x++) {
+             int c = 0;
+             if (validmap[x + y * width]) {
+                 c = 255;
+                 if (valuemap[x + y * width] != 0)
+                    c= 64 + 64 * fabs(valuemap[x + y* width]/maxvalue);
+             }
+                
+             fprintf(file, "%i ", c);
+         }
+         fprintf(file, "\n");
+     }
+     
+     fclose(file);
+
 }

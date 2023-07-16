@@ -46,6 +46,13 @@ public:
     
     void swap_best(void);
     
+    bool *validmap;
+    double *valuemap;
+    
+    void make_validmap(double depth);
+    bool  tooltouch_valid(int cx, int cy, double depth);
+    void export_validmap(const char *filename);
+    
 private:
     double ratio_x, ratio_y, invratio_x, invratio_y;
     class tool *tool;

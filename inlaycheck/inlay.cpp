@@ -64,17 +64,24 @@ int main(int argc, char **argv)
     save_as_stl("base.stl", base, plug, offset, true, false, 1.0/base->pixels_per_mm);
     save_as_stl("plug.stl", base, plug, offset, false, true, 1.0/base->pixels_per_mm);
 
-#ifdef EXPORT_OVERLAP
     if (gap > 0.1) {    
         offset += gap;
+#ifdef EXPORT_OVERLAP
         find_least_overlap(base, plug, offset); /* this is not fast */
         save_overlap_as_stl("overlap.stl", base, plug, offset, 1.0/base->pixels_per_mm);
         gap = save_as_xpm("result2.xpm", base, plug, offset);
-    }
 #endif
+    }
 
     plug->flip_over();
+    
+#if 1
     save_as_stl("plug_actual.stl", base, plug, offset, false, true, 1.0/base->pixels_per_mm);
     plug->swap_best();
     save_as_stl("plug_best.stl", base, plug, offset, false, true, 1.0/base->pixels_per_mm);
+    plug->swap_best();
+#endif
+//    plug->make_validmap(-(offset + gap));    
+    plug->make_validmap(-4);    
+    plug->export_validmap("valid.pgm");
 }
