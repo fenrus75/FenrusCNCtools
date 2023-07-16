@@ -73,4 +73,8 @@ int main(int argc, char **argv)
     }
 #endif
 
+    plug->flip_over();
+    save_as_stl("plug_actual.stl", base, plug, offset, false, true, 1.0/base->pixels_per_mm);
+    plug->swap_best();
+    save_as_stl("plug_best.stl", base, plug, offset, false, true, 1.0/base->pixels_per_mm);
 }

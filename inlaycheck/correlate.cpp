@@ -178,8 +178,11 @@ double save_as_xpm(const char *filename, render *base,render *plug, double offse
             double d = p - b - offset;
 //                printf("x %i y %i  b %5.2f  p %5.2f   ox %i, oy %i  oZ %5.2f\n", x,y,b,p, plug->offsetX, plug->offsetY, plug->offsetZ);
             
+            
+            plug->set_best_height(x, y, b + offset);
             if (b == 0) {
                 fprintf(file, "a");
+                plug->set_best_height(x, y, -plug->offsetZ);
                 continue;
             }
             /* the plug sticks out, we have a gap, color it red */

@@ -19,6 +19,7 @@ render::render(const char *filename)
     pixels_per_mm = 32;
     pixels = NULL;
     tool = NULL;    
+    bestpixels = NULL;
     cX = 0; cY = 0; cZ = 50;
     deepest = 0;
     offsetX = 0; offsetY = 0;
@@ -440,6 +441,21 @@ double render::get_height(int x, int y)
         return -offsetZ;
     return pixels[y * width + x];
 }
+double render::get_best_height(int x, int y) 
+{
+    x -= offsetX;
+    y -= offsetY;
+    
+    if (x < 0 || y < 0)
+        return -offsetZ;
+    if (x >= width)
+        return -offsetZ;
+    if (y >= height)
+        return -offsetZ;
+    if (!bestpixels)
+        return -offsetZ;
+    return bestpixels[y * width + x];
+}
 
 void render::flip_over(void)
 {
@@ -455,5 +471,51 @@ void render::flip_over(void)
     }
     free(pixels);
     pixels = newpixels;
-    offsetZ = depth_mm;
+    
+    
+    if (bestpixels) {
+        newpixels = (double *)calloc(sizeof(double), width * height);
+    
+        for (y = 0; y < height; y++) {
+            for (x = 0; x < width; x++) {
+                newpixels[y * width + (width - x - 1)] = - bestpixels[y * width + x];
+            }
+        }
+        free(bestpixels);
+        bestpixels = newpixels;
+    }
+    if (offsetZ == 0) 
+        offsetZ = depth_mm;
+    else
+        offsetZ = 0;
+}
+
+void render::set_best_height(int x, int y, double H) 
+{
+    x -= offsetX;
+    y -= offsetY;
+    
+    if (x < 0 || y < 0)
+        return;
+    if (x >= width)
+        return;
+    if (y >= height)
+        return;
+        
+    if (!bestpixels)
+        bestpixels = (double *) calloc(width * height, sizeof(double));
+        
+    if (H < 0)
+        H = 0;
+    bestpixels[y * width + x] = H;
+}
+
+void render::swap_best(void)
+{
+    double *p;
+    if (!bestpixels)
+        return;
+    p = pixels;
+    pixels = bestpixels;
+    bestpixels = p;
 }

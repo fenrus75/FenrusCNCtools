@@ -416,7 +416,8 @@ void save_as_stl(const char *filename, render *base,render *plug, double offset,
                 write_point4(file, x, y, b00, b01, b10, b11,false, base->width, basecache);
             if (export_plug && should_emit_plug(p00, p01, p10, p11, offset)) {
                 write_point4(file, x, y, p00 - offset, p01-offset, p10-offset,p11-offset, false, base->width, plugcache1);
-                write_point4(file, x, y, plugtop(p00 - offset), plugtop(p01-offset), plugtop(p10-offset),plugtop(p11-offset), false, base->width, plugcache2);
+                if (plug->offsetZ != 0)
+                    write_point4(file, x, y, plugtop(p00 - offset), plugtop(p01-offset), plugtop(p10-offset),plugtop(p11-offset), false, base->width, plugcache2);
                 
             }
         }

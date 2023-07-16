@@ -20,6 +20,7 @@ public:
     int    minX,minY,maxX,maxY;
     double *pixels;
     double deepest;
+    double offsetZ = 0.0;
     
     int mm_to_x(double X); 
     int mm_to_y(double Y); 
@@ -37,18 +38,24 @@ public:
     double get_height(int x, int y);
     void set_offsets(int x, int y);
     
+    void set_best_height(int x, int y, double H);
+    double get_best_height(int x, int y);
+    
     int get_offsetX(void) { return offsetX;};
     int get_offsetY(void) { return offsetY;};
+    
+    void swap_best(void);
     
 private:
     double ratio_x, ratio_y, invratio_x, invratio_y;
     class tool *tool;
     const char *fname;
     
+    double *bestpixels;
+    
     double cX, cY, cZ;
     int offsetX = 0;
     int offsetY = 0;
-    double offsetZ = 0.0;
     
     void setup_canvas(void);
     
