@@ -100,7 +100,7 @@ function allocate_2D_array(minX, minY, maxX, maxY) {
 	/* arrays are nicer if they start at 0 so calculate an offset */
 	xoffset = - Math.floor(minX / 5.0);
 	yoffset = - Math.floor(minY / 5.0);
-	array_xmax = yoffset + Math.ceil(maxX / 5.0) + 4
+	array_xmax = xoffset + Math.ceil(maxX / 5.0) + 4
 	array_ymax = yoffset + Math.ceil(maxY / 5.0) + 4
 	
 	var x, y;
